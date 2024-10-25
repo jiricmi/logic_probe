@@ -1,5 +1,5 @@
 #include "main.h"
-#include <string.h>
+#include "ansi_display.h"
 
 UART_HandleTypeDef huart2;
 
@@ -25,18 +25,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  
-char ansi_sequence[] = "\033[0;1;4;34;45mHello, World!\033[0m\n";
+
+  ansi_set_blue_background();
+  ansi_set_red_rectangle();
 
   while(1)
   {
-    HAL_UART_Transmit(&huart2, (uint8_t*)ansi_sequence, strlen(ansi_sequence), HAL_MAX_DELAY);
-    for(int i = 0; i < 10; ++i) {
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
-      HAL_Delay(100);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
-      HAL_Delay(100);
-    }
   }
 }
 
