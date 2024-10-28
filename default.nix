@@ -8,7 +8,8 @@ pkgs.mkShell {
     cmake
     putty
     stm32cubemx
-    minicom
+    clang-tools
+    glibc_multi
   ];
   OPENOCD_PATH="${pkgs.openocd}";
 }
