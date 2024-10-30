@@ -29,7 +29,9 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/ansi/ansi_display.c
     Core/Src/ansi/ansi_abstraction_layer.c
+    Core/Src/ansi/ansi_pages.c
     Core/Src/utils.c
+    Core/Src/callbacks.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE

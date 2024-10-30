@@ -6,7 +6,7 @@
  *                   This file contains the common defines of the application.
  ******************************************************************************
  * @attention
- *
+ * 
  * Copyright (c) 2024 STMicroelectronics.
  * All rights reserved.
  *
