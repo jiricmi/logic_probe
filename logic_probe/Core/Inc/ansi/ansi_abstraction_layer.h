@@ -33,11 +33,10 @@
 #define WHITE_TEXT "\033[37m\0"
 
 void send_uart_string(const char *str);
-void ansi_send_text(const char *str, const char *color, const char *bg_color);
+void ansi_send_text(const char *str, const char *color, const char *bg_color, const short int bold);
 void ansi_clear_format();
 void ansi_clear_terminal();
 void PrintError(const char *err_str);
 void ansi_set_cursor(const unsigned int row, const unsigned int col);
-void int_to_string(char *buffer, const int number);
-unsigned int join_strings(char *buffer, char *join, unsigned int start);
+
 #endif // ANSI_ABSTRACTION_LAYER_H

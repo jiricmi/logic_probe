@@ -11,7 +11,10 @@ void send_uart_string(const char* str) {
     HAL_UART_Transmit(&huart2, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 
-void ansi_send_text(const char* str, const char* color, const char* bg_color) {
+void ansi_send_text(const char* str,
+                    const char* color,
+                    const char* bg_color,
+                    const short int bold) {
     if (strlen(bg_color) != 0) {
         send_uart_string(bg_color);
     }
@@ -20,7 +23,17 @@ void ansi_send_text(const char* str, const char* color, const char* bg_color) {
         send_uart_string(color);
     }
 
+    if (bold == 1) {
+        send_uart_string("\033[1m");
+    }
+
     send_uart_string(str);
+}
+
+void ansi_send_bold_text(const char* str,
+                         const char* color,
+                         const char* bg_color) {
+    send_uart_string("\033[1m");
 }
 
 void ansi_clear_format() {

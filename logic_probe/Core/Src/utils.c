@@ -1,5 +1,4 @@
 #include "utils.h"
-
 #include <stdint.h>
 
 unsigned int join_strings(char* buffer, char* join, unsigned int start) {

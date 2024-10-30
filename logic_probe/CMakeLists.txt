@@ -32,6 +32,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/ansi/ansi_pages.c
     Core/Src/utils.c
     Core/Src/callbacks.c
+    Core/Src/uart_control.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
