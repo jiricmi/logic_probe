@@ -1,5 +1,7 @@
 #include "utils.h"
+#include <math.h>
 #include <stdint.h>
+#include <string.h>
 
 unsigned int join_strings(char* buffer, char* join, unsigned int start) {
     int i = 0;
@@ -9,39 +11,22 @@ unsigned int join_strings(char* buffer, char* join, unsigned int start) {
     return start;
 }
 
-void flip_buffer(char* buffer, const int size) {
-    for (int i = 0, j = size - 1; i < j; i++, j--) {
-        char temp = buffer[i];
-        buffer[i] = buffer[j];
-        buffer[j] = temp;
-    }
-}
-
-void int_to_string(char* buffer, int number) {
-    int it = 0;
-    uint8_t negative = 0;
-
-    if (number == 0) {
-        buffer[it++] = '0';
-        buffer[it] = '\0';
+void uint_32_to_split_int(unsigned int* buff,
+                          uint32_t n,
+                          unsigned int floating_point) {
+    if (floating_point == 0) {
+        buff[0] = n;
+        buff[1] = 0;
         return;
     }
 
-    if (number < 0) {
-        number = -number;
-        negative = 1;
-    }
+    unsigned int decimal = n / (unsigned int)pow(10, floating_point);
+    unsigned int floating = n % (unsigned int)pow(10, floating_point);
 
-    while (number != 0) {
-        buffer[it++] = (number % 10) + '0';
-        number /= 10;
-    }
+    buff[0] = decimal;
+    buff[1] = floating;
+}
 
-    if (negative) {
-        buffer[it++] = '-';
-    }
-
-    flip_buffer(buffer, it);
-
-    buffer[it] = '\0';
+void clear_buffer(void* buffer, size_t size) {
+    memset(buffer, 0, size);
 }
