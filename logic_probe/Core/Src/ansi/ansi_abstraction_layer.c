@@ -1,6 +1,7 @@
 #include "ansi_abstraction_layer.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "utils.h"
@@ -30,17 +31,15 @@ void ansi_send_text(const char* str,
     send_uart_string(str);
 }
 
-void ansi_send_bold_text(const char* str,
-                         const char* color,
-                         const char* bg_color) {
-    send_uart_string("\033[1m");
+void ansi_home_cursor(void) {
+    ansi_set_cursor(1, 1);
 }
 
-void ansi_clear_format() {
+void ansi_clear_format(void) {
     send_uart_string("\033[0m\033[1;1H");
 }
 
-void ansi_clear_terminal() {
+void ansi_clear_terminal(void) {
     send_uart_string("\033[2J\033[H");
 }
 
@@ -64,8 +63,8 @@ void ansi_set_cursor(const unsigned int row, const unsigned int col) {
     char row_buff[4];
     char col_buff[4];
 
-    int_to_string(row_buff, row);
-    int_to_string(col_buff, col);
+    snprintf(row_buff, sizeof(row_buff), "%u", row);
+    snprintf(col_buff, sizeof(col_buff), "%u", col);
 
     it = join_strings(result, row_buff, it);
     result[it++] = ';';

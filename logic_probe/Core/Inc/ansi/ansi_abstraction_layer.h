@@ -11,7 +11,7 @@
 #define GREEN_BG "\033[42m\0"
 #define YELLOW_BG "\033[43m\0"
 #define BLUE_BG "\033[44m\0"
-#define MAGENTA_BG "\033[45m\0" 
+#define MAGENTA_BG "\033[45m\0"
 #define CYAN_BG "\033[46m\0"
 #define WHITE_BG "\033[47m\0"
 #define DARK_GRAY_BG "\033[48;5;236m\0"
@@ -32,11 +32,15 @@
 #define CYAN_TEXT "\033[36m\0"
 #define WHITE_TEXT "\033[37m\0"
 
-void send_uart_string(const char *str);
-void ansi_send_text(const char *str, const char *color, const char *bg_color, const short int bold);
-void ansi_clear_format();
-void ansi_clear_terminal();
-void PrintError(const char *err_str);
+void send_uart_string(const char* str);
+void ansi_send_text(const char* str,
+                    const char* color,
+                    const char* bg_color,
+                    const short int bold);
+void ansi_home_cursor(void);
+void ansi_clear_format(void);
+void ansi_clear_terminal(void);
+void PrintError(const char* err_str);
 void ansi_set_cursor(const unsigned int row, const unsigned int col);
 
-#endif // ANSI_ABSTRACTION_LAYER_H
+#endif  // ANSI_ABSTRACTION_LAYER_H

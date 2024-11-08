@@ -3,8 +3,20 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_display.h"
 
+const char* voltage_ascii[] = {
+    " __      __   _ _                   \n",
+    " \\ \\    / /  | | |                  \n",
+    "  \\ \\  / /__ | | |_ __ _  __ _  ___ \n",
+    "   \\ \\/ / _ \\| | __/ _` |/ _` |/ _ \\\n",
+    "    \\  / (_) | | || (_| | (_| |  __/\n",
+    "     \\/ \\___/|_|\\__\\__,_|\\__, |\\___|\n",
+    "                          __/ |     \n",
+    "                         |___/       \n"};  // todo: udelat struct
+
 unsigned char current_page = 0;
 char* current_page_bg_color;
+extern uint32_t V_ref;
+extern uint32_t channel_1_probe;
 
 void generate_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
@@ -19,15 +31,17 @@ void ansi_main_page(void) {
     ansi_print_logo(RED_TEXT, "");
     ansi_print_border(BORDER_HORIZONTAL, BORDER_VERTICAL, "", "");
     generate_menu();
-    ansi_set_cursor(1, 1);
+
+    ansi_home_cursor();
 }
 
 void ansi_logic_probe_page(void) {
     current_page = 1;
     ansi_clear_terminal();
-    current_page_bg_color = LIGHT_BLUE_BG;
     ansi_print_border('@', "@", "", "");
-    ansi_set_cursor(1, 1);
+    ansi_print_title(voltage_ascii, 8, 37, "", "");
+    ansi_print_voltage_measures(V_ref, channel_1_probe, 0, 0, 0);
+    ansi_home_cursor();
 }
 
 void render_current_page(void) {
