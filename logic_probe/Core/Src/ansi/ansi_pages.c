@@ -34,6 +34,15 @@ void generate_channel_menu(void) {
     ansi_print_button("4] CHANNEL 4 (PA5)",
                       (adc1_ch->channel_4 == true) ? GREEN_BG : RED_BG, "", 16,
                       center);
+
+    if (!adc1_ch->applied) {
+        ansi_set_cursor(18, center - 12);
+        ansi_send_text("Change was made! Press S to save settings.", RED_TEXT,
+                       "", 0);
+    } else {
+        ansi_clear_line(18, 1);
+    }
+    ansi_clear_format();
 }
 
 void ansi_main_page(void) {
