@@ -7,7 +7,7 @@ void get_current_control(void) {
             control_main_page();
             break;
         case 1:
-            control_logic_probe_page();
+            control_voltage_page();
             break;
         default:
             control_main_page();
@@ -16,14 +16,14 @@ void get_current_control(void) {
 
 void control_main_page(void) {
     switch (received_char) {
-        case 'l':
-        case 'L':
-            ansi_logic_probe_page();
+        case 'v':
+        case 'V':
+            ansi_voltage_page();
             break;
     }
 }
 
-void control_logic_probe_page(void) {
+void control_voltage_page(void) {
     switch (received_char) {
         case 'q':
         case 'Q':

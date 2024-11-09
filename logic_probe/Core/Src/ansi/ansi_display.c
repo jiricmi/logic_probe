@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "ansi_abstraction_layer.h"
+#include "ansi_ascii_text.h"
 #include "utils.h"
 
 void ansi_set_background(const char* color) {
@@ -16,50 +17,20 @@ void ansi_set_background(const char* color) {
     ansi_clear_format();
 }
 
-void ansi_print_logo(const char* color, const char* bg_color) {
-    const char* jlp_art[] = {
-        "    ___  ___       ________   \n",
-        "   |\\  \\|\\  \\     |\\   __  \\  \n",
-        "   \\ \\  \\ \\  \\    \\ \\  \\|\\  \\ \n",
-        " __ \\ \\  \\ \\  \\    \\ \\   ____\\\n",
-        "|\\  \\\\_\\  \\ \\  \\____\\ \\  \\___|\n",
-        "\\ \\________\\ \\_______\\ \\__\\   \n",
-        " \\|________|\\|_______|\\|__|   \n",
-        "                               \n",
-    };
-    unsigned int row = 2;
-    unsigned int art_rows = sizeof(jlp_art) / sizeof(jlp_art[0]);
-    unsigned int width_center = TERMINAL_WIDTH / 2 - strlen(jlp_art[0]) / 2;
-
-    for (unsigned i = 0; i < art_rows; ++i) {
-        ansi_set_cursor(row + i, width_center);
-        ansi_send_text(jlp_art[i], color, bg_color, 0);
-    }
-
-    char* made_by = "Made by Milan Jiříček";
-    ansi_set_cursor(row + art_rows - 1,
-                    TERMINAL_WIDTH / 2 - strlen(made_by) / 2);
-    ansi_send_text(made_by, WHITE_TEXT, "", 0);
-
-    ansi_clear_format();
-}
-
-void ansi_print_title(const char** ascii,
-                      const size_t row,
-                      const size_t col,
+void ansi_print_title(const unsigned short int ascii_type,
                       const char* color,
                       const char* bg_color) {
-    if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
-        return;  // handle error
-    }
+    ascii_text* ascii = get_ascii_struct(ascii_type);
 
-    unsigned int start_display_row = 2;
-    unsigned int width_center = TERMINAL_WIDTH / 2 - (col / 2);
+    size_t start_display_row = 2;
+    size_t width_center = TERMINAL_WIDTH / 2 - ((ascii->col - 1) / 2);
 
-    for (size_t i = 0; i < row; ++i) {
+    for (size_t i = 0; i < ascii->row; ++i) {
         ansi_set_cursor(start_display_row + i, width_center);
-        ansi_send_text(ascii[i], color, bg_color, 0);
+        ansi_send_text(ascii->ascii[i], color, bg_color, 0);
     }
+    free_ascii_text(ascii);
+    ansi_clear_format();
 }
 
 void ansi_print_border(const char horizontal,
@@ -114,4 +85,5 @@ void ansi_print_voltage_measures(const uint32_t v_ref,
     snprintf(text_buffer, sizeof(text_buffer), "Reference: %u.%u V",
              split_float_format[0], split_float_format[1]);
     ansi_send_text(text_buffer, "", "", 0);
+    ansi_home_cursor();
 }

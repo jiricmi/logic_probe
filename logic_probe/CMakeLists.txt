@@ -30,6 +30,7 @@ target_sources(
   PRIVATE Core/Src/ansi/ansi_display.c
           Core/Src/ansi/ansi_abstraction_layer.c
           Core/Src/ansi/ansi_pages.c
+          Core/Src/ansi/ansi_ascii_text.c
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/uart_control.c

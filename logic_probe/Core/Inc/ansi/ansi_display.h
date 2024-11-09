@@ -2,17 +2,13 @@
 #define ANSI_DISPLAY_H
 
 #include <stdint.h>
-#include <stdio.h>
+
 #define BORDER_VERTICAL "|"
 #define BORDER_HORIZONTAL '-'
 
 void ansi_set_background(const char* color);
 
-void ansi_print_logo(const char* color, const char* bg_color);
-
-void ansi_print_title(const char** ascii,
-                      const size_t row,
-                      const size_t col,
+void ansi_print_title(const unsigned short int ascii_type,
                       const char* color,
                       const char* bg_color);
 
