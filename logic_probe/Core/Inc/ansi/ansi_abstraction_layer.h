@@ -38,6 +38,7 @@ void ansi_send_text(const char* str,
 void ansi_home_cursor(void);
 void ansi_clear_format(void);
 void ansi_clear_terminal(void);
+void ansi_clear_line(unsigned int row, unsigned int offset);
 void PrintError(const char* err_str);
 void ansi_set_cursor(const unsigned int row, const unsigned int col);
 

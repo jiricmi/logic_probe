@@ -43,6 +43,16 @@ void ansi_clear_terminal(void) {
     send_uart_string("\033[2J\033[H");
 }
 
+void ansi_clear_line(unsigned int row, unsigned int offset) {
+    ansi_set_cursor(row, offset + 1);
+    char buffer[TERMINAL_WIDTH];
+    for (unsigned int i = 0; i < TERMINAL_WIDTH - 2 * offset - 1; ++i) {
+        buffer[i] = ' ';
+    }
+    buffer[TERMINAL_WIDTH - 2 * offset - 1] = '\0';
+    send_uart_string(buffer);
+}
+
 void PrintError(const char* err_str) {
     ansi_set_cursor(30, 24);
     send_uart_string(err_str);
