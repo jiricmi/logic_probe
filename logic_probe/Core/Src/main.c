@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "adc_control.h"
-#include "ansi_display.h"
+#include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "measure_tools.h"
 /* USER CODE END Includes */
@@ -108,6 +108,7 @@ int main(void) {
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
     HAL_UART_Receive_IT(&huart2, &received_char, 1);
+    ansi_clear_terminal();
     /* USER CODE END 2 */
 
     /* Infinite loop */
