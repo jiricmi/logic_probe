@@ -44,20 +44,28 @@ void control_channel_set_page(void) {
             break;
         case '1':
             adc1_ch->channel_1 = !adc1_ch->channel_1;
+            adc1_ch->applied = false;
             generate_channel_menu();
             break;
         case '2':
             adc1_ch->channel_2 = !adc1_ch->channel_2;
+            adc1_ch->applied = false;
             generate_channel_menu();
             break;
         case '3':
             adc1_ch->channel_3 = !adc1_ch->channel_3;
+            adc1_ch->applied = false;
             generate_channel_menu();
             break;
         case '4':
             adc1_ch->channel_4 = !adc1_ch->channel_4;
+            adc1_ch->applied = false;
             generate_channel_menu();
             break;
+        case 's':
+        case 'S':
+            adc1_ch->applied = true;
+            generate_channel_menu();
     }
 }
 

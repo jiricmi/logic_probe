@@ -7,6 +7,7 @@ typedef struct {
     bool channel_2;
     bool channel_3;
     bool channel_4;
+    bool applied;
 } adc_channels;
 
 adc_channels* create_adc_channels(void);
