@@ -18,13 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "ansi_display.h"
-#include "ansi_pages.h"
-#include "measure_tools.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "adc_control.h"
+#include "ansi_display.h"
+#include "ansi_pages.h"
+#include "measure_tools.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,15 +47,16 @@ ADC_HandleTypeDef hadc1;
 
 UART_HandleTypeDef huart2;
 
+/* USER CODE BEGIN PV */
 unsigned char received_char;
+
+adc_channels* adc1_ch;
 
 uint32_t channel_1_probe;
 
 uint32_t V_ref;
 
-extern unsigned char current_page;
-
-/* USER CODE BEGIN PV */
+extern short current_page;
 
 /* USER CODE END PV */
 
@@ -113,17 +114,15 @@ int main(void) {
     /* USER CODE BEGIN WHILE */
     while (1) {
         /* USER CODE END WHILE */
+
+        /* USER CODE BEGIN 3 */
         V_ref = adc_measure_Vref();
         HAL_Delay(500);
 
         channel_1_probe = adc_measure_PA0(V_ref);
         HAL_Delay(500);
 
-        if (current_page == 1) {
-            ansi_print_voltage_measures(V_ref, channel_1_probe, 0, 0, 0);
-        }
-
-        /* USER CODE BEGIN 3 */
+        render_current_page();
     }
     /* USER CODE END 3 */
 }
@@ -194,18 +193,18 @@ static void MX_ADC1_Init(void) {
     hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
     hadc1.Init.Resolution = ADC_RESOLUTION_12B;
     hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+    hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
     hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     hadc1.Init.LowPowerAutoWait = DISABLE;
     hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-    hadc1.Init.ContinuousConvMode = ENABLE;
-    hadc1.Init.NbrOfConversion = 1;
+    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.NbrOfConversion = 4;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
     hadc1.Init.DMAContinuousRequests = DISABLE;
     hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
+    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
     hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.OversamplingMode = DISABLE;
     hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
@@ -221,8 +220,32 @@ static void MX_ADC1_Init(void) {
     if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
         Error_Handler();
     }
-    /* USER CODE BEGIN ADC1_Init 2 */
 
+    /** Configure Regular Channel
+     */
+    sConfig.Channel = ADC_CHANNEL_1;
+    sConfig.Rank = ADC_REGULAR_RANK_2;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /** Configure Regular Channel
+     */
+    sConfig.Channel = ADC_CHANNEL_4;
+    sConfig.Rank = ADC_REGULAR_RANK_3;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /** Configure Regular Channel
+     */
+    sConfig.Channel = ADC_CHANNEL_5;
+    sConfig.Rank = ADC_REGULAR_RANK_4;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN ADC1_Init 2 */
+    adc1_ch = create_adc_channels();
     /* USER CODE END ADC1_Init 2 */
 }
 

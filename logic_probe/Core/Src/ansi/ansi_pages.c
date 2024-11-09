@@ -1,46 +1,61 @@
 #include "ansi_pages.h"
 
+#include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 #include "ansi_display.h"
+#include "my_bool.h"
 
-const char* voltage_ascii[] = {
-    " __      __   _ _                   \n",
-    " \\ \\    / /  | | |                  \n",
-    "  \\ \\  / /__ | | |_ __ _  __ _  ___ \n",
-    "   \\ \\/ / _ \\| | __/ _` |/ _` |/ _ \\\n",
-    "    \\  / (_) | | || (_| | (_| |  __/\n",
-    "     \\/ \\___/|_|\\__\\__,_|\\__, |\\___|\n",
-    "                          __/ |     \n",
-    "                         |___/       \n"};  // todo: udelat struct
-
-unsigned char current_page = 0;
+short current_page = MAIN_PAGE;
 char* current_page_bg_color;
 extern uint32_t V_ref;
 extern uint32_t channel_1_probe;
+extern adc_channels* adc1_ch;
 
 void generate_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
 
     ansi_print_button("r - reload page", "", "", 13, center);
-    ansi_print_button("v - Voltmeter", "", "", 14, center);
+    ansi_print_button("c - Channel settings", "", "", 14, center);
+    ansi_print_button("v - Voltmeter", "", "", 15, center);
+}
+
+void generate_channel_menu(void) {
+    const unsigned int center = TERMINAL_WIDTH / 2 - 9;
+    ansi_print_button("1] CHANNEL 1 (PA0)",
+                      (adc1_ch->channel_1 == true) ? GREEN_BG : RED_BG, "", 13,
+                      center);
+    ansi_print_button("2] CHANNEL 2 (PA1)",
+                      (adc1_ch->channel_2 == true) ? GREEN_BG : RED_BG, "", 14,
+                      center);
+    ansi_print_button("3] CHANNEL 3 (PA4)",
+                      (adc1_ch->channel_3 == true) ? GREEN_BG : RED_BG, "", 15,
+                      center);
+    ansi_print_button("4] CHANNEL 4 (PA5)",
+                      (adc1_ch->channel_4 == true) ? GREEN_BG : RED_BG, "", 16,
+                      center);
 }
 
 void ansi_main_page(void) {
-    current_page = 0;
-    ansi_clear_terminal();
+    current_page = MAIN_PAGE;
     ansi_print_title(ASCII_MAIN_LOGO, RED_TEXT, "");
     ansi_set_cursor(9, 30);
     ansi_send_text("Made by Milan Jiříček", "", "", 1);
     ansi_print_border(BORDER_HORIZONTAL, BORDER_VERTICAL, "", "");
     generate_menu();
+    ansi_home_cursor();
+}
 
+void ansi_channel_set_page(void) {
+    current_page = CHANNEL_PAGE;
+    ansi_print_border('#', "#", "", "");
+    ansi_print_title(ASCII_CHANNEL, GREEN_TEXT, "");
+    generate_channel_menu();
     ansi_home_cursor();
 }
 
 void ansi_voltage_page(void) {
-    current_page = 1;
-    ansi_clear_terminal();
+    current_page = VOLTAGE_PAGE;
     ansi_print_border('@', "@", "", "");
     ansi_print_title(ASCII_VOLTAGE, MAGENTA_TEXT, "");
     ansi_print_voltage_measures(V_ref, channel_1_probe, 0, 0, 0);
@@ -48,10 +63,13 @@ void ansi_voltage_page(void) {
 
 void render_current_page(void) {
     switch (current_page) {
-        case 0:
+        case MAIN_PAGE:
             ansi_main_page();
             break;
-        case 1:
+        case CHANNEL_PAGE:
+            ansi_channel_set_page();
+            break;
+        case VOLTAGE_PAGE:
             ansi_voltage_page();
             break;
         default:

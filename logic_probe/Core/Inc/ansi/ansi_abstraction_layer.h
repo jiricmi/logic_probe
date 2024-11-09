@@ -1,8 +1,6 @@
 #ifndef ANSI_ABSTRACTION_LAYER_H
 #define ANSI_ABSTRACTION_LAYER_H
 
-#include "main.h"
-
 #define TERMINAL_WIDTH 80
 #define TERMINAL_HEIGHT 24
 

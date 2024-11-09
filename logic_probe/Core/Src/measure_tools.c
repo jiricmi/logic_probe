@@ -20,10 +20,11 @@ uint32_t adc_measure_Vref(void) {
         HAL_ADC_Stop(&hadc1);
         return __HAL_ADC_CALC_VREFANALOG_VOLTAGE(raw_v_val, ADC_RESOLUTION_12B);
     } else {
-        HAL_ADC_Stop(&hadc1);
+        HAL_ADC_Stop(&hadc1);  // todo: error
         return 0;
     }
 }
+
 
 uint32_t adc_measure_PA0(uint32_t V_ref) {
     ADC_ChannelConfTypeDef sConfig = {0};
@@ -47,3 +48,6 @@ uint32_t adc_measure_PA0(uint32_t V_ref) {
         return 0;
     }
 }
+
+
+

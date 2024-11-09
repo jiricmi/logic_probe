@@ -10,9 +10,13 @@ ascii_text* get_ascii_struct(const unsigned short int ascii) {
                                                  MAIN_ASCII_TITLE_COL);
             const char* main_ascii[] = MAIN_ASCII_TITLE;
             fill_ascii_struct(ascii_struct, main_ascii);
-
             break;
-
+        case ASCII_CHANNEL:
+            ascii_struct = allocate_ascii_struct(CHANNEL_ASCII_TITLE_ROW,
+                                                 CHANNEL_ASCII_TITLE_COL);
+            const char* channel_ascii[] = CHANNEL_ASCII_TITLE;
+            fill_ascii_struct(ascii_struct, channel_ascii);
+            break;
         case ASCII_VOLTAGE:
             ascii_struct = allocate_ascii_struct(VOLTAGE_ASCII_TITLE_ROW,
                                                  VOLTAGE_ASCII_TITLE_COL);

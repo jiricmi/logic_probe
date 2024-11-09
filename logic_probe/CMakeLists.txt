@@ -31,13 +31,16 @@ target_sources(
           Core/Src/ansi/ansi_abstraction_layer.c
           Core/Src/ansi/ansi_pages.c
           Core/Src/ansi/ansi_ascii_text.c
+          Core/Src/measure/adc_control.c
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/uart_control.c
           Core/Src/measure_tools.c)
 
-target_include_directories(${CMAKE_PROJECT_NAME}
-                           PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/ansi)
+target_include_directories(
+  ${CMAKE_PROJECT_NAME}
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/ansi
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/measure)
 
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE)
 
