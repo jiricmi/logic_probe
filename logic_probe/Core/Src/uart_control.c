@@ -2,6 +2,7 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
+#include "utils.h"
 
 extern adc_channels* adc1_ch;
 
@@ -42,26 +43,20 @@ void control_channel_set_page(void) {
             ansi_clear_terminal();
             ansi_main_page();
             break;
+
         case '1':
-            adc1_ch->channel_1 = !adc1_ch->channel_1;
-            adc1_ch->applied = false;
-            generate_channel_menu();
-            break;
         case '2':
-            adc1_ch->channel_2 = !adc1_ch->channel_2;
-            adc1_ch->applied = false;
-            generate_channel_menu();
-            break;
         case '3':
-            adc1_ch->channel_3 = !adc1_ch->channel_3;
-            adc1_ch->applied = false;
+        case '4': {
+            int num = cdtoi(received_char);
+
+            if (num == -1) {
+                // todo: handle error
+            }
+            flip_adc_channel(adc1_ch, (size_t)num);
             generate_channel_menu();
             break;
-        case '4':
-            adc1_ch->channel_4 = !adc1_ch->channel_4;
-            adc1_ch->applied = false;
-            generate_channel_menu();
-            break;
+        }
         case 's':
         case 'S':
             adc1_ch->applied = true;

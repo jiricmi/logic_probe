@@ -4,7 +4,7 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 #include "ansi_display.h"
-#include "my_bool.h"
+#include "utils.h"
 
 short current_page = MAIN_PAGE;
 char* current_page_bg_color;
@@ -14,33 +14,32 @@ extern adc_channels* adc1_ch;
 
 void generate_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
-
-    ansi_print_button("r - reload page", "", "", 13, center);
-    ansi_print_button("c - Channel settings", "", "", 14, center);
-    ansi_print_button("v - Voltmeter", "", "", 15, center);
+    unsigned int row = 13;
+    ansi_print_button("r - reload page", "", "", row++, center);
+    ansi_print_button("c - Channel settings", "", "", row++, center);
+    ansi_print_button("v - Voltmeter", "", "", row, center);
 }
 
 void generate_channel_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 9;
-    ansi_print_button("1] CHANNEL 1 (PA0)",
-                      (adc1_ch->channel_1 == true) ? GREEN_BG : RED_BG, "", 13,
-                      center);
-    ansi_print_button("2] CHANNEL 2 (PA1)",
-                      (adc1_ch->channel_2 == true) ? GREEN_BG : RED_BG, "", 14,
-                      center);
-    ansi_print_button("3] CHANNEL 3 (PA4)",
-                      (adc1_ch->channel_3 == true) ? GREEN_BG : RED_BG, "", 15,
-                      center);
-    ansi_print_button("4] CHANNEL 4 (PA5)",
-                      (adc1_ch->channel_4 == true) ? GREEN_BG : RED_BG, "", 16,
-                      center);
+    unsigned int row = 13;
+
+    for (int i = 0; i < NUM_CHANNELS; ++i) {
+        char label[20];
+        char num = itocd(i + 1);
+        char pin = itocd((int)adc1_ch->pin[i]);
+        snprintf(label, sizeof(label), "%c] CHANNEL %c (PA%c)", num, num, pin);
+        ansi_print_button(label, (adc1_ch->channel[i]) ? GREEN_BG : RED_BG, "",
+                          row, center);
+        ++row;
+    }
 
     if (!adc1_ch->applied) {
-        ansi_set_cursor(18, center - 12);
+        ansi_set_cursor(row + 2, center - 12);
         ansi_send_text("Change was made! Press S to save settings.", RED_TEXT,
                        "", 0);
     } else {
-        ansi_clear_line(18, 1);
+        ansi_clear_line(row + 2, 1);
     }
     ansi_clear_format();
 }
