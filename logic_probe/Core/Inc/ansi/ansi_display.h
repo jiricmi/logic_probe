@@ -2,6 +2,7 @@
 #define ANSI_DISPLAY_H
 
 #include <stdint.h>
+#include "adc_control.h"
 
 #define BORDER_VERTICAL "|"
 #define BORDER_HORIZONTAL '-'
@@ -24,8 +25,6 @@ void ansi_print_button(const char* text,
                        const unsigned int col);
 
 void ansi_print_voltage_measures(const uint32_t v_ref,
-                                 const uint32_t ch1,
-                                 const uint32_t ch2,
-                                 const uint32_t ch3,
-                                 const uint32_t ch4);
+                                 const uint32_t* v_measures,
+                                 const adc_channels* adc_ch);
 #endif  // ANSI_DISPLAY_H

@@ -1,6 +1,7 @@
 #include "ansi_display.h"
 #include <string.h>
 
+#include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 #include "utils.h"
@@ -71,14 +72,54 @@ void ansi_print_button(const char* text,
 }
 
 void ansi_print_voltage_measures(const uint32_t v_ref,
-                                 const uint32_t ch1,
-                                 const uint32_t ch2,
-                                 const uint32_t ch3,
-                                 const uint32_t ch4) {
+                                 const uint32_t* v_measures,
+                                 const adc_channels* adc_ch) {
     char text_buffer[50];
     unsigned int split_float_format[2];
     static unsigned int floating_point = 3;
     unsigned int center = TERMINAL_WIDTH / 2 - 10;
+    ansi_set_cursor(13, center);
+    uint_32_to_split_int(split_float_format, v_measures[0], floating_point);
+    if (adc_ch->channel[0]) {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 1: %u.%u V",
+                 split_float_format[0], split_float_format[1]);
+    } else {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 1: x");
+    }
+    ansi_send_text(text_buffer, "", "", 1);
+   
+    ansi_set_cursor(14, center);
+    uint_32_to_split_int(split_float_format, v_measures[1], floating_point);
+
+    if (adc_ch->channel[1]) {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 2: %u.%u V",
+                 split_float_format[0], split_float_format[1]);
+    } else {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 2: x");
+    }
+    ansi_send_text(text_buffer, "", "", 1);
+   
+    ansi_set_cursor(15, center);
+    uint_32_to_split_int(split_float_format, v_measures[2], floating_point);
+
+    if (adc_ch->channel[2]) {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 3: %u.%u V",
+                 split_float_format[0], split_float_format[1]);
+    } else {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 3: x");
+    }
+    ansi_send_text(text_buffer, "", "", 1);
+    
+    ansi_set_cursor(16, center);
+    uint_32_to_split_int(split_float_format, v_measures[3], floating_point);
+
+    if (adc_ch->channel[3]) {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 4: %u.%u V",
+                 split_float_format[0], split_float_format[1]);
+    } else {
+        snprintf(text_buffer, sizeof(text_buffer), "Channel 4: x");
+    }
+    ansi_send_text(text_buffer, "", "", 1);
 
     ansi_set_cursor(TERMINAL_HEIGHT - 5, center);
     uint_32_to_split_int(split_float_format, v_ref, floating_point);

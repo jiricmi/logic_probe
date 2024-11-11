@@ -25,6 +25,7 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "measure_tools.h"
+#include "my_error_handle.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,9 +55,11 @@ adc_channels* adc1_ch;
 
 uint32_t channel_1_probe;
 
-uint32_t V_ref;
+uint32_t v_ref = 3000;
 
 extern short current_page;
+// temp
+uint32_t v_measures[4];
 
 /* USER CODE END PV */
 
@@ -108,7 +111,7 @@ int main(void) {
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
     HAL_UART_Receive_IT(&huart2, &received_char, 1);
-    ansi_clear_terminal();
+    // ansi_clear_terminal();
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -117,10 +120,31 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-        V_ref = adc_measure_Vref();
-        HAL_Delay(500);
+        if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
+            exception("1st hal deinit failed");
+        }
 
-        channel_1_probe = adc_measure_PA0(V_ref);
+        setup_adc_channels(&hadc1, adc1_ch, false);
+        HAL_ADC_Start(&hadc1);
+        for (size_t i = 0; i < 40; ++i) {
+            if (adc1_ch->count_active == 0 ||
+                !adc1_ch->applied) {  // musime prepisovat, je potreba udelat
+                                      //  temp objekt
+                break;
+            }
+            adc_measure_channels(v_measures, &hadc1, adc1_ch);
+            HAL_Delay(100);
+            render_current_page();
+        }
+        HAL_ADC_Stop(&hadc1);
+        if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
+            exception("2nd hal deinit failed");
+        }
+        setup_adc_channels(&hadc1, adc1_ch, true);
+        HAL_ADC_Start(&hadc1);
+        v_ref = adc_measure_v_ref();
+        HAL_ADC_Stop(&hadc1);
+
         HAL_Delay(500);
 
         render_current_page();
@@ -181,8 +205,6 @@ static void MX_ADC1_Init(void) {
 
     /* USER CODE END ADC1_Init 0 */
 
-    ADC_ChannelConfTypeDef sConfig = {0};
-
     /* USER CODE BEGIN ADC1_Init 1 */
 
     /* USER CODE END ADC1_Init 1 */
@@ -198,55 +220,22 @@ static void MX_ADC1_Init(void) {
     hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     hadc1.Init.LowPowerAutoWait = DISABLE;
     hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.ContinuousConvMode = ENABLE;
     hadc1.Init.NbrOfConversion = 4;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
     hadc1.Init.DMAContinuousRequests = DISABLE;
     hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
+    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.OversamplingMode = DISABLE;
     hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
-    if (HAL_ADC_Init(&hadc1) != HAL_OK) {
-        Error_Handler();
-    }
 
-    /** Configure Regular Channel
-     */
-    sConfig.Channel = ADC_CHANNEL_0;
-    sConfig.Rank = ADC_REGULAR_RANK_1;
-    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
-    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Configure Regular Channel
-     */
-    sConfig.Channel = ADC_CHANNEL_1;
-    sConfig.Rank = ADC_REGULAR_RANK_2;
-    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Configure Regular Channel
-     */
-    sConfig.Channel = ADC_CHANNEL_4;
-    sConfig.Rank = ADC_REGULAR_RANK_3;
-    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Configure Regular Channel
-     */
-    sConfig.Channel = ADC_CHANNEL_5;
-    sConfig.Rank = ADC_REGULAR_RANK_4;
-    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        Error_Handler();
-    }
+    /** Configure Regular Channel */
     /* USER CODE BEGIN ADC1_Init 2 */
-    adc1_ch = create_adc_channels();
+    adc1_ch = create_adc_channels(&hadc1);
+    setup_adc_channels(&hadc1, adc1_ch, true);
     /* USER CODE END ADC1_Init 2 */
 }
 
@@ -331,6 +320,8 @@ void Error_Handler(void) {
      */
     __disable_irq();
     while (1) {
+        ansi_clear_terminal();
+        ansi_send_text("ERROR!", "", "", 0);
     }
     /* USER CODE END Error_Handler_Debug */
 }

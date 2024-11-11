@@ -8,8 +8,8 @@
 
 short current_page = MAIN_PAGE;
 char* current_page_bg_color;
-extern uint32_t V_ref;
-extern uint32_t channel_1_probe;
+extern uint32_t v_ref;
+extern uint32_t v_measures[4];
 extern adc_channels* adc1_ch;
 
 void generate_menu(void) {
@@ -66,7 +66,7 @@ void ansi_voltage_page(void) {
     current_page = VOLTAGE_PAGE;
     ansi_print_border('@', "@", "", "");
     ansi_print_title(ASCII_VOLTAGE, MAGENTA_TEXT, "");
-    ansi_print_voltage_measures(V_ref, channel_1_probe, 0, 0, 0);
+    ansi_print_voltage_measures(v_ref, v_measures, adc1_ch);
 }
 
 void render_current_page(void) {
