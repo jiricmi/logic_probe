@@ -32,4 +32,6 @@ void setup_adc_channels(ADC_HandleTypeDef* hadc,
                         bool calibration_flag);
 
 uint32_t adc_raw_measure(ADC_HandleTypeDef* hadc);
+
+uint32_t get_voltage(uint32_t measure);
 #endif  // !ADC_CONTROL_H

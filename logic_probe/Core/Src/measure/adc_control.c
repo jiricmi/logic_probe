@@ -112,7 +112,7 @@ void setup_adc_channels(ADC_HandleTypeDef* hadc,
         }
         if (adc_ch->channel[i] && adc_ch->applied) {
             set_adc_rank(&sConfig, active_channel++);
-            set_adc_channel(&sConfig, adc_ch->pin[i]);
+            set_adc_channel(&sConfig, i);
 
             if (HAL_ADC_ConfigChannel(hadc, &sConfig) != HAL_OK) {
                 exception("Failed to setup ADC_CONFIG in forloop");
@@ -129,4 +129,8 @@ uint32_t adc_raw_measure(ADC_HandleTypeDef* hadc) {
     }
     raw_voltage_value = HAL_ADC_GetValue(hadc);
     return raw_voltage_value;
+}
+
+uint32_t get_voltage(uint32_t measure) {
+    return __HAL_ADC_CALC_DATA_TO_VOLTAGE(v_ref, measure, ADC_RESOLUTION_12B);
 }

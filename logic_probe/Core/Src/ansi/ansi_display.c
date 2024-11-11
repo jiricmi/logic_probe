@@ -4,6 +4,7 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
+#include "ansi_pages.h"
 #include "utils.h"
 
 void ansi_set_background(const char* color) {
@@ -11,7 +12,6 @@ void ansi_set_background(const char* color) {
         ansi_set_cursor(i, 1);
         send_uart_string(color);
         for (unsigned int j = 1; j <= TERMINAL_WIDTH; ++j) {
-            send_uart_string(" ");
         }
     }
 
@@ -79,7 +79,8 @@ void ansi_print_voltage_measures(const uint32_t v_ref,
     static unsigned int floating_point = 3;
     unsigned int center = TERMINAL_WIDTH / 2 - 10;
     ansi_set_cursor(13, center);
-    uint_32_to_split_int(split_float_format, v_measures[0], floating_point);
+    uint_32_to_split_int(split_float_format, get_voltage(v_measures[0]),
+                         floating_point);
     if (adc_ch->channel[0]) {
         snprintf(text_buffer, sizeof(text_buffer), "Channel 1: %u.%u V",
                  split_float_format[0], split_float_format[1]);
@@ -87,10 +88,10 @@ void ansi_print_voltage_measures(const uint32_t v_ref,
         snprintf(text_buffer, sizeof(text_buffer), "Channel 1: x");
     }
     ansi_send_text(text_buffer, "", "", 1);
-   
-    ansi_set_cursor(14, center);
-    uint_32_to_split_int(split_float_format, v_measures[1], floating_point);
 
+    ansi_set_cursor(14, center);
+    uint_32_to_split_int(split_float_format, get_voltage(v_measures[1]),
+                         floating_point);
     if (adc_ch->channel[1]) {
         snprintf(text_buffer, sizeof(text_buffer), "Channel 2: %u.%u V",
                  split_float_format[0], split_float_format[1]);
@@ -98,10 +99,10 @@ void ansi_print_voltage_measures(const uint32_t v_ref,
         snprintf(text_buffer, sizeof(text_buffer), "Channel 2: x");
     }
     ansi_send_text(text_buffer, "", "", 1);
-   
-    ansi_set_cursor(15, center);
-    uint_32_to_split_int(split_float_format, v_measures[2], floating_point);
 
+    ansi_set_cursor(15, center);
+    uint_32_to_split_int(split_float_format, get_voltage(v_measures[2]),
+                         floating_point);
     if (adc_ch->channel[2]) {
         snprintf(text_buffer, sizeof(text_buffer), "Channel 3: %u.%u V",
                  split_float_format[0], split_float_format[1]);
@@ -109,10 +110,10 @@ void ansi_print_voltage_measures(const uint32_t v_ref,
         snprintf(text_buffer, sizeof(text_buffer), "Channel 3: x");
     }
     ansi_send_text(text_buffer, "", "", 1);
-    
-    ansi_set_cursor(16, center);
-    uint_32_to_split_int(split_float_format, v_measures[3], floating_point);
 
+    ansi_set_cursor(16, center);
+    uint_32_to_split_int(split_float_format, get_voltage(v_measures[3]),
+                         floating_point);
     if (adc_ch->channel[3]) {
         snprintf(text_buffer, sizeof(text_buffer), "Channel 4: %u.%u V",
                  split_float_format[0], split_float_format[1]);

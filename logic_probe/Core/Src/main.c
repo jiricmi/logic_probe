@@ -45,6 +45,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 UART_HandleTypeDef huart2;
 
@@ -66,6 +67,7 @@ uint32_t v_measures[4];
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
@@ -106,6 +108,7 @@ int main(void) {
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
+    MX_DMA_Init();
     MX_USART2_UART_Init();
     MX_ADC1_Init();
     /* USER CODE BEGIN 2 */
@@ -125,18 +128,10 @@ int main(void) {
         }
 
         setup_adc_channels(&hadc1, adc1_ch, false);
-        HAL_ADC_Start(&hadc1);
-        for (size_t i = 0; i < 40; ++i) {
-            if (adc1_ch->count_active == 0 ||
-                !adc1_ch->applied) {  // musime prepisovat, je potreba udelat
-                                      //  temp objekt
-                break;
-            }
-            adc_measure_channels(v_measures, &hadc1, adc1_ch);
-            HAL_Delay(100);
-            render_current_page();
-        }
-        HAL_ADC_Stop(&hadc1);
+        HAL_ADC_Start_DMA(&hadc1, v_measures, 4);
+        render_current_page();
+        HAL_Delay(500);
+        HAL_ADC_Stop_DMA(&hadc1);
         if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
             exception("2nd hal deinit failed");
         }
@@ -145,7 +140,7 @@ int main(void) {
         v_ref = adc_measure_v_ref();
         HAL_ADC_Stop(&hadc1);
 
-        HAL_Delay(500);
+        HAL_Delay(1);
 
         render_current_page();
     }
@@ -164,8 +159,8 @@ void SystemClock_Config(void) {
      */
     HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /** Initializes the RCC Oscillators according to the specified parameters
-     * in the RCC_OscInitTypeDef structure.
+    /** Initializes the RCC Oscillators according to the specified
+     * parameters in the RCC_OscInitTypeDef structure.
      */
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
     RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -175,7 +170,7 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
     RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
     RCC_OscInitStruct.PLL.PLLN = 8;
-    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
     RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
     RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
@@ -213,26 +208,24 @@ static void MX_ADC1_Init(void) {
      * Alignment and number of conversion)
      */
     hadc1.Instance = ADC1;
-    hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+    hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
     hadc1.Init.Resolution = ADC_RESOLUTION_12B;
     hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+    hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
     hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     hadc1.Init.LowPowerAutoWait = DISABLE;
     hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-    hadc1.Init.ContinuousConvMode = ENABLE;
-    hadc1.Init.NbrOfConversion = 4;
+    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.NbrOfConversion = 1;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc1.Init.DMAContinuousRequests = DISABLE;
+    hadc1.Init.DMAContinuousRequests = ENABLE;
     hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
     hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.OversamplingMode = DISABLE;
     hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
-
-    /** Configure Regular Channel */
     /* USER CODE BEGIN ADC1_Init 2 */
     adc1_ch = create_adc_channels(&hadc1);
     setup_adc_channels(&hadc1, adc1_ch, true);
@@ -269,6 +262,19 @@ static void MX_USART2_UART_Init(void) {
     /* USER CODE BEGIN USART2_Init 2 */
 
     /* USER CODE END USART2_Init 2 */
+}
+
+/**
+ * Enable DMA controller clock
+ */
+static void MX_DMA_Init(void) {
+    /* DMA controller clock enable */
+    __HAL_RCC_DMA1_CLK_ENABLE();
+
+    /* DMA interrupt init */
+    /* DMA1_Channel1_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
 /**
@@ -316,7 +322,8 @@ static void MX_GPIO_Init(void) {
  */
 void Error_Handler(void) {
     /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state
+    /* User can add his own implementation to report the HAL error return
+     * state
      */
     __disable_irq();
     while (1) {
