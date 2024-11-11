@@ -1,5 +1,4 @@
 #include "utils.h"
-#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -20,8 +19,8 @@ void uint_32_to_split_int(unsigned int* buff,
         return;
     }
 
-    unsigned int decimal = n / (unsigned int)pow(10, floating_point);
-    unsigned int floating = n % (unsigned int)pow(10, floating_point);
+    unsigned int decimal = n / (unsigned int)positive_power_10(floating_point);
+    unsigned int floating = n % (unsigned int)positive_power_10(floating_point);
 
     buff[0] = decimal;
     buff[1] = floating;
@@ -29,4 +28,31 @@ void uint_32_to_split_int(unsigned int* buff,
 
 void clear_buffer(void* buffer, size_t size) {
     memset(buffer, 0, size);
+}
+
+unsigned int positive_power_10(unsigned int power) {
+    unsigned int base = 1;
+    for (size_t i = 0; i < power; ++i) {
+        base *= 10;
+    }
+
+    return base;
+}
+
+// char digit to int
+int cdtoi(char digit) {
+    if (digit >= '0' && digit <= '9') {
+        return digit - '0';
+    } else {
+        return -1;
+    }
+}
+
+char itocd(int digit) {
+    if (digit >= 0 && digit <= 9) {
+        return (char)digit + '0';
+    } else {
+        // todo: handle error
+        return '0';
+    }
 }

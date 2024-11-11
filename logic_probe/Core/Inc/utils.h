@@ -10,4 +10,10 @@ void uint_32_to_split_int(unsigned int* buff,
                           unsigned int floating_point);
 
 void clear_buffer(void* buffer, size_t size);
+
+unsigned int positive_power_10(unsigned int power);
+
+int cdtoi(char digit);
+
+char itocd(int digit);
 #endif
