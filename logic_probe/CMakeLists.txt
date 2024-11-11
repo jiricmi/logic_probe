@@ -35,7 +35,8 @@ target_sources(
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/uart_control.c
-          Core/Src/measure_tools.c)
+          Core/Src/measure_tools.c
+          Core/Src/my_error_handle.c)
 
 target_include_directories(
   ${CMAKE_PROJECT_NAME}
