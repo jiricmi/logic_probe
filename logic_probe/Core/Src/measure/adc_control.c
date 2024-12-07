@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
 #include "my_error_handle.h"
 
 #define ADC_TIMEOUT 100
@@ -16,7 +15,8 @@ adc_channels* create_adc_channels(ADC_HandleTypeDef* hadc) {
         exception("Failed to allocate adc_channels struct");
     }
 
-    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+    adc_ch->channel[0] = true;
+    for (size_t i = 1; i < NUM_CHANNELS; ++i) {
         adc_ch->channel[i] = false;
     }
 

@@ -1,6 +1,5 @@
 #include "measure_tools.h"
 #include "adc_control.h"
-#include "main.h"
 
 #define V_REGISTER_SIZE 4095.0
 
