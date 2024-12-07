@@ -7,6 +7,8 @@
 #define ADC_TIMEOUT 100
 
 extern uint32_t v_ref;
+extern uint32_t* v_measures;
+extern ADC_HandleTypeDef hadc1;
 
 adc_channels* create_adc_channels(ADC_HandleTypeDef* hadc) {
     adc_channels* adc_ch = (adc_channels*)malloc(sizeof(adc_channels));
@@ -20,8 +22,16 @@ adc_channels* create_adc_channels(ADC_HandleTypeDef* hadc) {
         adc_ch->channel[i] = false;
     }
 
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        adc_ch->channel_unapplied[i] = adc_ch->channel[i];
+    }
+
     unsigned int pin_values[] = {0, 1, 4, 5};  // todo: lepe?
     memcpy(adc_ch->pin, pin_values, sizeof(pin_values));
+
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        adc_ch->avg_last_measure[0] = 0;
+    }
 
     adc_ch->applied = true;
     adc_ch->count_active = count_active_channels(adc_ch);
@@ -30,16 +40,22 @@ adc_channels* create_adc_channels(ADC_HandleTypeDef* hadc) {
     return adc_ch;
 }
 
-void flip_adc_channel(adc_channels* adc_ch, size_t channel) {
+void flip_adc_unapplied_channel(adc_channels* adc_ch, size_t channel) {
     if (channel == 0) {
         // todo: error
         return;
     }
 
     channel -= 1;
-    adc_ch->channel[channel] = !adc_ch->channel[channel];
-    adc_ch->count_active = count_active_channels(adc_ch);
+    adc_ch->channel_unapplied[channel] = !adc_ch->channel_unapplied[channel];
     adc_ch->applied = false;
+}
+
+void adc_remove_unapplied_channels(adc_channels* adc_ch) {
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        adc_ch->channel_unapplied[i] = adc_ch->channel[i];
+    }
+    adc_ch->applied = true;
 }
 
 size_t count_active_channels(adc_channels* adc_ch) {
@@ -50,6 +66,16 @@ size_t count_active_channels(adc_channels* adc_ch) {
         }
     }
     return count;
+}
+
+void adc_apply_channels(adc_channels* adc_ch) {
+    HAL_ADC_Stop_DMA(&hadc1);
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        adc_ch->channel[i] = adc_ch->channel_unapplied[i];
+    }
+    adc_ch->count_active = count_active_channels(adc_ch);
+    adc_ch->applied = true;
+    realloc_v_measures(adc_ch, &v_measures);
 }
 
 void set_adc_rank(ADC_ChannelConfTypeDef* sConfig, size_t rank) {
@@ -80,6 +106,27 @@ void adc_init_hal_conversion(ADC_HandleTypeDef* hadc,
 
     } else {
         exception("Bad input in adc_init_hal_conversion");
+    }
+}
+
+void realloc_v_measures(adc_channels* adc_ch, uint32_t** measures) {
+    size_t measure_size;
+
+    if (adc_ch->count_active == 0) {
+        measure_size = 1;
+    } else {
+        measure_size = (size_t)adc_ch->count_active * CHANNEL_NUM_SAMPLES;
+    }
+
+    if (*measures == NULL) {
+        *measures = (uint32_t*)calloc(measure_size, sizeof(uint32_t));
+    } else {
+        uint32_t* new_measures =
+            (uint32_t*)realloc(*measures, measure_size * sizeof(uint32_t));
+        *measures = new_measures;
+    }
+    if (*measures == NULL) {
+        exception("Failed to allocate memory for v_measures");
     }
 }
 
@@ -118,6 +165,44 @@ void setup_adc_channels(ADC_HandleTypeDef* hadc,
                 exception("Failed to setup ADC_CONFIG in forloop");
             }
         }
+    }
+}
+
+void adc_make_avg(uint32_t* buff,
+                  adc_channels* adc_ch,
+                  const uint32_t* measures) {
+    if (adc_ch->count_active == 0) {
+        return;
+    }
+
+    uint64_t avgs[NUM_CHANNELS];
+
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        avgs[i] = 0;
+    }
+
+    for (size_t i = 0; i < adc_ch->count_active * CHANNEL_NUM_SAMPLES; ++i) {
+        avgs[i % adc_ch->count_active] += measures[i];
+    }
+
+    for (size_t i = 0; i < adc_ch->count_active; ++i) {
+        avgs[i] /= CHANNEL_NUM_SAMPLES;
+    }
+
+    uint32_t ordered_buff[NUM_CHANNELS];
+
+    size_t index = 0;
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        if (adc_ch->channel[i]) {
+            ordered_buff[i] = (uint32_t)avgs[index++];
+        } else {
+            ordered_buff[i] = 0;
+        }
+    }
+
+    for (size_t i = 0; i < NUM_CHANNELS; ++i) {
+        buff[i] = (ordered_buff[i] + adc_ch->avg_last_measure[i]) / 2;
+        adc_ch->avg_last_measure[i] = ordered_buff[i];
     }
 }
 

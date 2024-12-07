@@ -50,17 +50,15 @@ DMA_HandleTypeDef hdma_adc1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+// uart
 unsigned char received_char;
-
-adc_channels* adc1_ch;
-
-uint32_t channel_1_probe;
-
-uint32_t v_ref = 3000;
-
 extern short current_page;
-// temp
-uint32_t v_measures[4];
+
+// voltmeter
+uint32_t* v_measures;
+uint32_t v_ref = 3300;
+adc_channels* adc1_ch;
 
 /* USER CODE END PV */
 
@@ -80,8 +78,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
+ * @brief  The application entry point. @retval int
  */
 int main(void) {
     /* USER CODE BEGIN 1 */
@@ -128,9 +125,11 @@ int main(void) {
         }
 
         setup_adc_channels(&hadc1, adc1_ch, false);
-        HAL_ADC_Start_DMA(&hadc1, v_measures, 4);
+        HAL_ADC_Start_DMA(
+            &hadc1, v_measures,
+            adc1_ch->count_active * CHANNEL_NUM_SAMPLES);  // handle 0
         render_current_page();
-        HAL_Delay(500);
+        HAL_Delay(1000);
         HAL_ADC_Stop_DMA(&hadc1);
         if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
             exception("2nd hal deinit failed");
@@ -140,7 +139,7 @@ int main(void) {
         v_ref = adc_measure_v_ref();
         HAL_ADC_Stop(&hadc1);
 
-        HAL_Delay(1);
+        HAL_Delay(100);
 
         render_current_page();
     }
@@ -215,19 +214,20 @@ static void MX_ADC1_Init(void) {
     hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     hadc1.Init.LowPowerAutoWait = DISABLE;
     hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-    hadc1.Init.ContinuousConvMode = DISABLE;
+    hadc1.Init.ContinuousConvMode = ENABLE;
     hadc1.Init.NbrOfConversion = 1;
     hadc1.Init.DiscontinuousConvMode = DISABLE;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
     hadc1.Init.DMAContinuousRequests = ENABLE;
     hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
+    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
     hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.OversamplingMode = DISABLE;
     hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
     /* USER CODE BEGIN ADC1_Init 2 */
     adc1_ch = create_adc_channels(&hadc1);
+    realloc_v_measures(adc1_ch, &v_measures);
     setup_adc_channels(&hadc1, adc1_ch, true);
     /* USER CODE END ADC1_Init 2 */
 }
@@ -327,8 +327,6 @@ void Error_Handler(void) {
      */
     __disable_irq();
     while (1) {
-        ansi_clear_terminal();
-        ansi_send_text("ERROR!", "", "", 0);
     }
     /* USER CODE END Error_Handler_Debug */
 }

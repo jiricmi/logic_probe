@@ -26,5 +26,5 @@ void ansi_print_button(const char* text,
 
 void ansi_print_voltage_measures(const uint32_t v_ref,
                                  const uint32_t* v_measures,
-                                 const adc_channels* adc_ch);
+                                 adc_channels* adc_ch);
 #endif  // ANSI_DISPLAY_H

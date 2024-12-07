@@ -40,6 +40,7 @@ void control_channel_set_page(void) {
     switch (received_char) {
         case 'q':
         case 'Q':
+            adc_remove_unapplied_channels(adc1_ch);
             ansi_clear_terminal();
             ansi_main_page();
             break;
@@ -53,13 +54,13 @@ void control_channel_set_page(void) {
             if (num == -1) {
                 // todo: handle error
             }
-            flip_adc_channel(adc1_ch, (size_t)num);
+            flip_adc_unapplied_channel(adc1_ch, (size_t)num);
             generate_channel_menu();
             break;
         }
         case 's':
         case 'S':
-            adc1_ch->applied = true;
+            adc_apply_channels(adc1_ch);
             generate_channel_menu();
     }
 }

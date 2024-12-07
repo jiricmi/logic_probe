@@ -61,7 +61,6 @@ void PrintError(const char* err_str) {
 
 void ansi_set_cursor(const unsigned int row, const unsigned int col) {
     if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
-        PrintError("Cursor is out of range");
         return;
     }
 

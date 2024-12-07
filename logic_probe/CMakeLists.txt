@@ -46,3 +46,14 @@ target_include_directories(
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE)
 
 target_link_libraries(${CMAKE_PROJECT_NAME} stm32cubemx)
+
+# Add compiler flags
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(
+    ${CMAKE_PROJECT_NAME}
+    PRIVATE -Wall # Enable all warnings
+            -Wextra # Enable extra warnings
+            -Wpedantic # Enable pedantic checks
+            -Wshadow # Warn if a variable is shadowing another
+  )
+endif()

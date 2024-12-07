@@ -9,7 +9,7 @@
 short current_page = MAIN_PAGE;
 char* current_page_bg_color;
 extern uint32_t v_ref;
-extern uint32_t v_measures[4];
+extern uint32_t* v_measures;
 extern adc_channels* adc1_ch;
 
 void generate_menu(void) {
@@ -29,8 +29,9 @@ void generate_channel_menu(void) {
         char num = itocd(i + 1);
         char pin = itocd((int)adc1_ch->pin[i]);
         snprintf(label, sizeof(label), "%c] CHANNEL %c (PA%c)", num, num, pin);
-        ansi_print_button(label, (adc1_ch->channel[i]) ? GREEN_BG : RED_BG, "",
-                          row, center);
+        ansi_print_button(label,
+                          (adc1_ch->channel_unapplied[i]) ? GREEN_BG : RED_BG,
+                          "", row, center);
         ++row;
     }
 
