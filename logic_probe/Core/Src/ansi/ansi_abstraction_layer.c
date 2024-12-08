@@ -29,6 +29,7 @@ void ansi_send_text(const char* str,
     }
 
     send_uart_string(str);
+    ansi_clear_format();
 }
 
 void ansi_home_cursor(void) {

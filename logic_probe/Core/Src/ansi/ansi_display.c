@@ -70,38 +70,72 @@ void ansi_print_button(const char* text,
     ansi_clear_format();
 }
 
-void ansi_print_voltage_measures(const uint32_t v_ref,
-                                 const uint32_t* measures,
-                                 adc_channels* adc_ch) {
+void print_voltage_for_channel(uint32_t voltage,
+                               unsigned int channel,
+                               unsigned int floating_point) {
     char text_buffer[50];
     unsigned int split_float_format[2];
-    static unsigned int floating_point = 3;
-    unsigned int col_center = TERMINAL_WIDTH / 2 - 10;
-    unsigned int row = 13;
-    uint32_t avg_measures[4];
-    adc_make_avg(avg_measures, adc_ch, measures);
 
-    for (unsigned short int i = 0; i < NUM_CHANNELS; ++i) {
-        ansi_set_cursor(row++, col_center);
+    uint_32_to_split_int(split_float_format, voltage, floating_point);
+    snprintf(text_buffer, sizeof(text_buffer), "Channel %hu: %u.%0*u V",
+             channel + 1, split_float_format[0], floating_point,
+             split_float_format[1]);
+    ansi_send_text(text_buffer, "", "", 1);
+}
 
-        uint_32_to_split_int(split_float_format, get_voltage(avg_measures[i]),
-                             floating_point);
-
-        if (adc_ch->channel[i]) {
-            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu: %u.%0*u V",
-                     i + 1, split_float_format[0], floating_point,
-                     split_float_format[1]);
-        } else {
-            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu: x", i + 1);
-        }
-
-        ansi_send_text(text_buffer, "", "", 1);
-    }
-
-    ansi_set_cursor(TERMINAL_HEIGHT - 5, col_center);
+void print_reference_voltage(uint32_t v_ref, unsigned int floating_point) {
+    unsigned int split_float_format[2];
     uint_32_to_split_int(split_float_format, v_ref, floating_point);
+    char text_buffer[50];
     snprintf(text_buffer, sizeof(text_buffer), "Reference: %u.%u V",
              split_float_format[0], split_float_format[1]);
     ansi_send_text(text_buffer, "", "", 0);
+}
+
+void ansi_print_voltage_measures(const uint32_t v_ref,
+                                 const uint32_t* measures,
+                                 adc_channels* adc_ch) {
+    static const unsigned int floating_point = 3;
+    const unsigned int col_center = TERMINAL_WIDTH / 2 - 10;
+    unsigned int row = 13;
+    uint32_t avg_measures[4];
+
+    adc_make_avg(avg_measures, adc_ch, measures);
+
+    for (unsigned short int channel = 0; channel < NUM_CHANNELS; ++channel) {
+        uint32_t voltage = get_voltage(avg_measures[channel]);
+
+        ansi_set_cursor(row, col_center + 20);
+        ansi_print_logic_probe_ch(voltage, adc_ch->channel[channel]);
+
+        ansi_set_cursor(row++, col_center);
+        if (adc_ch->channel[channel]) {
+            print_voltage_for_channel(voltage, channel, floating_point);
+        } else {
+            char text_buffer[50];
+            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu: x",
+                     channel + 1);
+            ansi_send_text(text_buffer, "", "", 1);
+        }
+    }
+
+    ansi_set_cursor(TERMINAL_HEIGHT - 5, col_center);
+    print_reference_voltage(v_ref, floating_point);
+
     ansi_home_cursor();
+}
+
+void ansi_print_logic_probe_ch(uint32_t voltage, bool channel) {
+    if (!channel) {
+        ansi_send_text(" ? ", WHITE_TEXT, LIGHT_GRAY_BG, 1);
+        return;
+    }
+
+    if (voltage <= 800) {
+        ansi_send_text(" L ", BLACK_TEXT, RED_BG, 1);
+    } else if (voltage >= 2000) {
+        ansi_send_text(" H ", BLACK_TEXT, GREEN_BG, 1);
+    } else {
+        ansi_send_text(" ? ", WHITE_TEXT, LIGHT_GRAY_BG, 1);
+    }
 }
