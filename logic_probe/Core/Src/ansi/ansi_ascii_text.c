@@ -23,6 +23,20 @@ ascii_text* get_ascii_struct(const unsigned short int ascii) {
             const char* voltage_ascii[] = VOLTAGE_ASCII_TITLE;
             fill_ascii_struct(ascii_struct, voltage_ascii);
             break;
+        case ASCII_SIGNAL_DETECT:
+            ascii_struct = allocate_ascii_struct(SIGNAL_DETECT_ASCII_TITLE_ROW,
+                                                 SIGNAL_DETECT_ASCII_TITLE_COL);
+            const char* signal_detect_ascii[] = SIGNAL_DETECT_ASCII_TITLE;
+            fill_ascii_struct(ascii_struct, signal_detect_ascii);
+            break;
+        case ASCII_SIGNAL_GENERATOR:
+            ascii_struct =
+                allocate_ascii_struct(SIGNAL_GENERATOR_ASCII_TITLE_ROW,
+                                      SIGNAL_GENERATOR_ASCII_TITLE_COL);
+            const char* signal_generator_ascii[] = SIGNAL_GENERATOR_ASCII_TITLE;
+            fill_ascii_struct(ascii_struct, signal_generator_ascii);
+            break;
+
         default:
             return NULL;
     }

@@ -17,7 +17,9 @@ void generate_menu(void) {
     unsigned int row = 13;
     ansi_print_button("r - reload page", "", "", row++, center);
     ansi_print_button("c - Channel settings", "", "", row++, center);
-    ansi_print_button("v - Voltmeter", "", "", row, center);
+    ansi_print_button("v - Voltmeter", "", "", row++, center);
+    ansi_print_button("f - Signal detect", "", "", row++, center);
+    ansi_print_button("g - Signal generator", "", "", row++, center);
 }
 
 void generate_channel_menu(void) {
@@ -70,6 +72,18 @@ void ansi_voltage_page(void) {
     ansi_print_voltage_measures(v_ref, v_measures, adc1_ch);
 }
 
+void ansi_frequency_reader_page(void) {
+    current_page = IMPULSE_DETECTOR_PAGE;
+    ansi_print_border('x', "x", "", "");
+    ansi_print_title(ASCII_SIGNAL_DETECT, YELLOW_TEXT, "");
+}
+
+void ansi_impulse_generator_page(void) {
+    current_page = IMPULSE_GENERATOR_PAGE;
+    ansi_print_border('%', "%", "", "");
+    ansi_print_title(ASCII_SIGNAL_GENERATOR, CYAN_TEXT, "");
+}
+
 void render_current_page(void) {
     switch (current_page) {
         case MAIN_PAGE:
@@ -80,6 +94,12 @@ void render_current_page(void) {
             break;
         case VOLTAGE_PAGE:
             ansi_voltage_page();
+            break;
+        case IMPULSE_DETECTOR_PAGE:
+            ansi_frequency_reader_page();
+            break;
+        case IMPULSE_GENERATOR_PAGE:
+            ansi_impulse_generator_page();
             break;
         default:
             ansi_main_page();

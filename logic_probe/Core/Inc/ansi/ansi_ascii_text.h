@@ -6,6 +6,8 @@
 #define ASCII_MAIN_LOGO 0
 #define ASCII_CHANNEL 1
 #define ASCII_VOLTAGE 2
+#define ASCII_SIGNAL_DETECT 3
+#define ASCII_SIGNAL_GENERATOR 4
 
 #define MAIN_ASCII_TITLE                           \
     {"    ___  ___       ________   \n",           \
@@ -43,6 +45,29 @@
 #define VOLTAGE_ASCII_TITLE_ROW 8
 #define VOLTAGE_ASCII_TITLE_COL 37
 
+#define SIGNAL_DETECT_ASCII_TITLE                       \
+    {"  _____       _            _             ",       \
+     " |  __ \\     | |          | |            ",      \
+     " | |  | | ___| |_ ___  ___| |_ ___  _ __ ",       \
+     " | |  | |/ _ \\ __/ _ \\/ __| __/ _ \\| '__|",    \
+     " | |__| |  __/ ||  __/ (__| || (_) | |   ",       \
+     " |_____/ \\___|\\__\\___|\\___|\\__\\___/|_|   ", \
+     "                                         ",       \
+     "                                         "}
+#define SIGNAL_DETECT_ASCII_TITLE_ROW 8
+#define SIGNAL_DETECT_ASCII_TITLE_COL 41
+
+#define SIGNAL_GENERATOR_ASCII_TITLE                            \
+    {"   _____                           _             ",       \
+     "  / ____|                         | |            ",       \
+     " | |  __  ___ _ __   ___ _ __ __ _| |_ ___  _ __ ",       \
+     " | | |_ |/ _ \\ '_ \\ / _ \\ '__/ _` | __/ _ \\| '__|",   \
+     " | |__| |  __/ | | |  __/ | | (_| | || (_) | |   ",       \
+     "  \\_____|\\___|_| |_|\\___|_|  \\__,_|\\__\\___/|_|   ", \
+     "                                                 ",       \
+     "                                                 "}
+#define SIGNAL_GENERATOR_ASCII_TITLE_ROW 8
+#define SIGNAL_GENERATOR_ASCII_TITLE_COL 49
 typedef struct {
     size_t row;
     size_t col;

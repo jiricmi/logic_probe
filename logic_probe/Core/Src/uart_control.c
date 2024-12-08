@@ -17,6 +17,13 @@ void get_current_control(void) {
         case VOLTAGE_PAGE:
             control_voltage_page();
             break;
+        case IMPULSE_DETECTOR_PAGE:
+            control_frequency_reader_page();
+            break;
+        case IMPULSE_GENERATOR_PAGE:
+            control_impulse_generator_page();
+            break;
+
         default:
             control_main_page();
     }
@@ -33,6 +40,16 @@ void control_main_page(void) {
         case 'C':
             ansi_clear_terminal();
             ansi_channel_set_page();
+            break;
+        case 'f':
+        case 'F':
+            ansi_clear_terminal();
+            ansi_frequency_reader_page();
+            break;
+        case 'g':
+        case 'G':
+            ansi_clear_terminal();
+            ansi_impulse_generator_page();
     }
 }
 
@@ -66,6 +83,26 @@ void control_channel_set_page(void) {
 }
 
 void control_voltage_page(void) {
+    switch (received_char) {
+        case 'q':
+        case 'Q':
+            ansi_clear_terminal();
+            ansi_main_page();
+            break;
+    }
+}
+
+void control_frequency_reader_page(void) {
+    switch (received_char) {
+        case 'q':
+        case 'Q':
+            ansi_clear_terminal();
+            ansi_main_page();
+            break;
+    }
+}
+
+void control_impulse_generator_page(void) {
     switch (received_char) {
         case 'q':
         case 'Q':
