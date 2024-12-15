@@ -27,6 +27,7 @@
 #include "my_bool.h"
 #include "my_error_handle.h"
 #include "signal_detector.h"
+#include "signal_generator.h"
 #include "stm32g0xx_hal_tim.h"
 /* USER CODE END Includes */
 
@@ -71,6 +72,9 @@ adc_channels* adc1_ch;
 
 // detector
 sig_detector_t signal_detector;
+
+// signal_generator
+sig_gen_t signal_generator;
 
 /* USER CODE END PV */
 
@@ -418,6 +422,8 @@ static void MX_TIM16_Init(void) {
         Error_Handler();
     }
     /* USER CODE BEGIN TIM16_Init 2 */
+    HAL_TIM_Base_Start_IT(&htim16);
+    sig_gen_init(&signal_generator);
 
     /* USER CODE END TIM16_Init 2 */
 }
@@ -486,6 +492,9 @@ static void MX_GPIO_Init(void) {
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
     /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+
+    /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pin : T_NRST_Pin */
@@ -493,6 +502,13 @@ static void MX_GPIO_Init(void) {
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(T_NRST_GPIO_Port, &GPIO_InitStruct);
+
+    /*Configure GPIO pin : PA7 */
+    GPIO_InitStruct.Pin = GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /*Configure GPIO pin : LD3_Pin */
     GPIO_InitStruct.Pin = LD3_Pin;

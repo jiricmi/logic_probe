@@ -5,6 +5,7 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "signal_detector.h"
+#include "signal_generator.h"
 
 #define BORDER_VERTICAL "|"
 #define BORDER_HORIZONTAL '-'
@@ -40,4 +41,7 @@ void ansi_print_logic_probe_ch(uint32_t voltage, bool channel);
 void ansi_generate_frequency_reader(const sig_detector_t* detector);
 
 void ansi_frequency_reader_generate_hint(void);
+
+void ansi_generate_impulse_generator(const sig_gen_t* generator);
+void ansi_impulse_generator_generate_hint(void);
 #endif  // ANSI_DISPLAY_H

@@ -3,10 +3,12 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "signal_detector.h"
+#include "signal_generator.h"
 #include "utils.h"
 
 extern adc_channels* adc1_ch;
 extern sig_detector_t signal_detector;
+extern sig_gen_t signal_generator;
 
 void get_current_control(void) {
     switch (current_page) {
@@ -112,7 +114,7 @@ void control_frequency_reader_page(void) {
         case 'd':
         case 'D':
             signal_detector.p = false;
-        break;
+            break;
     }
 }
 
@@ -123,5 +125,36 @@ void control_impulse_generator_page(void) {
             ansi_clear_terminal();
             ansi_main_page();
             break;
+        case 'a':
+        case 'A':
+            sig_gen_change_period(&signal_generator, -1);
+            break;
+        case 's':
+        case 'S':
+            sig_gen_change_period(&signal_generator, 1);
+            break;
+        case 'd':
+        case 'D':
+            sig_gen_change_period(&signal_generator, -10);
+            break;
+        case 'f':
+        case 'F':
+            sig_gen_change_period(&signal_generator, 10);
+            break;
+        case 'g':
+        case 'G':
+            sig_gen_change_period(&signal_generator, -100);
+            break;
+        case 'h':
+        case 'H':
+            sig_gen_change_period(&signal_generator, 100);
+            break;
+        case 'w':
+        case 'W':
+            sig_gen_activate_pulse(&signal_generator);
+            break;
+        case 't':
+        case 'T':
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
     }
 }

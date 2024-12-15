@@ -5,6 +5,7 @@
 #include "ansi_ascii_text.h"
 #include "ansi_display.h"
 #include "signal_detector.h"
+#include "signal_generator.h"
 #include "utils.h"
 
 short current_page = MAIN_PAGE;
@@ -13,6 +14,7 @@ extern uint32_t v_ref;
 extern uint32_t* v_measures;
 extern adc_channels* adc1_ch;
 extern sig_detector_t signal_detector;
+extern sig_gen_t signal_generator;
 
 void generate_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
@@ -86,6 +88,8 @@ void ansi_impulse_generator_page(void) {
     current_page = IMPULSE_GENERATOR_PAGE;
     ansi_print_border('%', "%", "", "");
     ansi_print_title(ASCII_SIGNAL_GENERATOR, CYAN_TEXT, "");
+    ansi_generate_impulse_generator(&signal_generator);
+    ansi_impulse_generator_generate_hint();
 }
 
 void render_current_page(void) {

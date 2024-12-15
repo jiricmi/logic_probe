@@ -33,6 +33,7 @@ target_sources(
           Core/Src/ansi/ansi_ascii_text.c
           Core/Src/measure/adc_control.c
           Core/Src/measure/signal_detector.c
+          Core/Src/measure/signal_generator.c
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/uart_control.c

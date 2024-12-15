@@ -5,6 +5,7 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 #include "signal_detector.h"
+#include "signal_generator.h"
 #include "stdio.h"
 #include "utils.h"
 
@@ -221,3 +222,27 @@ void ansi_frequency_reader_generate_hint(void) {
     ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
     ansi_send_text("d - delete flag ", "", "", 0);
 }
+
+void ansi_generate_impulse_generator(const sig_gen_t* generator) {
+    char buff[100];
+    ansi_set_cursor(10, 10);
+    snprintf(buff, 100, "Pulse width (A7): %4lu ms", generator->period);
+    ansi_send_text(buff, "", "", 1);
+    GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7);
+    ansi_set_cursor(11, 10);
+    if (state == GPIO_PIN_SET) {
+        snprintf(buff, 100, "INPUT: HIGH");
+    } else {
+        snprintf(buff, 100, "INPUT: LOW ");
+    }
+    ansi_send_text(buff, "", "", 1);
+}
+
+    void ansi_impulse_generator_generate_hint(void) {
+        ansi_set_cursor(TERMINAL_HEIGHT - 2, 4);
+        ansi_send_text("a,d,g - decrease ", "", "", 0);
+        ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
+        ansi_send_text("s,f,h - increase ", "", "", 0);
+        ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
+        ansi_send_text("w - send ", "", "", 0);
+    }

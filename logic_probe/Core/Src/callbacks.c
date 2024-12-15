@@ -2,13 +2,16 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "signal_detector.h"
+#include "signal_generator.h"
 #include "stm32g0xx_hal_tim.h"
 #include "uart_control.h"
 
 extern sig_detector_t signal_detector;
+extern sig_gen_t signal_generator;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim16;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
     if (huart->Instance == USART2) {
@@ -78,6 +81,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
         HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
         signal_detector.pulse_count = 0;
         HAL_TIM_Base_Start_IT(&htim3);
+    } else if (htim->Instance == TIM16) {
+        if (!signal_generator.start) {
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+            signal_generator.start = true;
+        } else {
+            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+            HAL_TIM_Base_Stop_IT(&htim16);
+            signal_generator.start = false;
+        }
     }
 }
 
