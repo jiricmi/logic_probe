@@ -52,6 +52,7 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim14;
+TIM_HandleTypeDef htim16;
 DMA_HandleTypeDef hdma_tim2_ch1;
 DMA_HandleTypeDef hdma_tim2_ch2;
 
@@ -82,6 +83,7 @@ static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -126,6 +128,7 @@ int main(void) {
     MX_TIM3_Init();
     MX_TIM2_Init();
     MX_TIM14_Init();
+    MX_TIM16_Init();
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
     HAL_UART_Receive_IT(&huart2, &received_char, 1);
@@ -217,6 +220,8 @@ static void MX_ADC1_Init(void) {
 
     /* USER CODE END ADC1_Init 0 */
 
+    ADC_ChannelConfTypeDef sConfig = {0};
+
     /* USER CODE BEGIN ADC1_Init 1 */
 
     /* USER CODE END ADC1_Init 1 */
@@ -242,6 +247,18 @@ static void MX_ADC1_Init(void) {
     hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
     hadc1.Init.OversamplingMode = DISABLE;
     hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
+    if (HAL_ADC_Init(&hadc1) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /** Configure Regular Channel
+     */
+    sConfig.Channel = ADC_CHANNEL_1;
+    sConfig.Rank = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+        Error_Handler();
+    }
     /* USER CODE BEGIN ADC1_Init 2 */
     adc1_ch = create_adc_channels(&hadc1);
     realloc_v_measures(adc1_ch, &v_measures);
@@ -329,7 +346,7 @@ static void MX_TIM3_Init(void) {
     htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
     htim3.Init.Period = 999;
     htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
         Error_Handler();
     }
@@ -365,7 +382,7 @@ static void MX_TIM14_Init(void) {
     htim14.Instance = TIM14;
     htim14.Init.Prescaler = 63999;
     htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim14.Init.Period = 999;
+    htim14.Init.Period = 1000;
     htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim14) != HAL_OK) {
@@ -375,6 +392,34 @@ static void MX_TIM14_Init(void) {
     HAL_TIM_Base_Start_IT(&htim14);
 
     /* USER CODE END TIM14_Init 2 */
+}
+
+/**
+ * @brief TIM16 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM16_Init(void) {
+    /* USER CODE BEGIN TIM16_Init 0 */
+
+    /* USER CODE END TIM16_Init 0 */
+
+    /* USER CODE BEGIN TIM16_Init 1 */
+
+    /* USER CODE END TIM16_Init 1 */
+    htim16.Instance = TIM16;
+    htim16.Init.Prescaler = 63999;
+    htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim16.Init.Period = 999;
+    htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim16.Init.RepetitionCounter = 0;
+    htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM16_Init 2 */
+
+    /* USER CODE END TIM16_Init 2 */
 }
 
 /**

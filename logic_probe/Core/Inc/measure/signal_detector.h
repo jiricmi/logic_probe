@@ -33,4 +33,6 @@ typedef struct {
 void init_detector(sig_detector_t* detector, TIM_HandleTypeDef* htim);
 
 void detector_change_sample_time(sig_detector_t* detector);
+
+void detector_change_mode(sig_detector_t* detector);
 #endif

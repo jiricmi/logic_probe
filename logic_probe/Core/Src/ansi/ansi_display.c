@@ -172,9 +172,11 @@ void ansi_generate_frequency_reader(const sig_detector_t* detector) {
     ansi_set_cursor(8, 35);
     ansi_send_text(col_text.str, col_text.color, "", 1);
 
-    uint32_t duty =
-        (uint32_t)((float)detector->high_width /
-                   (detector->high_width + detector->low_width) * 100);
+    uint32_t duty = 0;
+    if (detector->low_width != 0 || detector->high_width != 0) {
+        duty = (uint32_t)((float)detector->high_width /
+                          (detector->high_width + detector->low_width) * 100);
+    }
 
     char buff[100];
     if (detector->mode == 2) {
@@ -194,15 +196,19 @@ void ansi_generate_frequency_reader(const sig_detector_t* detector) {
         snprintf(buff, 100, "Sample time: %4u ms",
                  detector->sample_times[detector->sample_time_index]);
         ansi_send_text(buff, "", "", 1);
-    } else if (detector->mode == 0) {
+    } else if (detector->mode != 2) {
         ansi_set_cursor(10, 10);
         snprintf(buff, 100, "Pulse found: ");
         ansi_send_text(buff, "", "", 1);
 
         if (detector->p) {
-            ansi_set_cursor(10, 14);
+            ansi_set_cursor(10, 24);
             snprintf(buff, 100, " TRUE ");
             ansi_send_text(buff, WHITE_TEXT, GREEN_BG, 1);
+        } else {
+            ansi_set_cursor(10, 24);
+            snprintf(buff, 100, " FALSE ");
+            ansi_send_text(buff, "", RED_BG, 1);
         }
     }
 }
@@ -212,4 +218,6 @@ void ansi_frequency_reader_generate_hint(void) {
     ansi_send_text("m - change mode ", "", "", 0);
     ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
     ansi_send_text("t - change sample time ", "", "", 0);
+    ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
+    ansi_send_text("d - delete flag ", "", "", 0);
 }

@@ -103,16 +103,16 @@ void control_frequency_reader_page(void) {
             break;
         case 'm':
         case 'M':
-            if (signal_detector.mode < DETECTOR_MODE_COUNT - 1) {
-                ++signal_detector.mode;
-            } else {
-                signal_detector.mode = 0;
-            }
+            detector_change_mode(&signal_detector);
             break;
         case 't':
         case 'T':
             detector_change_sample_time(&signal_detector);
             break;
+        case 'd':
+        case 'D':
+            signal_detector.p = false;
+        break;
     }
 }
 

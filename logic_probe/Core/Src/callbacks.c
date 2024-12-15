@@ -35,18 +35,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
         if (signal_detector.high_end > signal_detector.high_start) {
             rise_pulse_ticks =
                 signal_detector.high_end - signal_detector.high_start;
-        } else {
+        } else if (signal_detector.high_end < signal_detector.high_start) {
             rise_pulse_ticks = (0xFFFFFFFF - signal_detector.high_start) +
                                signal_detector.high_end;
+        } else {
+            rise_pulse_ticks = 0;
         }
         signal_detector.high_width = (rise_pulse_ticks * 15.625) / 1000;
 
         if (signal_detector.low_end > signal_detector.low_start) {
             rise_pulse_ticks =
                 signal_detector.low_end - signal_detector.low_start;
-        } else {
+        } else if (signal_detector.low_end < signal_detector.low_start) {
             rise_pulse_ticks = (0xFFFFFFFF - signal_detector.low_start) +
                                signal_detector.low_end;
+        } else {
+            rise_pulse_ticks = 0;
         }
         signal_detector.low_width = (rise_pulse_ticks * 15.625) / 1000;
 
@@ -92,6 +96,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
                     HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_1);
                 signal_detector.low_calculated = true;
             }
+            if (signal_detector.mode == 0) {
+                signal_detector.p = true;
+            }
         }
         if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
             if (!signal_detector.high_calculated &&
@@ -105,6 +112,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
                 signal_detector.low_start =
                     HAL_TIM_ReadCapturedValue(&htim2, TIM_CHANNEL_2);
                 signal_detector.low_catched = true;
+            }
+            if (signal_detector.mode == 1) {
+                signal_detector.p = true;
             }
         }
 
