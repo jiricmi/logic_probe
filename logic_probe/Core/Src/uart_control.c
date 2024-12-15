@@ -2,9 +2,11 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
+#include "signal_detector.h"
 #include "utils.h"
 
 extern adc_channels* adc1_ch;
+extern sig_detector_t signal_detector;
 
 void get_current_control(void) {
     switch (current_page) {
@@ -98,6 +100,18 @@ void control_frequency_reader_page(void) {
         case 'Q':
             ansi_clear_terminal();
             ansi_main_page();
+            break;
+        case 'm':
+        case 'M':
+            if (signal_detector.mode < DETECTOR_MODE_COUNT - 1) {
+                ++signal_detector.mode;
+            } else {
+                signal_detector.mode = 0;
+            }
+            break;
+        case 't':
+        case 'T':
+            detector_change_sample_time(&signal_detector);
             break;
     }
 }

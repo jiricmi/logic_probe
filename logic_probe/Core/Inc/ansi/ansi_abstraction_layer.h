@@ -3,6 +3,7 @@
 
 #define TERMINAL_WIDTH 80
 #define TERMINAL_HEIGHT 24
+#define COLOR_STR_SIZE 6
 
 #define BLACK_BG "\033[40m\0"
 #define RED_BG "\033[41m\0"

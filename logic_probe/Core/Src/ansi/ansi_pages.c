@@ -4,6 +4,7 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 #include "ansi_display.h"
+#include "signal_detector.h"
 #include "utils.h"
 
 short current_page = MAIN_PAGE;
@@ -11,6 +12,7 @@ char* current_page_bg_color;
 extern uint32_t v_ref;
 extern uint32_t* v_measures;
 extern adc_channels* adc1_ch;
+extern sig_detector_t signal_detector;
 
 void generate_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
@@ -76,6 +78,8 @@ void ansi_frequency_reader_page(void) {
     current_page = IMPULSE_DETECTOR_PAGE;
     ansi_print_border('x', "x", "", "");
     ansi_print_title(ASCII_SIGNAL_DETECT, YELLOW_TEXT, "");
+    ansi_generate_frequency_reader(&signal_detector);
+    ansi_frequency_reader_generate_hint();
 }
 
 void ansi_impulse_generator_page(void) {
