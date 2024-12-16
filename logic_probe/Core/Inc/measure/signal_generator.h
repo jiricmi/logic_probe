@@ -8,11 +8,12 @@ typedef struct {
     uint32_t period;
     bool input_state;
     bool start;
+    bool con;
 } sig_gen_t;
 
 void sig_gen_init(sig_gen_t* generator);
 
 void sig_gen_change_period(sig_gen_t* generator, const int change);
 
-void sig_gen_activate_pulse(sig_gen_t* generator);
+void sig_gen_toggle_pulse(sig_gen_t* generator, const bool con);
 #endif

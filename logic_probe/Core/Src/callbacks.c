@@ -82,11 +82,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
         signal_detector.pulse_count = 0;
         HAL_TIM_Base_Start_IT(&htim3);
     } else if (htim->Instance == TIM16) {
-        if (!signal_generator.start) {
-            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+        if (signal_generator.con) {
+        } else if (!signal_generator.start) {
             signal_generator.start = true;
         } else {
-            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
             HAL_TIM_Base_Stop_IT(&htim16);
             signal_generator.start = false;
         }

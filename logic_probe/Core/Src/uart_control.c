@@ -151,10 +151,15 @@ void control_impulse_generator_page(void) {
             break;
         case 'w':
         case 'W':
-            sig_gen_activate_pulse(&signal_generator);
+            sig_gen_toggle_pulse(&signal_generator, false);
             break;
         case 't':
         case 'T':
             HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+            break;
+        case 'y':
+        case 'Y':
+            sig_gen_toggle_pulse(&signal_generator, true);
+            break;
     }
 }
