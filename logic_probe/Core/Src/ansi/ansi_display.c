@@ -12,7 +12,7 @@
 void ansi_set_background(const char* color) {
     for (unsigned int i = 1; i <= TERMINAL_HEIGHT; ++i) {
         ansi_set_cursor(i, 1);
-        send_uart_string(color);
+        ansi_send_string(color);
         for (unsigned int j = 1; j <= TERMINAL_WIDTH; ++j) {
         }
     }
@@ -238,11 +238,11 @@ void ansi_generate_impulse_generator(const sig_gen_t* generator) {
     ansi_send_text(buff, "", "", 1);
 }
 
-    void ansi_impulse_generator_generate_hint(void) {
-        ansi_set_cursor(TERMINAL_HEIGHT - 2, 4);
-        ansi_send_text("a,d,g - decrease ", "", "", 0);
-        ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
-        ansi_send_text("s,f,h - increase ", "", "", 0);
-        ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
-        ansi_send_text("w - send ", "", "", 0);
-    }
+void ansi_impulse_generator_generate_hint(void) {
+    ansi_set_cursor(TERMINAL_HEIGHT - 2, 4);
+    ansi_send_text("a,d,g - decrease ", "", "", 0);
+    ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
+    ansi_send_text("s,f,h - increase ", "", "", 0);
+    ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
+    ansi_send_text("w - send ", "", "", 0);
+}

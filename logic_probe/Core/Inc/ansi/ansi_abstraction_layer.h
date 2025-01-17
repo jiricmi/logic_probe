@@ -1,5 +1,6 @@
 #ifndef ANSI_ABSTRACTION_LAYER_H
 #define ANSI_ABSTRACTION_LAYER_H
+#include <stdint.h>
 
 #define TERMINAL_WIDTH 80
 #define TERMINAL_HEIGHT 24
@@ -30,17 +31,18 @@
 #define MAGENTA_TEXT "\033[35m\0"
 #define CYAN_TEXT "\033[36m\0"
 #define WHITE_TEXT "\033[37m\0"
+#define BOLD_TEXT "\033[1m\0"
 
-void send_uart_string(const char* str);
+void ansi_send_string(const char* str);
 void ansi_send_text(const char* str,
                     const char* color,
                     const char* bg_color,
-                    const short int bold);
+                    const _Bool bold);
 void ansi_home_cursor(void);
 void ansi_clear_format(void);
 void ansi_clear_terminal(void);
 void ansi_clear_line(unsigned int row, unsigned int offset);
 void PrintError(const char* err_str);
-void ansi_set_cursor(const unsigned int row, const unsigned int col);
+void ansi_set_cursor(const uint8_t row, const uint8_t col);
 
 #endif  // ANSI_ABSTRACTION_LAYER_H

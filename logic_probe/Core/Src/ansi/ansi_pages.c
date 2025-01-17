@@ -56,6 +56,10 @@ void ansi_main_page(void) {
     ansi_print_title(ASCII_MAIN_LOGO, RED_TEXT, "");
     ansi_set_cursor(9, 30);
     ansi_send_text("Made by Milan Jiříček", "", "", 1);
+    ansi_set_cursor(20, TERMINAL_WIDTH / 2 - 12);
+    ansi_send_text("Department of Measurement", "", "", 0);
+    ansi_set_cursor(21, TERMINAL_WIDTH / 2 - 4);
+    ansi_send_text("CTU FEE", "", "", 0);
     ansi_print_border(BORDER_HORIZONTAL, BORDER_VERTICAL, "", "");
     generate_menu();
     ansi_home_cursor();
