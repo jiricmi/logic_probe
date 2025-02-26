@@ -1,0 +1,3 @@
+[submodule "typst_documentation/template"]
+	path = typst_documentation/template
+	url = git@github.com:jiricmi/ctu-thesis-typst.git

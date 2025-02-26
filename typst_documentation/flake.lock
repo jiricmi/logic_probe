@@ -1,5 +1,18 @@
 {
   "nodes": {
+    "fonts": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1,
+        "narHash": "sha256-QGeoAXuQB6bHewcs9N9/Mop9/CDOilJ5JXPD7ll5ItU=",
+        "path": "./template/template/res/fonts",
+        "type": "path"
+      },
+      "original": {
+        "path": "./template/template/res/fonts",
+        "type": "path"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1740367490,
@@ -18,6 +31,7 @@
     },
     "root": {
       "inputs": {
+        "fonts": "fonts",
         "nixpkgs": "nixpkgs"
       }
     }
