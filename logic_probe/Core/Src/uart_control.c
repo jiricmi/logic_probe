@@ -6,25 +6,27 @@
 #include "signal_generator.h"
 #include "utils.h"
 
+extern ansi_page_type_t current_page;
+extern unsigned char received_char;
 extern adc_channels* adc1_ch;
 extern sig_detector_t signal_detector;
 extern sig_gen_t signal_generator;
 
 void get_current_control(void) {
     switch (current_page) {
-        case MAIN_PAGE:
+        case ANSI_PAGE_MAIN:
             control_main_page();
             break;
-        case CHANNEL_PAGE:
+        case ANSI_PAGE_CHANNEL_SETTINGS:
             control_channel_set_page();
             break;
-        case VOLTAGE_PAGE:
+        case ANSI_PAGE_VOLTAGE_MEASURE:
             control_voltage_page();
             break;
-        case IMPULSE_DETECTOR_PAGE:
+        case ANSI_PAGE_FREQUENCY_READER:
             control_frequency_reader_page();
             break;
-        case IMPULSE_GENERATOR_PAGE:
+        case ANSI_PAGE_IMPULSE_GENERATOR:
             control_impulse_generator_page();
             break;
 
@@ -38,22 +40,22 @@ void control_main_page(void) {
         case 'v':
         case 'V':
             ansi_clear_terminal();
-            ansi_voltage_page();
+            ansi_set_current_page(ANSI_PAGE_VOLTAGE_MEASURE);
             break;
         case 'c':
         case 'C':
             ansi_clear_terminal();
-            ansi_channel_set_page();
+            ansi_set_current_page(ANSI_PAGE_CHANNEL_SETTINGS);
             break;
         case 'f':
         case 'F':
             ansi_clear_terminal();
-            ansi_frequency_reader_page();
+            ansi_set_current_page(ANSI_PAGE_FREQUENCY_READER);
             break;
         case 'g':
         case 'G':
             ansi_clear_terminal();
-            ansi_impulse_generator_page();
+            ansi_set_current_page(ANSI_PAGE_IMPULSE_GENERATOR);
     }
 }
 
@@ -63,7 +65,7 @@ void control_channel_set_page(void) {
         case 'Q':
             adc_remove_unapplied_channels(adc1_ch);
             ansi_clear_terminal();
-            ansi_main_page();
+            ansi_set_current_page(ANSI_PAGE_MAIN);
             break;
 
         case '1':
@@ -73,16 +75,16 @@ void control_channel_set_page(void) {
             int num = cdtoi(received_char);
 
             if (num == -1) {
-                // todo: handle error
+                // TODO: handle error
             }
             flip_adc_unapplied_channel(adc1_ch, (size_t)num);
-            generate_channel_menu();
+            ansi_render_current_page();
             break;
         }
         case 's':
         case 'S':
             adc_apply_channels(adc1_ch);
-            generate_channel_menu();
+            ansi_render_current_page();
     }
 }
 
@@ -91,7 +93,7 @@ void control_voltage_page(void) {
         case 'q':
         case 'Q':
             ansi_clear_terminal();
-            ansi_main_page();
+            ansi_set_current_page(ANSI_PAGE_MAIN);
             break;
     }
 }
@@ -101,7 +103,7 @@ void control_frequency_reader_page(void) {
         case 'q':
         case 'Q':
             ansi_clear_terminal();
-            ansi_main_page();
+            ansi_set_current_page(ANSI_PAGE_MAIN);
             break;
         case 'm':
         case 'M':
@@ -123,7 +125,7 @@ void control_impulse_generator_page(void) {
         case 'q':
         case 'Q':
             ansi_clear_terminal();
-            ansi_main_page();
+            ansi_set_current_page(ANSI_PAGE_MAIN);
             break;
         case 'a':
         case 'A':

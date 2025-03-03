@@ -1,23 +1,15 @@
 #ifndef ANSI_PAGES_H
 #define ANSI_PAGES_H
 
-#define MAIN_PAGE 0
-#define CHANNEL_PAGE 1
-#define VOLTAGE_PAGE 2
-#define IMPULSE_GENERATOR_PAGE 3
-#define IMPULSE_DETECTOR_PAGE 4
+typedef enum {
+    ANSI_PAGE_MAIN,
+    ANSI_PAGE_CHANNEL_SETTINGS,
+    ANSI_PAGE_VOLTAGE_MEASURE,
+    ANSI_PAGE_FREQUENCY_READER,
+    ANSI_PAGE_IMPULSE_GENERATOR
+} ansi_page_type_t;
 
-void ansi_main_page(void);
+void ansi_render_current_page(void);
 
-void generate_channel_menu(void);
-
-void ansi_channel_set_page(void);
-
-void ansi_voltage_page(void);
-
-void ansi_frequency_reader_page(void);
-
-void ansi_impulse_generator_page(void);
-
-void render_current_page(void);
+void ansi_set_current_page(ansi_page_type_t page);
 #endif

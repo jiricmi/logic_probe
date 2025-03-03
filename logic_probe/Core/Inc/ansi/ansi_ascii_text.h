@@ -3,11 +3,13 @@
 
 #include <stdio.h>
 
-#define ASCII_MAIN_LOGO 0
-#define ASCII_CHANNEL 1
-#define ASCII_VOLTAGE 2
-#define ASCII_SIGNAL_DETECT 3
-#define ASCII_SIGNAL_GENERATOR 4
+typedef enum {
+    ASCII_LOGO_MAIN,
+    ASCII_LOGO_CHANNEL,
+    ASCII_LOGO_VOLTAGE,
+    ASCII_LOGO_SIGNAL_DETECT,
+    ASCII_LOGO_SIGNAL_GENERATOR
+} ascii_logo_type_t;
 
 #define MAIN_ASCII_TITLE                           \
     {"    ___  ___       ________   \n",           \
@@ -74,7 +76,7 @@ typedef struct {
     char** ascii;
 } ascii_text;
 
-ascii_text* get_ascii_struct(const unsigned short int ascii);
+ascii_text* get_ascii_struct(const ascii_logo_type_t ascii);
 
 ascii_text* allocate_ascii_struct(const size_t row, const size_t col);
 

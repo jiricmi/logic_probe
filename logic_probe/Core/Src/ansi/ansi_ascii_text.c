@@ -2,34 +2,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-ascii_text* get_ascii_struct(const unsigned short int ascii) {
+ascii_text* get_ascii_struct(const ascii_logo_type_t ascii) {
     ascii_text* ascii_struct;
     switch (ascii) {
-        case ASCII_MAIN_LOGO:
+        case ASCII_LOGO_MAIN:
             ascii_struct = allocate_ascii_struct(MAIN_ASCII_TITLE_ROW,
                                                  MAIN_ASCII_TITLE_COL);
             const char* main_ascii[] = MAIN_ASCII_TITLE;
             fill_ascii_struct(ascii_struct, main_ascii);
             break;
-        case ASCII_CHANNEL:
+        case ASCII_LOGO_CHANNEL:
             ascii_struct = allocate_ascii_struct(CHANNEL_ASCII_TITLE_ROW,
                                                  CHANNEL_ASCII_TITLE_COL);
             const char* channel_ascii[] = CHANNEL_ASCII_TITLE;
             fill_ascii_struct(ascii_struct, channel_ascii);
             break;
-        case ASCII_VOLTAGE:
+        case ASCII_LOGO_VOLTAGE:
             ascii_struct = allocate_ascii_struct(VOLTAGE_ASCII_TITLE_ROW,
                                                  VOLTAGE_ASCII_TITLE_COL);
             const char* voltage_ascii[] = VOLTAGE_ASCII_TITLE;
             fill_ascii_struct(ascii_struct, voltage_ascii);
             break;
-        case ASCII_SIGNAL_DETECT:
+        case ASCII_LOGO_SIGNAL_DETECT:
             ascii_struct = allocate_ascii_struct(SIGNAL_DETECT_ASCII_TITLE_ROW,
                                                  SIGNAL_DETECT_ASCII_TITLE_COL);
             const char* signal_detect_ascii[] = SIGNAL_DETECT_ASCII_TITLE;
             fill_ascii_struct(ascii_struct, signal_detect_ascii);
             break;
-        case ASCII_SIGNAL_GENERATOR:
+        case ASCII_LOGO_SIGNAL_GENERATOR:
             ascii_struct =
                 allocate_ascii_struct(SIGNAL_GENERATOR_ASCII_TITLE_ROW,
                                       SIGNAL_GENERATOR_ASCII_TITLE_COL);

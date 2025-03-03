@@ -17,7 +17,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
     if (huart->Instance == USART2) {
         if (received_char == 'r' || received_char == 'R') {  // reload
             ansi_clear_terminal();
-            render_current_page();
+            ansi_render_current_page();
         } else {
             get_current_control();
         }

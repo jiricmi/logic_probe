@@ -1,119 +1,35 @@
 #include "ansi_pages.h"
 
-#include "adc_control.h"
-#include "ansi_abstraction_layer.h"
-#include "ansi_ascii_text.h"
-#include "ansi_display.h"
-#include "signal_detector.h"
-#include "signal_generator.h"
-#include "utils.h"
+#include "ansi_page_channel_settings.h"
+#include "ansi_page_frequency_reader.h"
+#include "ansi_page_impulse_generator.h"
+#include "ansi_page_main.h"
+#include "ansi_page_voltage_measure.h"
 
-short current_page = MAIN_PAGE;
-char* current_page_bg_color;
-extern uint32_t v_ref;
-extern uint32_t* v_measures;
-extern adc_channels* adc1_ch;
-extern sig_detector_t signal_detector;
-extern sig_gen_t signal_generator;
+ansi_page_type_t current_page = ANSI_PAGE_MAIN;
 
-void generate_menu(void) {
-    const unsigned int center = TERMINAL_WIDTH / 2 - 10;
-    unsigned int row = 13;
-    ansi_print_button("r - reload page", "", "", row++, center);
-    ansi_print_button("c - Channel settings", "", "", row++, center);
-    ansi_print_button("v - Voltmeter", "", "", row++, center);
-    ansi_print_button("f - Signal detect", "", "", row++, center);
-    ansi_print_button("g - Signal generator", "", "", row++, center);
-}
-
-void generate_channel_menu(void) {
-    const unsigned int center = TERMINAL_WIDTH / 2 - 9;
-    unsigned int row = 13;
-
-    for (int i = 0; i < NUM_CHANNELS; ++i) {
-        char label[20];
-        char num = itocd(i + 1);
-        char pin = itocd((int)adc1_ch->pin[i]);
-        snprintf(label, sizeof(label), "%c] CHANNEL %c (PA%c)", num, num, pin);
-        ansi_print_button(label,
-                          (adc1_ch->channel_unapplied[i]) ? GREEN_BG : RED_BG,
-                          "", row, center);
-        ++row;
-    }
-
-    if (!adc1_ch->applied) {
-        ansi_set_cursor(row + 2, center - 12);
-        ansi_send_text("Change was made! Press S to save settings.", RED_TEXT,
-                       "", 0);
-    } else {
-        ansi_clear_line(row + 2, 1);
-    }
-    ansi_clear_format();
-}
-
-void ansi_main_page(void) {
-    current_page = MAIN_PAGE;
-    ansi_print_title(ASCII_MAIN_LOGO, RED_TEXT, "");
-    ansi_set_cursor(9, 30);
-    ansi_send_text("Made by Milan Jiříček", "", "", 1);
-    ansi_set_cursor(20, TERMINAL_WIDTH / 2 - 12);
-    ansi_send_text("Department of Measurement", "", "", 0);
-    ansi_set_cursor(21, TERMINAL_WIDTH / 2 - 4);
-    ansi_send_text("CTU FEE", "", "", 0);
-    ansi_print_border(BORDER_HORIZONTAL, BORDER_VERTICAL, "", "");
-    generate_menu();
-    ansi_home_cursor();
-}
-
-void ansi_channel_set_page(void) {
-    current_page = CHANNEL_PAGE;
-    ansi_print_border('#', "#", "", "");
-    ansi_print_title(ASCII_CHANNEL, GREEN_TEXT, "");
-    generate_channel_menu();
-    ansi_home_cursor();
-}
-
-void ansi_voltage_page(void) {
-    current_page = VOLTAGE_PAGE;
-    ansi_print_border('@', "@", "", "");
-    ansi_print_title(ASCII_VOLTAGE, MAGENTA_TEXT, "");
-    ansi_print_voltage_measures(v_ref, v_measures, adc1_ch);
-}
-
-void ansi_frequency_reader_page(void) {
-    current_page = IMPULSE_DETECTOR_PAGE;
-    ansi_print_border('x', "x", "", "");
-    ansi_print_title(ASCII_SIGNAL_DETECT, YELLOW_TEXT, "");
-    ansi_generate_frequency_reader(&signal_detector);
-    ansi_frequency_reader_generate_hint();
-}
-
-void ansi_impulse_generator_page(void) {
-    current_page = IMPULSE_GENERATOR_PAGE;
-    ansi_print_border('%', "%", "", "");
-    ansi_print_title(ASCII_SIGNAL_GENERATOR, CYAN_TEXT, "");
-    ansi_generate_impulse_generator(&signal_generator);
-    ansi_impulse_generator_generate_hint();
-}
-
-void render_current_page(void) {
+void ansi_render_current_page(void) {
     switch (current_page) {
-        case MAIN_PAGE:
-            ansi_main_page();
+        case ANSI_PAGE_MAIN:
+            ansi_render_main_page();
             break;
-        case CHANNEL_PAGE:
-            ansi_channel_set_page();
+        case ANSI_PAGE_CHANNEL_SETTINGS:
+            ansi_render_channel_settings();
             break;
-        case VOLTAGE_PAGE:
-            ansi_voltage_page();
+        case ANSI_PAGE_VOLTAGE_MEASURE:
+            ansi_render_voltage_page();
             break;
-        case IMPULSE_DETECTOR_PAGE:
-            ansi_frequency_reader_page();
+        case ANSI_PAGE_FREQUENCY_READER:
+            ansi_render_frequency_reader_page();
             break;
-        case IMPULSE_GENERATOR_PAGE:
-            ansi_impulse_generator_page();
+        case ANSI_PAGE_IMPULSE_GENERATOR:
+            ansi_render_impulse_generator_page();
             break;
         default:
-            ansi_main_page();
+            ansi_render_main_page();
     }
+}
+
+void ansi_set_current_page(ansi_page_type_t page) {
+    current_page = page;
 }

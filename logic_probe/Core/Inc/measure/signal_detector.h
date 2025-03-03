@@ -7,6 +7,12 @@
 #define DETECTOR_SAMPLE_TIMES_COUNT 6
 #define DETECTOR_MODE_COUNT 3
 
+typedef enum {
+    DETECTOR_MODE_PULSE_UP,
+    DETECTOR_MODE_PULSE_DOWN,
+    DETECTOR_MODE_FREQUENCY
+} detector_mode_t;
+
 typedef struct {
     TIM_HandleTypeDef* htim;
     uint32_t high_start;
@@ -20,7 +26,7 @@ typedef struct {
     bool high_calculated;
     bool low_catched;
     bool low_calculated;
-    uint8_t mode;
+    detector_mode_t mode;
     uint8_t pulse_catch_mode;
     bool active;
     uint16_t sample_times[DETECTOR_SAMPLE_TIMES_COUNT];

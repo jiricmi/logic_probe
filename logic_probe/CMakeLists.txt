@@ -27,10 +27,14 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE)
 
 target_sources(
   ${CMAKE_PROJECT_NAME}
-  PRIVATE Core/Src/ansi/ansi_display.c
-          Core/Src/ansi/ansi_abstraction_layer.c
+  PRIVATE Core/Src/ansi/ansi_abstraction_layer.c
           Core/Src/ansi/ansi_pages.c
           Core/Src/ansi/ansi_ascii_text.c
+          Core/Src/ansi/pages/ansi_page_main.c
+          Core/Src/ansi/pages/ansi_page_voltage_measure.c
+          Core/Src/ansi/pages/ansi_page_channel_settings.c
+          Core/Src/ansi/pages/ansi_page_frequency_reader.c
+          Core/Src/ansi/pages/ansi_page_impulse_generator.c
           Core/Src/measure/adc_control.c
           Core/Src/measure/signal_detector.c
           Core/Src/measure/signal_generator.c
@@ -43,7 +47,9 @@ target_sources(
 target_include_directories(
   ${CMAKE_PROJECT_NAME}
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/ansi
-  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/measure)
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/ansi/pages
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/measure
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc)
 
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE)
 
@@ -58,4 +64,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
             -Wpedantic # Enable pedantic checks
             -Wshadow # Warn if a variable is shadowing another
   )
+
+  # Size optimization for Release mode
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os)
+  endif()
 endif()

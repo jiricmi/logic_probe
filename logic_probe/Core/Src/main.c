@@ -153,7 +153,7 @@ int main(void) {
         HAL_ADC_Start_DMA(
             &hadc1, v_measures,
             adc1_ch->count_active * CHANNEL_NUM_SAMPLES);  // handle 0
-        render_current_page();
+        ansi_render_current_page();
         HAL_Delay(1000);
         HAL_ADC_Stop_DMA(&hadc1);
         if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
@@ -166,7 +166,7 @@ int main(void) {
 
         HAL_Delay(100);
 
-        render_current_page();
+        ansi_render_current_page();
     }
     /* USER CODE END 3 */
 }
