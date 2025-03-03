@@ -535,6 +535,8 @@ void Error_Handler(void) {
      * state
      */
     __disable_irq();
+    HAL_DeInit();
+    NVIC_SystemReset();
     while (1) {
     }
     /* USER CODE END Error_Handler_Debug */
