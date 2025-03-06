@@ -1,4 +1,5 @@
 #include "adc_control.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,7 @@ extern uint32_t v_ref;
 extern uint32_t* v_measures;
 extern ADC_HandleTypeDef hadc1;
 
-adc_channels* create_adc_channels(ADC_HandleTypeDef* hadc) {
+adc_channels* adc_create_channel_struct(ADC_HandleTypeDef* hadc) {
     adc_channels* adc_ch = (adc_channels*)malloc(sizeof(adc_channels));
 
     if (adc_ch == NULL) {
@@ -34,15 +35,14 @@ adc_channels* create_adc_channels(ADC_HandleTypeDef* hadc) {
     }
 
     adc_ch->applied = true;
-    adc_ch->count_active = count_active_channels(adc_ch);
+    adc_ch->count_active = adc_count_active_channels(adc_ch);
     adc_ch->hadc = hadc;
 
     return adc_ch;
 }
 
-void flip_adc_unapplied_channel(adc_channels* adc_ch, size_t channel) {
+void adc_flip_unapplied_channel(adc_channels* adc_ch, size_t channel) {
     if (channel == 0) {
-        // todo: error
         return;
     }
 
@@ -58,7 +58,7 @@ void adc_remove_unapplied_channels(adc_channels* adc_ch) {
     adc_ch->applied = true;
 }
 
-size_t count_active_channels(adc_channels* adc_ch) {
+size_t adc_count_active_channels(adc_channels* adc_ch) {
     size_t count = 0;
     for (size_t i = 0; i < NUM_CHANNELS; ++i) {
         if (adc_ch->channel[i]) {
@@ -73,12 +73,12 @@ void adc_apply_channels(adc_channels* adc_ch) {
     for (size_t i = 0; i < NUM_CHANNELS; ++i) {
         adc_ch->channel[i] = adc_ch->channel_unapplied[i];
     }
-    adc_ch->count_active = count_active_channels(adc_ch);
+    adc_ch->count_active = adc_count_active_channels(adc_ch);
     adc_ch->applied = true;
-    realloc_v_measures(adc_ch, &v_measures);
+    adc_realloc_v_measures(adc_ch, &v_measures);
 }
 
-void set_adc_rank(ADC_ChannelConfTypeDef* sConfig, size_t rank) {
+void adc_set_rank(ADC_ChannelConfTypeDef* sConfig, size_t rank) {
     static const uint32_t rank_map[] = {ADC_REGULAR_RANK_1, ADC_REGULAR_RANK_2,
                                         ADC_REGULAR_RANK_3, ADC_REGULAR_RANK_4};
 
@@ -87,7 +87,7 @@ void set_adc_rank(ADC_ChannelConfTypeDef* sConfig, size_t rank) {
     }
 }
 
-void set_adc_channel(ADC_ChannelConfTypeDef* sConfig, size_t channel) {
+void adc_set_channel(ADC_ChannelConfTypeDef* sConfig, size_t channel) {
     static const uint32_t channel_map[] = {ADC_CHANNEL_0, ADC_CHANNEL_1,
                                            ADC_CHANNEL_4, ADC_CHANNEL_5};
     if (channel >= 1 && channel <= 4) {
@@ -109,7 +109,7 @@ void adc_init_hal_conversion(ADC_HandleTypeDef* hadc,
     }
 }
 
-void realloc_v_measures(adc_channels* adc_ch, uint32_t** measures) {
+void adc_realloc_v_measures(adc_channels* adc_ch, uint32_t** measures) {
     size_t measure_size;
 
     if (adc_ch->count_active == 0) {
@@ -130,9 +130,9 @@ void realloc_v_measures(adc_channels* adc_ch, uint32_t** measures) {
     }
 }
 
-void setup_adc_channels(ADC_HandleTypeDef* hadc,
-                        adc_channels* adc_ch,
-                        bool calibration_flag) {
+void adc_setup_channel_struct(ADC_HandleTypeDef* hadc,
+                              adc_channels* adc_ch,
+                              _Bool calibration_flag) {
     // has to be deinit
     ADC_ChannelConfTypeDef sConfig = {0};
     sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
@@ -158,8 +158,8 @@ void setup_adc_channels(ADC_HandleTypeDef* hadc,
             break;
         }
         if (adc_ch->channel[i] && adc_ch->applied) {
-            set_adc_rank(&sConfig, active_channel++);
-            set_adc_channel(&sConfig, i);
+            adc_set_rank(&sConfig, active_channel++);
+            adc_set_channel(&sConfig, i);
 
             if (HAL_ADC_ConfigChannel(hadc, &sConfig) != HAL_OK) {
                 exception("Failed to setup ADC_CONFIG in forloop");
@@ -168,9 +168,9 @@ void setup_adc_channels(ADC_HandleTypeDef* hadc,
     }
 }
 
-void adc_make_avg(uint32_t* buff,
-                  adc_channels* adc_ch,
-                  const uint32_t* measures) {
+void adc_make_voltage_avg(uint32_t* buff,
+                          adc_channels* adc_ch,
+                          const uint32_t* measures) {
     if (adc_ch->count_active == 0) {
         return;
     }
@@ -216,6 +216,13 @@ uint32_t adc_raw_measure(ADC_HandleTypeDef* hadc) {
     return raw_voltage_value;
 }
 
-uint32_t get_voltage(uint32_t measure) {
+uint32_t adc_get_voltage(uint32_t measure) {
     return __HAL_ADC_CALC_DATA_TO_VOLTAGE(v_ref, measure, ADC_RESOLUTION_12B);
+}
+
+uint32_t adc_get_v_ref(void) {
+    // HAL_ADC_Start(&hadc1);
+    uint32_t raw_voltage_value = adc_raw_measure(&hadc1);
+    return __HAL_ADC_CALC_VREFANALOG_VOLTAGE(raw_voltage_value,
+                                             ADC_RESOLUTION_12B);
 }

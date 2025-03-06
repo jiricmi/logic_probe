@@ -5,6 +5,7 @@
 #include "signal_detector.h"
 #include "signal_generator.h"
 #include "utils.h"
+#include <stdbool.h>
 
 extern ansi_page_type_t current_page;
 extern unsigned char received_char;
@@ -77,7 +78,7 @@ void control_channel_set_page(void) {
             if (num == -1) {
                 // TODO: handle error
             }
-            flip_adc_unapplied_channel(adc1_ch, (size_t)num);
+            adc_flip_unapplied_channel(adc1_ch, (size_t)num);
             ansi_render_current_page();
             break;
         }

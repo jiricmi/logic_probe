@@ -17,6 +17,6 @@ void ansi_render_channel_voltage(uint32_t voltage,
 
 void ansi_render_reference_voltage(uint32_t v_ref, unsigned int floating_point);
 
-void ansi_render_logic_probe_ch(uint32_t voltage, bool channel);
+void ansi_render_logic_probe_ch(uint32_t voltage, _Bool channel);
 
 #endif

@@ -1,5 +1,6 @@
 #include "signal_generator.h"
 #include "main.h"
+#include <stdbool.h>
 
 extern TIM_HandleTypeDef htim16;
 

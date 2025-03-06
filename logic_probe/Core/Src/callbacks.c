@@ -1,4 +1,5 @@
 #include "callbacks.h"
+#include <stdbool.h>
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "signal_detector.h"

@@ -23,12 +23,11 @@
 /* USER CODE BEGIN Includes */
 #include "adc_control.h"
 #include "ansi_pages.h"
-#include "measure_tools.h"
-#include "my_bool.h"
 #include "my_error_handle.h"
 #include "signal_detector.h"
 #include "signal_generator.h"
 #include "stm32g0xx_hal_tim.h"
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -149,7 +148,7 @@ int main(void) {
             exception("1st hal deinit failed");
         }
 
-        setup_adc_channels(&hadc1, adc1_ch, false);
+        adc_setup_channel_struct(&hadc1, adc1_ch, false);
         HAL_ADC_Start_DMA(
             &hadc1, v_measures,
             adc1_ch->count_active * CHANNEL_NUM_SAMPLES);  // handle 0
@@ -159,9 +158,9 @@ int main(void) {
         if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
             exception("2nd hal deinit failed");
         }
-        setup_adc_channels(&hadc1, adc1_ch, true);
+        adc_setup_channel_struct(&hadc1, adc1_ch, true);
         HAL_ADC_Start(&hadc1);
-        v_ref = adc_measure_v_ref();
+        v_ref = adc_get_v_ref();
         HAL_ADC_Stop(&hadc1);
 
         HAL_Delay(100);
@@ -264,9 +263,9 @@ static void MX_ADC1_Init(void) {
         Error_Handler();
     }
     /* USER CODE BEGIN ADC1_Init 2 */
-    adc1_ch = create_adc_channels(&hadc1);
-    realloc_v_measures(adc1_ch, &v_measures);
-    setup_adc_channels(&hadc1, adc1_ch, true);
+    adc1_ch = adc_create_channel_struct(&hadc1);
+    adc_realloc_v_measures(adc1_ch, &v_measures);
+    adc_setup_channel_struct(&hadc1, adc1_ch, true);
     /* USER CODE END ADC1_Init 2 */
 }
 

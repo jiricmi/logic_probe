@@ -28,10 +28,10 @@ void ansi_render_voltage_measures(const uint32_t v_ref1,
     unsigned int row = 13;
     uint32_t avg_measures[4];
 
-    adc_make_avg(avg_measures, adc_ch, measures);
+    adc_make_voltage_avg(avg_measures, adc_ch, measures);
 
     for (unsigned short int channel = 0; channel < NUM_CHANNELS; ++channel) {
-        uint32_t voltage = get_voltage(avg_measures[channel]);
+        uint32_t voltage = adc_get_voltage(avg_measures[channel]);
 
         ansi_set_cursor(row, col_center + 24);
         ansi_render_logic_probe_ch(voltage, adc_ch->channel[channel]);
@@ -78,7 +78,7 @@ void ansi_render_reference_voltage(uint32_t v_ref1,
     ansi_send_text(text_buffer, &ansi_default_conf);
 }
 
-void ansi_render_logic_probe_ch(uint32_t voltage, bool channel) {
+void ansi_render_logic_probe_ch(uint32_t voltage, _Bool channel) {
     ansi_text_config_t conf_unknown_state = {WHITE_TEXT, LIGHT_GRAY_BG, 1};
     if (!channel) {
         ansi_send_text(" ? ", &conf_unknown_state);
