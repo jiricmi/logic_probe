@@ -2,9 +2,9 @@
 
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
-#include "ansi_pages.h"
+#include "global_vars.h"
 
-extern ansi_page_type_t current_page;
+extern global_vars_t global_var;
 
 void ansi_page_main_render_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
@@ -19,7 +19,7 @@ void ansi_page_main_render_menu(void) {
 }
 
 void ansi_render_main_page(void) {
-    current_page = ANSI_PAGE_MAIN;
+    global_var.current_page = ANSI_PAGE_MAIN;
     ansi_render_title(ASCII_LOGO_MAIN, RED_TEXT);
     ansi_set_cursor(9, 30);
     ansi_send_text("Made by Milan Jiříček", &ansi_bold_conf);

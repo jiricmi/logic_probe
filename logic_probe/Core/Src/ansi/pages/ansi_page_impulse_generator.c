@@ -2,21 +2,20 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 
-#include "ansi_pages.h"
+#include "global_vars.h"
 #include "main.h"
 
-extern ansi_page_type_t current_page;
-extern sig_gen_t signal_generator;
+extern global_vars_t global_var;
 
 void ansi_render_impulse_generator_page(void) {
-    current_page = ANSI_PAGE_IMPULSE_GENERATOR;
+    global_var.current_page = ANSI_PAGE_IMPULSE_GENERATOR;
     ansi_render_border('%', "%", "");
     ansi_render_title(ASCII_LOGO_SIGNAL_GENERATOR, CYAN_TEXT);
-    ansi_render_impulse_generator(&signal_generator);
+    ansi_render_impulse_generator(global_var.signal_generator);
     ansi_impulse_generator_render_hint();
 }
 
-void ansi_render_impulse_generator(const sig_gen_t* generator) {
+void ansi_render_impulse_generator(const sig_generator_t* generator) {
     char buff[100];
     ansi_set_cursor(10, 10);
     snprintf(buff, 100, "Pulse width (A7): %4lu ms", generator->period);

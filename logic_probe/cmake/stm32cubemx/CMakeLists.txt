@@ -35,7 +35,6 @@ target_sources(stm32cubemx INTERFACE
     ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_gpio.c
     ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_dma.c
     ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_dma_ex.c
-    ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_dma.c
     ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pwr.c
     ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pwr_ex.c
     ../../Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_cortex.c
