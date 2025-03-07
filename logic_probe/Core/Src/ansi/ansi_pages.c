@@ -5,11 +5,12 @@
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_main.h"
 #include "ansi_page_voltage_measure.h"
+#include "global_vars.h"
 
-ansi_page_type_t current_page = ANSI_PAGE_MAIN;
+extern global_vars_t global_var;
 
 void ansi_render_current_page(void) {
-    switch (current_page) {
+    switch (global_var.current_page) {
         case ANSI_PAGE_MAIN:
             ansi_render_main_page();
             break;
@@ -31,5 +32,5 @@ void ansi_render_current_page(void) {
 }
 
 void ansi_set_current_page(ansi_page_type_t page) {
-    current_page = page;
+    global_var.current_page = page;
 }

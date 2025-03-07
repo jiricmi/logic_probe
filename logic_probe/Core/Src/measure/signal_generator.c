@@ -1,10 +1,10 @@
 #include "signal_generator.h"
-#include "main.h"
 #include <stdbool.h>
+#include "main.h"
 
 extern TIM_HandleTypeDef htim16;
 
-void sig_gen_init(sig_gen_t* generator) {
+void sig_gen_init(sig_generator_t* generator) {
     generator->mode = 0;
     generator->period = 1000;
     generator->input_state = false;
@@ -12,7 +12,7 @@ void sig_gen_init(sig_gen_t* generator) {
     generator->con = false;
 }
 
-void sig_gen_change_period(sig_gen_t* generator, const int change) {
+void sig_gen_change_period(sig_generator_t* generator, const int change) {
     generator->period += change;
 
     if (generator->period <= 2) {
@@ -22,7 +22,7 @@ void sig_gen_change_period(sig_gen_t* generator, const int change) {
     }
 }
 
-void sig_gen_toggle_pulse(sig_gen_t* generator, const bool con) {
+void sig_gen_toggle_pulse(sig_generator_t* generator, const bool con) {
     generator->start = false;
     __HAL_TIM_SET_AUTORELOAD(&htim16, generator->period - 1);
 

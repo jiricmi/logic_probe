@@ -42,8 +42,8 @@
 #define BORDER_HORIZONTAL '-'
 
 typedef struct {
-    const char* color;
-    const char* bg_color;
+    char* color;
+    char* bg_color;
     _Bool bold;
 } ansi_text_config_t;
 
@@ -62,11 +62,11 @@ void ansi_set_cursor(const uint8_t row, const uint8_t col);
 
 void ansi_set_background(const char* color);
 
-void ansi_render_title(const unsigned short int ascii_type, const char* color);
+void ansi_render_title(const unsigned short int ascii_type, char* color);
 
 void ansi_render_border(const char horizontal,
                         const char* vertical,
-                        const char* color);
+                        char* color);
 
 void ansi_render_button(const char* text,
                         const uint8_t row,

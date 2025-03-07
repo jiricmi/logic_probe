@@ -87,7 +87,7 @@ void ansi_set_cursor(const uint8_t row, const uint8_t col) {
     ansi_send_string(result);
 }
 
-void ansi_render_title(const unsigned short int ascii_type, const char* color) {
+void ansi_render_title(const unsigned short int ascii_type, char* color) {
     ascii_text* ascii = get_ascii_struct(ascii_type);
 
     size_t start_display_row = 2;
@@ -104,7 +104,7 @@ void ansi_render_title(const unsigned short int ascii_type, const char* color) {
 
 void ansi_render_border(const char horizontal,
                         const char* vertical,
-                        const char* color) {
+                        char* color) {
     ansi_text_config_t border_conf = {color, "", 0};
 
     char buffer[TERMINAL_WIDTH];

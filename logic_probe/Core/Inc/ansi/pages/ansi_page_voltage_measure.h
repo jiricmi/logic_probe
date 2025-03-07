@@ -6,9 +6,7 @@
 
 void ansi_render_voltage_page(void);
 
-void ansi_render_voltage_measures(const uint32_t v_ref,
-                                  const uint32_t* measures,
-                                  adc_channels* adc_ch);
+void ansi_render_voltage_measures(const adc_vars_t* adc_ch);
 
 void ansi_render_channel_voltage(uint32_t voltage,
                                  unsigned int channel,

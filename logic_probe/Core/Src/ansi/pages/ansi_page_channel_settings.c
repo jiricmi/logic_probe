@@ -4,30 +4,29 @@
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
 #include "ansi_pages.h"
+#include "global_vars.h"
 #include "utils.h"
 
-extern ansi_page_type_t current_page;
-extern adc_channels* adc1_ch;
-
-static const ansi_text_config_t default_config = {"", "", 0};
+extern global_vars_t global_var;
 
 void ansi_render_channel_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 9;
     unsigned int row = 13;
 
-    for (int i = 0; i < NUM_CHANNELS; ++i) {
+    for (int i = 1; i < NUM_CHANNELS; ++i) {
         ansi_text_config_t button_conf = {"", RED_BG, 0};
         char label[20];
-        char num = itocd(i + 1);
-        char pin = itocd((int)adc1_ch->pin[i]);
+        char num = itocd(i);
+        char pin = itocd((int)global_var.adc_vars->pin[i]);
         snprintf(label, sizeof(label), "%c] CHANNEL %c (PA%c)", num, num, pin);
         button_conf.bg_color =
-            (adc1_ch->channel_unapplied[i] ? GREEN_BG : RED_BG);
+            (global_var.adc_vars->channel_state_unapplied[i] ? GREEN_BG
+                                                             : RED_BG);
         ansi_render_button(label, row, center, &button_conf);
         ++row;
     }
 
-    if (!adc1_ch->applied) {
+    if (!global_var.adc_vars->applied) {
         ansi_set_cursor(row + 2, center - 12);
         ansi_text_config_t text_conf = {RED_TEXT, "", 0};
         ansi_send_text("Change was made! Press S to save settings.",
@@ -39,7 +38,7 @@ void ansi_render_channel_menu(void) {
 }
 
 void ansi_render_channel_settings(void) {
-    current_page = ANSI_PAGE_CHANNEL_SETTINGS;
+    global_var.current_page = ANSI_PAGE_CHANNEL_SETTINGS;
     ansi_render_border('#', "#", "");
     ansi_render_title(ASCII_LOGO_CHANNEL, GREEN_TEXT);
     ansi_render_channel_menu();

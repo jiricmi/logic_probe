@@ -21,13 +21,15 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdbool.h>
 #include "adc_control.h"
+#include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
+#include "global_vars.h"
 #include "my_error_handle.h"
 #include "signal_detector.h"
 #include "signal_generator.h"
 #include "stm32g0xx_hal_tim.h"
-#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +55,7 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim14;
 TIM_HandleTypeDef htim16;
+TIM_HandleTypeDef htim17;
 DMA_HandleTypeDef hdma_tim2_ch1;
 DMA_HandleTypeDef hdma_tim2_ch2;
 
@@ -60,20 +63,8 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-// uart
-unsigned char received_char;
-extern short current_page;
-
-// voltmeter
-uint32_t* v_measures;
-uint32_t v_ref = 3300;
-adc_channels* adc1_ch;
-
-// detector
-sig_detector_t signal_detector;
-
-// signal_generator
-sig_gen_t signal_generator;
+global_vars_t global_var = {
+    DEV_STATE_VOLTMETER, false, 0, ANSI_PAGE_MAIN, NULL, NULL, NULL};
 
 /* USER CODE END PV */
 
@@ -87,6 +78,7 @@ static void MX_TIM3_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM14_Init(void);
 static void MX_TIM16_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -132,9 +124,13 @@ int main(void) {
     MX_TIM2_Init();
     MX_TIM14_Init();
     MX_TIM16_Init();
+    MX_TIM17_Init();
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
-    HAL_UART_Receive_IT(&huart2, &received_char, 1);
+    HAL_UART_Receive_IT(&huart2, &global_var.received_char, 1);
+
+    adc_setup_channel_struct(global_var.adc_vars);
+
     // ansi_clear_terminal();
     /* USER CODE END 2 */
 
@@ -142,30 +138,15 @@ int main(void) {
     /* USER CODE BEGIN WHILE */
     while (1) {
         /* USER CODE END WHILE */
-
         /* USER CODE BEGIN 3 */
-        if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
-            exception("1st hal deinit failed");
-        }
-
-        adc_setup_channel_struct(&hadc1, adc1_ch, false);
         HAL_ADC_Start_DMA(
-            &hadc1, v_measures,
-            adc1_ch->count_active * CHANNEL_NUM_SAMPLES);  // handle 0
-        ansi_render_current_page();
+            global_var.adc_vars->hadc, global_var.adc_vars->voltage_measures,
+            global_var.adc_vars->n_active_channels * CHANNEL_NUM_SAMPLES);
+
         HAL_Delay(1000);
-        HAL_ADC_Stop_DMA(&hadc1);
-        if (HAL_ADC_DeInit(&hadc1) != HAL_OK) {
-            exception("2nd hal deinit failed");
-        }
-        adc_setup_channel_struct(&hadc1, adc1_ch, true);
-        HAL_ADC_Start(&hadc1);
-        v_ref = adc_get_v_ref();
-        HAL_ADC_Stop(&hadc1);
-
-        HAL_Delay(100);
-
+        adc_get_avg_voltages(global_var.adc_vars);
         ansi_render_current_page();
+        HAL_ADC_Stop_DMA(global_var.adc_vars->hadc);
     }
     /* USER CODE END 3 */
 }
@@ -263,9 +244,9 @@ static void MX_ADC1_Init(void) {
         Error_Handler();
     }
     /* USER CODE BEGIN ADC1_Init 2 */
-    adc1_ch = adc_create_channel_struct(&hadc1);
-    adc_realloc_v_measures(adc1_ch, &v_measures);
-    adc_setup_channel_struct(&hadc1, adc1_ch, true);
+    global_var.adc_vars = adc_create_channel_struct(&hadc1);
+    adc_realloc_v_measures(global_var.adc_vars);
+    adc_setup_channel_struct(global_var.adc_vars);
     /* USER CODE END ADC1_Init 2 */
 }
 
@@ -321,7 +302,7 @@ static void MX_TIM2_Init(void) {
         Error_Handler();
     }
     /* USER CODE BEGIN TIM2_Init 2 */
-    init_detector(&signal_detector, &htim2);
+    init_detector(global_var.signal_detector, &htim2);
     HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
     HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 
@@ -422,9 +403,37 @@ static void MX_TIM16_Init(void) {
     }
     /* USER CODE BEGIN TIM16_Init 2 */
     HAL_TIM_Base_Start_IT(&htim16);
-    sig_gen_init(&signal_generator);
+    sig_gen_init(global_var.signal_generator);
 
     /* USER CODE END TIM16_Init 2 */
+}
+
+/**
+ * @brief TIM17 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM17_Init(void) {
+    /* USER CODE BEGIN TIM17_Init 0 */
+
+    /* USER CODE END TIM17_Init 0 */
+
+    /* USER CODE BEGIN TIM17_Init 1 */
+
+    /* USER CODE END TIM17_Init 1 */
+    htim17.Instance = TIM17;
+    htim17.Init.Prescaler = 639;
+    htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim17.Init.Period = 49999;
+    htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim17.Init.RepetitionCounter = 0;
+    htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim17) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM17_Init 2 */
+
+    /* USER CODE END TIM17_Init 2 */
 }
 
 /**
