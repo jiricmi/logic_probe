@@ -16,13 +16,100 @@ extern global_vars_t global_var;
 void ansi_render_voltage_page(void) {
     global_var.current_page = ANSI_PAGE_VOLTAGE_MEASURE;
     ansi_render_border('@', "@", "");
-    ansi_render_title(ASCII_LOGO_VOLTAGE, MAGENTA_TEXT);
-    ansi_render_voltage_measures(global_var.adc_vars);
+    if (global_var.adc_vars->resistance_mode) {
+        ansi_render_resistance_measure(global_var.adc_vars);
+    } else {
+        ansi_render_title(ASCII_LOGO_VOLTAGE, MAGENTA_TEXT);
+        ansi_render_voltage_measures(global_var.adc_vars);
+    }
+}
+
+void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
+    uint32_t floating_avg_measures[NUM_CHANNELS];
+
+    adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
+
+    uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
+    uint32_t measured_voltage =
+        adc_get_voltage(ref_voltage, floating_avg_measures[1]);
+
+    uint32_t resistance = adc_ch->base_resistor *
+                          (measured_voltage / (ref_voltage - measured_voltage));
+
+    uint8_t row = 8;
+
+    ansi_set_cursor(row - 3, ADC_MEASURE_CENTER + 3);
+    ansi_send_text("RESISTANCE", &ansi_bold_conf);
+
+    ansi_render_resistor_schema(row, ADC_MEASURE_CENTER, ref_voltage,
+                                adc_ch->base_resistor, resistance);
+}
+
+void ansi_render_resistor_schema(const uint8_t row,
+                                 const uint8_t col,
+                                 const uint32_t volt_ref,
+                                 const uint32_t base_resistor,
+                                 const uint32_t resistance) {
+    if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
+        return;
+    }
+
+    ansi_render_resistance_circuit(row, col);
+    ansi_render_resistance_values(row, col, volt_ref, base_resistor,
+                                  resistance);
+}
+
+void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col) {
+    // clang-format off
+    const char* circuit[] = {
+        "    Vcc",
+        "     |",
+        "     |",
+        " [R1 BASE]",
+        "     |",
+        "     +--- CHANNEL 1",
+        "     |",
+        "    [R2]",
+        "     |",
+        "     |",
+        "    GND"
+    };
+    // clang-format on
+    uint8_t lines = sizeof(circuit) / sizeof(circuit[0]);
+
+    for (uint8_t i = 0; i < lines; ++i) {
+        ansi_set_cursor(row + i, col);
+        ansi_send_text(circuit[i], &ansi_default_conf);
+    }
+}
+
+void ansi_render_resistance_values(const uint8_t row,
+                                   const uint8_t col,
+                                   const uint32_t volt_ref,
+                                   const uint32_t base_resistor,
+                                   const uint32_t resistance) {
+    char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
+
+    ansi_set_cursor(row, col + VOLTAGE_TEXT_OFFSET);
+    snprintf(text_buffer, sizeof(text_buffer), " (%u mV)",
+             (unsigned int)volt_ref);
+    ansi_send_text(text_buffer, &ansi_bold_conf);
+
+    ansi_set_cursor(row + 3, col + BASE_RESISTOR_OFFSET);
+    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %-7u",
+             (unsigned int)base_resistor);
+    ansi_send_text(text_buffer, &ansi_bold_conf);
+
+    ansi_text_config_t result_text_conf = {"", GREEN_BG, true};
+    ansi_set_cursor(row + 7, col + RESISTANCE_OFFSET);
+    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %-7u ",
+             (unsigned int)resistance);
+    ansi_send_text(text_buffer, &result_text_conf);
 }
 
 void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
-    const uint8_t col_center = TERMINAL_WIDTH / 2 - 9;
-    uint8_t row = 13;
+    const uint8_t col_center = ADC_MEASURE_CENTER;
+    uint8_t row = ADC_MEASURE_ROW;
     uint32_t floating_avg_measures[NUM_CHANNELS];
 
     adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
@@ -53,7 +140,7 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
     }
 
     ansi_set_cursor(TERMINAL_HEIGHT - 6, col_center);
-    ansi_render_reference_voltage(ref_voltage, floating_point);
+    ansi_render_reference_voltage(ref_voltage, ADC_FLOATING_POINT);
     ansi_render_adc_change_message(TERMINAL_HEIGHT - 4, col_center,
                                    adc_ch);  // TODO: FIX
 

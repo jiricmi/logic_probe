@@ -76,6 +76,19 @@ void control_voltage_page(void) {
             adc_setup_channel_struct(global_var.adc_vars);
             ansi_clear_terminal();
             ansi_render_current_page();
+            break;
+        case 'm':
+        case 'M':
+            global_var.adc_vars->resistance_mode =
+                !global_var.adc_vars->resistance_mode;
+            if (global_var.adc_vars->resistance_mode) {
+                global_var.adc_vars->channel_state_unapplied[1] = true;
+                adc_apply_channels(global_var.adc_vars);
+                adc_setup_channel_struct(global_var.adc_vars);
+            }
+            ansi_clear_terminal();
+            ansi_render_current_page();
+            break;
     }
 }
 

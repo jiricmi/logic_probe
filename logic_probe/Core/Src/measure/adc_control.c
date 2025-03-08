@@ -26,6 +26,8 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc) {
            sizeof(adc_ch->avg_voltage_previous));
 
     adc_ch->applied = true;
+    adc_ch->resistance_mode = false;
+    adc_ch->base_resistor = 1000;
 
     unsigned int pin_values[] = {0, 0, 1, 4, 5};
     memcpy(adc_ch->pin, pin_values, sizeof(pin_values));
