@@ -5,8 +5,6 @@
 #include <string.h>
 #include "my_error_handle.h"
 
-#define ADC_TIMEOUT 100
-
 adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc) {
     adc_vars_t* adc_ch = (adc_vars_t*)malloc(sizeof(adc_vars_t));
 
