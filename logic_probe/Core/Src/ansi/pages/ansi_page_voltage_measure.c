@@ -13,16 +13,108 @@
 
 extern global_vars_t global_var;
 
+_Bool ansi_page_voltage_edit_resistance = false;
+
 void ansi_render_voltage_page(void) {
     global_var.current_page = ANSI_PAGE_VOLTAGE_MEASURE;
     ansi_render_border('@', "@", "");
-    ansi_render_title(ASCII_LOGO_VOLTAGE, MAGENTA_TEXT);
-    ansi_render_voltage_measures(global_var.adc_vars);
+    if (global_var.adc_vars->resistance_mode) {
+        ansi_render_resistance_measure(global_var.adc_vars);
+    } else {
+        ansi_render_title(ASCII_LOGO_VOLTAGE, MAGENTA_TEXT);
+        ansi_render_voltage_measures(global_var.adc_vars);
+    }
+}
+
+void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
+    uint32_t floating_avg_measures[NUM_CHANNELS];
+
+    adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
+
+    uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
+    uint32_t measured_voltage =
+        adc_get_voltage(ref_voltage, floating_avg_measures[1]);
+
+    uint32_t resistance = (adc_ch->base_resistor * measured_voltage) /
+                          (ref_voltage - measured_voltage);
+
+    uint8_t row = 8;
+
+    ansi_set_cursor(row - 3, ADC_MEASURE_CENTER + 3);
+    ansi_send_text("RESISTANCE", &ansi_bold_conf);
+
+    ansi_render_resistor_schema(row, ADC_MEASURE_CENTER, ref_voltage,
+                                adc_ch->base_resistor, resistance);
+
+    if (ansi_page_voltage_edit_resistance) {
+        const ansi_text_config_t warn_config = {RED_TEXT, "", true};
+        ansi_set_cursor(TERMINAL_HEIGHT - 3, ADC_MEASURE_CENTER);
+        ansi_send_text("Editing base resistor!", &warn_config);
+    }
+}
+
+void ansi_render_resistor_schema(const uint8_t row,
+                                 const uint8_t col,
+                                 const uint32_t volt_ref,
+                                 const uint32_t base_resistor,
+                                 const uint32_t resistance) {
+    if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
+        return;
+    }
+
+    ansi_render_resistance_circuit(row, col);
+    ansi_render_resistance_values(row, col, volt_ref, base_resistor,
+                                  resistance);
+}
+
+void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col) {
+    // clang-format off
+    const char* circuit[] = {
+        "    Vcc",
+        "     |",
+        "     |",
+        " [R1 BASE]",
+        "     |",
+        "     +--- CHANNEL 1",
+        "     |",
+        "    [R2]",
+        "     |",
+        "     |",
+        "    GND"
+    };
+    // clang-format on
+    uint8_t lines = sizeof(circuit) / sizeof(circuit[0]);
+
+    for (uint8_t i = 0; i < lines; ++i) {
+        ansi_set_cursor(row + i, col);
+        ansi_send_text(circuit[i], &ansi_default_conf);
+    }
+}
+
+void ansi_render_resistance_values(const uint8_t row,
+                                   const uint8_t col,
+                                   const uint32_t volt_ref,
+                                   const uint32_t base_resistor,
+                                   const uint32_t resistance) {
+    char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
+
+    ansi_set_cursor(row, col + VOLTAGE_TEXT_OFFSET);
+    snprintf(text_buffer, sizeof(text_buffer), " (%4lu mV)", volt_ref);
+    ansi_send_text(text_buffer, &ansi_bold_conf);
+
+    ansi_set_cursor(row + 3, col + BASE_RESISTOR_OFFSET);
+    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %7lu", base_resistor);
+    ansi_send_text(text_buffer, &ansi_bold_conf);
+
+    ansi_text_config_t result_text_conf = {"", GREEN_BG, true};
+    ansi_set_cursor(row + 7, col + RESISTANCE_OFFSET);
+    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %7lu ", resistance);
+    ansi_send_text(text_buffer, &result_text_conf);
 }
 
 void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
-    const uint8_t col_center = TERMINAL_WIDTH / 2 - 9;
-    uint8_t row = 13;
+    const uint8_t col_center = ADC_MEASURE_CENTER;
+    uint8_t row = ADC_MEASURE_ROW;
     uint32_t floating_avg_measures[NUM_CHANNELS];
 
     adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
@@ -46,14 +138,14 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
                                         ADC_FLOATING_POINT);
         } else {
             char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
-            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu (A%u): x",
-                     channel, (unsigned int)adc_ch->pin[channel]);
+            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu (A%lu): x",
+                     channel, adc_ch->pin[channel]);
             ansi_send_text(text_buffer, &ansi_bold_conf);
         }
     }
 
     ansi_set_cursor(TERMINAL_HEIGHT - 6, col_center);
-    ansi_render_reference_voltage(ref_voltage, floating_point);
+    ansi_render_reference_voltage(ref_voltage, ADC_FLOATING_POINT);
     ansi_render_adc_change_message(TERMINAL_HEIGHT - 4, col_center,
                                    adc_ch);  // TODO: FIX
 
@@ -107,25 +199,24 @@ void ansi_render_adc_change_message(const uint8_t row,
 }
 
 void ansi_render_channel_voltage(uint32_t voltage,
-                                 unsigned int channel,
-                                 unsigned int pin,
-                                 unsigned int floating_point) {
+                                 uint8_t channel,
+                                 uint32_t pin,
+                                 uint32_t floating_point) {
     char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
-    unsigned int split_float_format[2];
+    uint32_t split_float_format[2];
 
     uint_32_to_split_int(split_float_format, voltage, floating_point);
-    snprintf(text_buffer, sizeof(text_buffer), "Channel %hu (A%u): %u.%0*u V",
-             channel, pin, split_float_format[0], floating_point,
-             split_float_format[1]);
+    snprintf(text_buffer, sizeof(text_buffer),
+             "Channel %hu (A%lu): %lu.%0*lu V", channel, pin,
+             split_float_format[0], (int)floating_point, split_float_format[1]);
     ansi_send_text(text_buffer, &ansi_bold_conf);
 }
 
-void ansi_render_reference_voltage(uint32_t v_ref,
-                                   unsigned int floating_point) {
-    unsigned int split_float_format[2];
+void ansi_render_reference_voltage(uint32_t v_ref, uint32_t floating_point) {
+    uint32_t split_float_format[2];
     uint_32_to_split_int(split_float_format, v_ref, floating_point);
     char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
-    snprintf(text_buffer, sizeof(text_buffer), "Reference: %u.%u V",
+    snprintf(text_buffer, sizeof(text_buffer), "Reference: %lu.%lu V",
              split_float_format[0], split_float_format[1]);
     ansi_send_text(text_buffer, &ansi_default_conf);
 }

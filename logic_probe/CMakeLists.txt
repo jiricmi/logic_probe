@@ -39,7 +39,8 @@ target_sources(
           Core/Src/measure/signal_generator.c
           Core/Src/utils.c
           Core/Src/callbacks.c
-          Core/Src/perif/uart_control.c
+          Core/Src/perif/uart_control/uart_control.c
+          Core/Src/perif/uart_control/control_voltage_measure.c
           Core/Src/my_error_handle.c)
 
 target_include_directories(
@@ -48,6 +49,7 @@ target_include_directories(
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/ansi/pages
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/measure
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/perif
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/perif/uart_control
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc)
 
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE)

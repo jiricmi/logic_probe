@@ -3,17 +3,17 @@
 #include <stdint.h>
 #include "stdio.h"
 
-unsigned int join_strings(char* buffer, char* join, unsigned int start);
+uint32_t join_strings(char* buffer, char* join, uint32_t start);
 
-void uint_32_to_split_int(unsigned int* buff,
-                          uint32_t n,
-                          unsigned int floating_point);
+void uint_32_to_split_int(uint32_t* buff, uint32_t n, uint32_t floating_point);
 
 void clear_buffer(void* buffer, size_t size);
 
-unsigned int positive_power_10(unsigned int power);
+uint32_t positive_power_10(uint32_t power);
 
-int cdtoi(char digit);
+int32_t cdtoi(char digit);
 
-char itocd(int digit);
+char itocd(int32_t digit);
+
+int32_t digits_count(int32_t n);
 #endif

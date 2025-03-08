@@ -1,13 +1,11 @@
 #include "uart_control.h"
 #include <stdbool.h>
-#include "adc_control.h"
 #include "ansi_abstraction_layer.h"
-#include "ansi_page_voltage_measure.h"
 #include "ansi_pages.h"
+#include "control_voltage_measure.h"
 #include "global_vars.h"
 #include "signal_detector.h"
 #include "signal_generator.h"
-#include "utils.h"
 
 extern global_vars_t global_var;
 
@@ -17,7 +15,7 @@ void get_current_control(void) {
             control_main_page();
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
-            control_voltage_page();
+            control_voltage_page(global_var.received_char);
             break;
         case ANSI_PAGE_FREQUENCY_READER:
             control_frequency_reader_page();
@@ -47,35 +45,6 @@ void control_main_page(void) {
         case 'G':
             ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_IMPULSE_GENERATOR);
-    }
-}
-
-void control_voltage_page(void) {
-    switch (global_var.received_char) {
-        case 'q':
-        case 'Q':
-            adc_remove_unapplied_channels(global_var.adc_vars);
-            ansi_clear_terminal();
-            ansi_set_current_page(ANSI_PAGE_MAIN);
-            break;
-        case '1':
-        case '2':
-        case '3':
-        case '4': {
-            int num = cdtoi(global_var.received_char);
-            if (num == -1) {
-                // TODO: handle error
-            }
-            adc_flip_unapplied_channel(global_var.adc_vars, (size_t)num);
-            ansi_render_voltage_measures(global_var.adc_vars);
-            break;
-        }
-        case 's':
-        case 'S':
-            adc_apply_channels(global_var.adc_vars);
-            adc_setup_channel_struct(global_var.adc_vars);
-            ansi_clear_terminal();
-            ansi_render_current_page();
     }
 }
 

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
-unsigned int join_strings(char* buffer, char* join, unsigned int start) {
+uint32_t join_strings(char* buffer, char* join, uint32_t start) {
     int i = 0;
     while (join[i] != '\0') {
         buffer[start++] = join[i++];
@@ -10,17 +10,15 @@ unsigned int join_strings(char* buffer, char* join, unsigned int start) {
     return start;
 }
 
-void uint_32_to_split_int(unsigned int* buff,
-                          uint32_t n,
-                          unsigned int floating_point) {
+void uint_32_to_split_int(uint32_t* buff, uint32_t n, uint32_t floating_point) {
     if (floating_point == 0) {
         buff[0] = n;
         buff[1] = 0;
         return;
     }
 
-    unsigned int decimal = n / (unsigned int)positive_power_10(floating_point);
-    unsigned int floating = n % (unsigned int)positive_power_10(floating_point);
+    uint32_t decimal = n / positive_power_10(floating_point);
+    uint32_t floating = n % positive_power_10(floating_point);
 
     buff[0] = decimal;
     buff[1] = floating;
@@ -30,7 +28,7 @@ void clear_buffer(void* buffer, size_t size) {
     memset(buffer, 0, size);
 }
 
-unsigned int positive_power_10(unsigned int power) {
+uint32_t positive_power_10(uint32_t power) {
     unsigned int base = 1;
     for (size_t i = 0; i < power; ++i) {
         base *= 10;
@@ -40,7 +38,7 @@ unsigned int positive_power_10(unsigned int power) {
 }
 
 // char digit to int
-int cdtoi(char digit) {
+int32_t cdtoi(char digit) {
     if (digit >= '0' && digit <= '9') {
         return digit - '0';
     } else {
@@ -48,11 +46,25 @@ int cdtoi(char digit) {
     }
 }
 
-char itocd(int digit) {
+char itocd(int32_t digit) {
     if (digit >= 0 && digit <= 9) {
         return (char)digit + '0';
     } else {
         // todo: handle error
         return '0';
     }
+}
+
+int32_t digits_count(int32_t n) {
+    int32_t count = 0;
+    if (n < 0) {
+        n = -n;
+    }
+
+    do {
+        ++count;
+        n /= 10;
+    } while (n != 0);
+
+    return count;
 }
