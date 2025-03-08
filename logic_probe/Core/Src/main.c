@@ -23,10 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include "adc_control.h"
-#include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
-#include "my_error_handle.h"
 #include "signal_detector.h"
 #include "signal_generator.h"
 #include "stm32g0xx_hal_tim.h"

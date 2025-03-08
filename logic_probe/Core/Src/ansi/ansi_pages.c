@@ -1,6 +1,5 @@
 #include "ansi_pages.h"
 
-#include "ansi_page_channel_settings.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_main.h"
@@ -13,9 +12,6 @@ void ansi_render_current_page(void) {
     switch (global_var.current_page) {
         case ANSI_PAGE_MAIN:
             ansi_render_main_page();
-            break;
-        case ANSI_PAGE_CHANNEL_SETTINGS:
-            ansi_render_channel_settings();
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
             ansi_render_voltage_page();

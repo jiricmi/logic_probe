@@ -32,7 +32,6 @@ target_sources(
           Core/Src/ansi/ansi_ascii_text.c
           Core/Src/ansi/pages/ansi_page_main.c
           Core/Src/ansi/pages/ansi_page_voltage_measure.c
-          Core/Src/ansi/pages/ansi_page_channel_settings.c
           Core/Src/ansi/pages/ansi_page_frequency_reader.c
           Core/Src/ansi/pages/ansi_page_impulse_generator.c
           Core/Src/measure/adc_control.c

@@ -23,18 +23,6 @@ typedef enum {
 #define MAIN_ASCII_TITLE_ROW 8
 #define MAIN_ASCII_TITLE_COL 30
 
-#define CHANNEL_ASCII_TITLE                            \
-    {"   _____ _                            _ \n",     \
-     "  / ____| |                          | |\n",     \
-     " | |    | |__   __ _ _ __  _ __   ___| |\n",     \
-     " | |    | '_ \\ / _` | '_ \\| '_ \\ / _ \\ |\n", \
-     " | |____| | | | (_| | | | | | | |  __/ |\n",     \
-     "  \\_____|_| |_|\\__,_|_| |_|_| |_|\\___|_|\n",  \
-     "                                        \n",     \
-     "                                        \n"}
-#define CHANNEL_ASCII_TITLE_ROW 8
-#define CHANNEL_ASCII_TITLE_COL 41
-
 #define VOLTAGE_ASCII_TITLE                          \
     {" __      __   _ _                   \n",       \
      " \\ \\    / /  | | |                  \n",     \

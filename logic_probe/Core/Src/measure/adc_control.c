@@ -101,7 +101,7 @@ void adc_set_channel(ADC_ChannelConfTypeDef* sConfig, uint8_t channel) {
 
 void adc_init_hal_conversion(ADC_HandleTypeDef* hadc,
                              const uint32_t n_conversion) {
-    if (n_conversion > 1 && n_conversion <= 5) {
+    if (n_conversion >= 1 && n_conversion <= 5) {
         hadc->Init.NbrOfConversion = n_conversion;
 
         if (HAL_ADC_Init(hadc) != HAL_OK) {

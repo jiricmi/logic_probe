@@ -8,6 +8,7 @@
 #define CHANNEL_NUM_SAMPLES 100  // Number of samples per channel for averaging
 #define V_REF_DEFAULT 3300       // Default reference voltage in millivolts
 #define ADC_TIMEOUT 100
+#define ADC_FLOATING_POINT 3
 
 typedef struct {
     _Bool channel_state[NUM_CHANNELS];

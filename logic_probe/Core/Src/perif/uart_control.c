@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
+#include "ansi_page_voltage_measure.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
 #include "signal_detector.h"
@@ -14,9 +15,6 @@ void get_current_control(void) {
     switch (global_var.current_page) {
         case ANSI_PAGE_MAIN:
             control_main_page();
-            break;
-        case ANSI_PAGE_CHANNEL_SETTINGS:
-            control_channel_set_page();
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
             control_voltage_page();
@@ -40,11 +38,6 @@ void control_main_page(void) {
             ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_VOLTAGE_MEASURE);
             break;
-        case 'c':
-        case 'C':
-            ansi_clear_terminal();
-            ansi_set_current_page(ANSI_PAGE_CHANNEL_SETTINGS);
-            break;
         case 'f':
         case 'F':
             ansi_clear_terminal();
@@ -57,7 +50,7 @@ void control_main_page(void) {
     }
 }
 
-void control_channel_set_page(void) {
+void control_voltage_page(void) {
     switch (global_var.received_char) {
         case 'q':
         case 'Q':
@@ -65,35 +58,24 @@ void control_channel_set_page(void) {
             ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_MAIN);
             break;
-
         case '1':
         case '2':
         case '3':
         case '4': {
             int num = cdtoi(global_var.received_char);
-
             if (num == -1) {
                 // TODO: handle error
             }
             adc_flip_unapplied_channel(global_var.adc_vars, (size_t)num);
-            ansi_render_current_page();
+            ansi_render_voltage_measures(global_var.adc_vars);
             break;
         }
         case 's':
         case 'S':
             adc_apply_channels(global_var.adc_vars);
             adc_setup_channel_struct(global_var.adc_vars);
-            ansi_render_current_page();
-    }
-}
-
-void control_voltage_page(void) {
-    switch (global_var.received_char) {
-        case 'q':
-        case 'Q':
             ansi_clear_terminal();
-            ansi_set_current_page(ANSI_PAGE_MAIN);
-            break;
+            ansi_render_current_page();
     }
 }
 

@@ -10,8 +10,6 @@ void ansi_page_main_render_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
     unsigned int row = 13;
     ansi_render_button("r - reload page", row++, center, &ansi_default_conf);
-    ansi_render_button("c - Channel settings", row++, center,
-                       &ansi_default_conf);
     ansi_render_button("v - Voltmeter", row++, center, &ansi_default_conf);
     ansi_render_button("f - Signal detect", row++, center, &ansi_default_conf);
     ansi_render_button("g - Signal generator", row++, center,
