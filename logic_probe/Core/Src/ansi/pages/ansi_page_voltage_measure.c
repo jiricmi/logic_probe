@@ -19,6 +19,7 @@ void ansi_render_voltage_page(void) {
     global_var.current_page = ANSI_PAGE_VOLTAGE_MEASURE;
     ansi_render_border('@', "@", "");
     if (global_var.adc_vars->resistance_mode) {
+        ansi_render_resistance_circuit(8, ADC_MEASURE_CENTER);
         ansi_render_resistance_measure(global_var.adc_vars);
     } else {
         ansi_render_title(ASCII_LOGO_VOLTAGE, MAGENTA_TEXT);
@@ -43,28 +44,14 @@ void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
     ansi_set_cursor(row - 3, ADC_MEASURE_CENTER + 3);
     ansi_send_text("RESISTANCE", &ansi_bold_conf);
 
-    ansi_render_resistor_schema(row, ADC_MEASURE_CENTER, ref_voltage,
-                                adc_ch->base_resistor, resistance);
+    ansi_render_resistance_values(row, ADC_MEASURE_CENTER, ref_voltage,
+                                  adc_ch->base_resistor, resistance);
 
     if (ansi_page_voltage_edit_resistance) {
         const ansi_text_config_t warn_config = {RED_TEXT, "", true};
         ansi_set_cursor(TERMINAL_HEIGHT - 3, ADC_MEASURE_CENTER);
         ansi_send_text("Editing base resistor!", &warn_config);
     }
-}
-
-void ansi_render_resistor_schema(const uint8_t row,
-                                 const uint8_t col,
-                                 const uint32_t volt_ref,
-                                 const uint32_t base_resistor,
-                                 const uint32_t resistance) {
-    if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
-        return;
-    }
-
-    ansi_render_resistance_circuit(row, col);
-    ansi_render_resistance_values(row, col, volt_ref, base_resistor,
-                                  resistance);
 }
 
 void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col) {
@@ -146,8 +133,7 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
 
     ansi_set_cursor(TERMINAL_HEIGHT - 6, col_center);
     ansi_render_reference_voltage(ref_voltage, ADC_FLOATING_POINT);
-    ansi_render_adc_change_message(TERMINAL_HEIGHT - 4, col_center,
-                                   adc_ch);  // TODO: FIX
+    ansi_render_adc_change_message(TERMINAL_HEIGHT - 4, col_center, adc_ch);
 
     ansi_home_cursor();
 }

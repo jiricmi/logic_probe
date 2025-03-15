@@ -7,12 +7,19 @@
 
 #define PROCESSOR_FREQ_IN_MHZ 64
 
-typedef enum { DEV_STATE_VOLTMETER } dev_state_t;
+typedef enum {
+    DEV_STATE_NONE,
+    DEV_STATE_VOLTMETER,
+    DEV_STATE_OHMMETER,
+    DEV_STATE_FREQUENCY_READ,
+    DEV_STATE_PULSE_READ
+} dev_state_t;
 
 typedef struct {
     dev_state_t device_state;
-    _Bool init;
     unsigned char received_char;
+    _Bool need_frontend_update;
+    _Bool need_perif_update;
     ansi_page_type_t current_page;
     adc_vars_t* adc_vars;
     sig_detector_t* signal_detector;

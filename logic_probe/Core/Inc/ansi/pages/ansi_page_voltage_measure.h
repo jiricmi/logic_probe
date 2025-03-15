@@ -19,12 +19,6 @@ void ansi_render_voltage_page(void);
 
 void ansi_render_resistance_measure(const adc_vars_t* adc_ch);
 
-void ansi_render_resistor_schema(const uint8_t row,
-                                 const uint8_t col,
-                                 const uint32_t volt_ref,
-                                 const uint32_t base_resistor,
-                                 const uint32_t resistance);
-
 void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col);
 
 void ansi_render_resistance_values(const uint8_t row,

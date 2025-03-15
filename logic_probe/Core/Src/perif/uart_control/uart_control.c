@@ -5,6 +5,7 @@
 #include "control_frequency_reader.h"
 #include "control_voltage_measure.h"
 #include "global_vars.h"
+#include "loop.h"
 #include "signal_generator.h"
 
 extern global_vars_t global_var;
@@ -35,13 +36,14 @@ void control_main_page(void) {
     switch (global_var.received_char) {
         case 'v':
         case 'V':
-            ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_VOLTAGE_MEASURE);
+            dev_mode_change_mode(DEV_STATE_VOLTMETER);
             break;
         case 'f':
         case 'F':
             ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_FREQUENCY_READER);
+            dev_mode_change_mode(DEV_STATE_FREQUENCY_READ);
             break;
         case 'g':
         case 'G':

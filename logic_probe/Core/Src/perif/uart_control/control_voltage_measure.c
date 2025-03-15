@@ -1,7 +1,6 @@
 #include "control_voltage_measure.h"
-#include "ansi_abstraction_layer.h"
-#include "ansi_page_voltage_measure.h"
 #include "global_vars.h"
+#include "loop.h"
 #include "utils.h"
 
 #include <stdbool.h>
@@ -21,21 +20,23 @@ void control_voltage_base(const unsigned char received_char) {
     switch (received_char) {
         case 'q':
         case 'Q':
-            adc_remove_unapplied_channels(global_var.adc_vars);
-            ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_MAIN);
+            dev_mode_change_mode(DEV_STATE_NONE);
             break;
         case 'm':
         case 'M':
             global_var.adc_vars->resistance_mode =
                 !global_var.adc_vars->resistance_mode;
+
             if (global_var.adc_vars->resistance_mode) {
                 global_var.adc_vars->channel_state_unapplied[1] = true;
                 adc_apply_channels(global_var.adc_vars);
                 adc_setup_channel_struct(global_var.adc_vars);
+                dev_mode_change_mode(DEV_STATE_OHMMETER);
+
+            } else {
+                dev_mode_change_mode(DEV_STATE_VOLTMETER);
             }
-            ansi_clear_terminal();
-            ansi_render_current_page();
             break;
     }
 }
@@ -47,19 +48,14 @@ void control_voltage_measures(const unsigned char received_char) {
         case '3':
         case '4': {
             int num = cdtoi(global_var.received_char);
-            if (num == -1) {
-                // TODO: handle error
-            }
             adc_flip_unapplied_channel(global_var.adc_vars, (size_t)num);
-            ansi_render_voltage_measures(global_var.adc_vars);
             break;
         }
         case 's':
         case 'S':
             adc_apply_channels(global_var.adc_vars);
             adc_setup_channel_struct(global_var.adc_vars);
-            ansi_clear_terminal();
-            ansi_render_current_page();
+            dev_mode_request_update();
             break;
         default:
             control_voltage_base(received_char);
@@ -72,8 +68,7 @@ void control_voltage_resistance(const unsigned char received_char) {
         case 'E':
             ansi_page_voltage_edit_resistance =
                 !ansi_page_voltage_edit_resistance;
-            ansi_clear_terminal();
-            ansi_render_current_page();
+            dev_mode_request_frontend_change();
             break;
         case '1':
         case '2':
@@ -90,17 +85,12 @@ void control_voltage_resistance(const unsigned char received_char) {
                 global_var.adc_vars->base_resistor *= 10;
                 global_var.adc_vars->base_resistor +=
                     (uint32_t)cdtoi((char)received_char);
-
-                ansi_clear_terminal();
-                ansi_render_current_page();
             }
             break;
         case 'x':
         case 'X':
             if (ansi_page_voltage_edit_resistance) {
                 global_var.adc_vars->base_resistor /= 10;
-                ansi_clear_terminal();
-                ansi_render_current_page();
             }
             break;
         default:
