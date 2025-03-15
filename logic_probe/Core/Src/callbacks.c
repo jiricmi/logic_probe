@@ -5,6 +5,7 @@
 #include "global_vars.h"
 #include "main.h"
 #include "stm32g0xx_hal_tim.h"
+#include "tim_setup.h"
 #include "uart_control.h"
 
 extern global_vars_t global_var;
@@ -27,7 +28,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
         HAL_UART_Receive_IT(&huart2, &global_var.received_char, 1);
     }
 }
-
+// TODO: TADY U HLEDANI PULSU UDELAT VYJIMKU
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
     if (htim->Instance == global_var.signal_detector->master_tim->Instance) {
         sig_detector_t* sig_det = global_var.signal_detector;
@@ -50,8 +51,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
             HAL_TIM_Base_Stop_IT(sig_det->master_tim);
             detector_slave_init_frequency(sig_det);
         }
-        __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
 
+        __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
         HAL_TIM_Base_Start_IT(sig_det->master_tim);
 
     } else if (htim->Instance == TIM16) {
@@ -66,32 +67,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
     }
 }
 
+// TODO: ZAJISTIT ABY NEPRETEKL resp aby s tim umel pocitat
+
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
     sig_detector_t* sig_det = global_var.signal_detector;
+
     if (htim->Instance == sig_det->slave_tim->Instance) {
-        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
-            if (!sig_det->edge_catch[DET_EDGE1_RISE]) {
-                sig_det->edge_times[DET_EDGE1_RISE] =
-                    HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-                sig_det->edge_catch[DET_EDGE1_RISE] = true;
-            } else if (!sig_det->edge_catch[DET_EDGE3_RISE]) {
-                sig_det->edge_times[DET_EDGE3_RISE] =
-                    HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
-                sig_det->edge_catch[DET_EDGE3_RISE] = true;
-
-                detector_compute_freq_measures(sig_det);
-
-                HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_1);
-                HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
-            }
-
-        } else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
-            if (sig_det->edge_catch[DET_EDGE1_RISE] &&
-                !sig_det->edge_catch[DET_EDGE2_FALL]) {
-                sig_det->edge_times[DET_EDGE2_FALL] =
-                    HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
-                sig_det->edge_catch[DET_EDGE2_FALL] = true;
-            }
+        if (sig_det->mode == DETECTOR_MODE_FREQUENCY) {
+            detector_parse_catched_signal(sig_det);
+        } else {
+            // TODO: UDELAT I MERENI JAK DLOUHY JE PULS
+            detector_parse_pulse_catcher(sig_det);
         }
     }
 }

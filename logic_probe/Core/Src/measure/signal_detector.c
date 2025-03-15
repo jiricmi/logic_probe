@@ -3,6 +3,7 @@
 #include <string.h>
 #include "global_vars.h"
 #include "main.h"
+#include "tim_setup.h"
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim14;
@@ -29,6 +30,29 @@ void detector_change_sample_time(sig_detector_t* detector) {
                              SAMPLE_TIMES[detector->sample_time_index] - 1);
 }
 
+void detector_setup_timers(sig_detector_t* detector) {
+    HAL_TIM_Base_Stop_IT(detector->master_tim);
+    HAL_TIM_Base_Stop(detector->slave_tim);
+    HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_1);
+    HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_2);
+    __HAL_TIM_SET_COUNTER(detector->master_tim, 0);
+    __HAL_TIM_SET_COUNTER(detector->slave_tim, 0);
+
+    switch (detector->mode) {
+        case (DETECTOR_MODE_FREQUENCY):
+            detector_slave_init_frequency(detector);
+            HAL_TIM_Base_Start_IT(detector->master_tim);
+            break;
+
+        case (DETECTOR_MODE_PULSE_UP):
+        case (DETECTOR_MODE_PULSE_DOWN):
+            detector_slave_init_pulse_width(detector);
+            HAL_TIM_IC_Start_IT(detector->slave_tim, TIM_CHANNEL_1);
+            HAL_TIM_IC_Start_IT(detector->slave_tim, TIM_CHANNEL_2);
+            break;
+    }
+}
+
 void detector_change_mode(sig_detector_t* detector) {
     if (detector->mode != DETECTOR_MODE_FREQUENCY) {
         detector->mode = detector->mode + 1;
@@ -36,6 +60,7 @@ void detector_change_mode(sig_detector_t* detector) {
         detector->mode = DETECTOR_MODE_PULSE_UP;
     }
     detector->one_pulse_found = false;
+    detector_setup_timers(detector);
 }
 
 uint32_t detector_get_gated_value(uint32_t n_pulses, uint8_t index) {
@@ -64,105 +89,58 @@ void detector_compute_freq_measures(sig_detector_t* detector) {
     detector->widths[DET_LOW_WIDTH] = (low_delta * 10) / PROCESSOR_FREQ_IN_MHZ;
     detector->widths[DET_HIGH_WIDTH] =
         (high_delta * 10) / PROCESSOR_FREQ_IN_MHZ;
-}
 
-void detector_slave_init_pulse_width(sig_detector_t* detector) {
-    TIM_HandleTypeDef* slave_tim = detector->slave_tim;
-
-    HAL_StatusTypeDef status = HAL_TIM_Base_DeInit(slave_tim);
-    if (status != HAL_OK) {
-        // Chyba při deinicializaci
-    }
-
-    detector->slave_tim_mode = SLAVE_MODE_WIDTH;
-
-    for (uint8_t i = 0; i < DETECTOR_N_OF_EDGES; ++i) {
-        detector->edge_catch[i] = false;
-    }
-
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
-    TIM_IC_InitTypeDef sConfigIC = {0};
-
-    /* USER CODE BEGIN TIM2_Init 1 */
-
-    /* USER CODE END TIM2_Init 1 */
-    htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 0;
-    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 4294967295;
-    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
-        Error_Handler();
-    }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
-    }
-    if (HAL_TIM_IC_Init(&htim2) != HAL_OK) {
-        Error_Handler();
-    }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) !=
-        HAL_OK) {
-        Error_Handler();
-    }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-    sConfigIC.ICFilter = 0;
-    if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
-        Error_Handler();
-    }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-    if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK) {
-        Error_Handler();
+    if (detector->frequency == 0) {
+        detector->widths[DET_HIGH_WIDTH] = 0;
+        detector->widths[DET_LOW_WIDTH] = 0;
     }
 }
 
-void detector_slave_init_frequency(sig_detector_t* detector) {
-    TIM_HandleTypeDef* slave_tim = detector->slave_tim;
-    HAL_StatusTypeDef status = HAL_TIM_Base_DeInit(detector->slave_tim);
-    if (status != HAL_OK) {
-        // Chyba při deinicializaci
+void detector_parse_catched_signal(sig_detector_t* detector) {
+    TIM_HandleTypeDef* htim = detector->slave_tim;
+    if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) {
+        detector_check_signal_raise_edge(detector);
+    } else if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) {
+        detector_check_signal_fall_edge(detector);
     }
-    detector->slave_tim_mode = SLAVE_MODE_FREQUENCY;
+}
 
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
+void detector_check_signal_raise_edge(sig_detector_t* detector) {
+    if (!detector->edge_catch[DET_EDGE1_RISE]) {
+        detector->edge_times[DET_EDGE1_RISE] =
+            HAL_TIM_ReadCapturedValue(detector->slave_tim, TIM_CHANNEL_1);
+        detector->edge_catch[DET_EDGE1_RISE] = true;
+    } else if (!detector->edge_catch[DET_EDGE3_RISE]) {
+        detector->edge_times[DET_EDGE3_RISE] =
+            HAL_TIM_ReadCapturedValue(detector->slave_tim, TIM_CHANNEL_1);
+        detector->edge_catch[DET_EDGE3_RISE] = true;
 
-    /* USER CODE BEGIN TIM2_Init 1 */
+        detector_compute_freq_measures(detector);
 
-    /* USER CODE END TIM2_Init 1 */
-    slave_tim->Instance = TIM2;
-    slave_tim->Init.Prescaler = 0;
-    slave_tim->Init.CounterMode = TIM_COUNTERMODE_UP;
-    slave_tim->Init.Period = 4294967295;
-    slave_tim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    slave_tim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(slave_tim) != HAL_OK) {
-        Error_Handler();
+        HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_1);
+        HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_2);
     }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
-    sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
-    sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
-    sClockSourceConfig.ClockFilter = 0;
-    if (HAL_TIM_ConfigClockSource(slave_tim, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
+}
+
+void detector_check_signal_fall_edge(sig_detector_t* detector) {
+    if (detector->edge_catch[DET_EDGE1_RISE] &&
+        !detector->edge_catch[DET_EDGE2_FALL]) {
+        detector->edge_times[DET_EDGE2_FALL] =
+            HAL_TIM_ReadCapturedValue(detector->slave_tim, TIM_CHANNEL_2);
+        detector->edge_catch[DET_EDGE2_FALL] = true;
     }
-    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_TRIGGER;
-    sSlaveConfig.InputTrigger = TIM_TS_ITR2;
-    if (HAL_TIM_SlaveConfigSynchro(slave_tim, &sSlaveConfig) != HAL_OK) {
-        Error_Handler();
-    }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(slave_tim, &sMasterConfig) !=
-        HAL_OK) {
-        Error_Handler();
+}
+
+void detector_parse_pulse_catcher(sig_detector_t* detector) {
+    _Bool is_channel_1 =
+        detector->slave_tim->Channel == HAL_TIM_ACTIVE_CHANNEL_1;
+    _Bool is_channel_2 =
+        detector->slave_tim->Channel == HAL_TIM_ACTIVE_CHANNEL_2;
+    _Bool is_pulse_up_mode = detector->mode == DETECTOR_MODE_PULSE_UP;
+    _Bool is_pulse_down_mode = detector->mode == DETECTOR_MODE_PULSE_DOWN;
+
+    if ((is_channel_1 && is_pulse_up_mode) ||
+        (is_channel_2 && is_pulse_down_mode)) {
+        detector->one_pulse_found = true;
     }
 }

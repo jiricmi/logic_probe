@@ -18,8 +18,6 @@ void ansi_render_frequency_reader_page(void) {
     ansi_frequency_reader_generate_hint();
 }
 
-// TODO: UDELAT PROMNENLIVE JEDNOTKY
-
 void ansi_generate_frequency_reader(sig_detector_t* detector) {
     char buffer[DETECTOR_MODE_BUFF_SIZE];
     ansi_text_config_t conf = {"", "", 1};
@@ -55,13 +53,13 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
         ansi_text_config_t text_conf = {"", RED_BG, 1};
 
         if (detector->one_pulse_found) {
-             ansi_set_cursor(10, 24);
-             snprintf(buff, 100, " TRUE ");
-             text_conf.color = WHITE_TEXT;
-             text_conf.bg_color = GREEN_BG;
-             ansi_send_text(buff, &text_conf);
-         } else {
-             ansi_set_cursor(10, 24);
+            ansi_set_cursor(10, 24);
+            snprintf(buff, 100, " TRUE  ");
+            text_conf.color = WHITE_TEXT;
+            text_conf.bg_color = GREEN_BG;
+            ansi_send_text(buff, &text_conf);
+        } else {
+            ansi_set_cursor(10, 24);
             snprintf(buff, 100, " FALSE ");
             ansi_send_text(buff, &text_conf);
         }

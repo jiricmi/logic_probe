@@ -37,6 +37,7 @@ target_sources(
           Core/Src/measure/adc_control.c
           Core/Src/measure/signal_detector.c
           Core/Src/measure/signal_generator.c
+          Core/Src/measure/tim_setup.c
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/perif/uart_control/uart_control.c
