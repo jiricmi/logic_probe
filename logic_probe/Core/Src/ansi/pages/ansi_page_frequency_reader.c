@@ -4,6 +4,7 @@
 #include "ansi_ascii_text.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
+#include "utils.h"
 
 #define DETECTOR_MODE_BUFF_SIZE 50
 
@@ -17,6 +18,8 @@ void ansi_render_frequency_reader_page(void) {
     ansi_frequency_reader_generate_hint();
 }
 
+// TODO: UDELAT PROMNENLIVE JEDNOTKY
+
 void ansi_generate_frequency_reader(sig_detector_t* detector) {
     char buffer[DETECTOR_MODE_BUFF_SIZE];
     ansi_text_config_t conf = {"", "", 1};
@@ -24,44 +27,41 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
     ansi_set_cursor(8, 35);
     ansi_send_text(buffer, &conf);
 
-    uint32_t duty = 0;
-    if (detector->low_width != 0 || detector->high_width != 0) {
-        duty = (uint32_t)((float)detector->high_width /
-                          (detector->high_width + detector->low_width) * 100);
-    }
-
     char buff[100];
-    if (detector->mode == 2) {
+    if (detector->mode == DETECTOR_MODE_FREQUENCY) {
         ansi_set_cursor(10, 10);
         snprintf(buff, 100, "Frequency (A0): %7lu Hz", detector->frequency);
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(11, 10);
-        snprintf(buff, 100, "High pulse width: %7lu us ", detector->high_width);
+        snprintf(buff, 100, "High pulse width: %7lu us ",
+                 detector->widths[DET_HIGH_WIDTH]);
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(12, 10);
-        snprintf(buff, 100, "low pulse width: %7lu us ", detector->low_width);
+        snprintf(buff, 100, "low pulse width: %7lu us ",
+                 detector->widths[DET_LOW_WIDTH]);
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(13, 10);
-        snprintf(buff, 100, "Duty: %3lu %%", duty);
+        snprintf(buff, 100, "Duty: %3u %%",
+                 (uint16_t)utils_round(detector->pwm_duty));
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(14, 10);
-        snprintf(buff, 100, "Sample time: %4u ms",
-                 detector->sample_times[detector->sample_time_index]);
+        snprintf(buff, 100, "Sample time: %5u ms",
+                 SAMPLE_TIMES[detector->sample_time_index]);
         ansi_send_text(buff, &ansi_default_conf);
-    } else if (detector->mode != 2) {
+    } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
         ansi_set_cursor(10, 10);
         snprintf(buff, 100, "Pulse found: ");
         ansi_send_text(buff, &ansi_default_conf);
         ansi_text_config_t text_conf = {"", RED_BG, 1};
 
-        if (detector->p) {
-            ansi_set_cursor(10, 24);
-            snprintf(buff, 100, " TRUE ");
-            text_conf.color = WHITE_TEXT;
-            text_conf.bg_color = GREEN_BG;
-            ansi_send_text(buff, &text_conf);
-        } else {
-            ansi_set_cursor(10, 24);
+        if (detector->one_pulse_found) {
+             ansi_set_cursor(10, 24);
+             snprintf(buff, 100, " TRUE ");
+             text_conf.color = WHITE_TEXT;
+             text_conf.bg_color = GREEN_BG;
+             ansi_send_text(buff, &text_conf);
+         } else {
+             ansi_set_cursor(10, 24);
             snprintf(buff, 100, " FALSE ");
             ansi_send_text(buff, &text_conf);
         }

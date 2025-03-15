@@ -5,6 +5,8 @@
 #include "signal_detector.h"
 #include "signal_generator.h"
 
+#define PROCESSOR_FREQ_IN_MHZ 64
+
 typedef enum { DEV_STATE_VOLTMETER } dev_state_t;
 
 typedef struct {

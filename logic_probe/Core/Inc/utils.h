@@ -7,6 +7,8 @@ uint32_t join_strings(char* buffer, char* join, uint32_t start);
 
 void uint_32_to_split_int(uint32_t* buff, uint32_t n, uint32_t floating_point);
 
+int32_t utils_round(int32_t n);
+
 void clear_buffer(void* buffer, size_t size);
 
 uint32_t positive_power_10(uint32_t power);

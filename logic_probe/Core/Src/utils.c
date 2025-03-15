@@ -24,6 +24,10 @@ void uint_32_to_split_int(uint32_t* buff, uint32_t n, uint32_t floating_point) {
     buff[1] = floating;
 }
 
+int32_t utils_round(int32_t n) {
+    return (n + 5) / 10;
+}
+
 void clear_buffer(void* buffer, size_t size) {
     memset(buffer, 0, size);
 }

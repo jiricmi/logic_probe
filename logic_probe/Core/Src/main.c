@@ -23,7 +23,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include "adc_control.h"
-#include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
 #include "signal_detector.h"
@@ -55,15 +54,15 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim14;
 TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
-DMA_HandleTypeDef hdma_tim2_ch1;
-DMA_HandleTypeDef hdma_tim2_ch2;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-global_vars_t global_var = {
-    DEV_STATE_VOLTMETER, false, 0, ANSI_PAGE_MAIN, NULL, NULL, NULL};
+sig_detector_t signal_detector;
+
+global_vars_t global_var = {DEV_STATE_VOLTMETER, false, 0, ANSI_PAGE_MAIN, NULL,
+                            &signal_detector,    NULL};
 
 /* USER CODE END PV */
 
@@ -129,6 +128,10 @@ int main(void) {
     HAL_UART_Receive_IT(&huart2, &global_var.received_char, 1);
 
     adc_setup_channel_struct(global_var.adc_vars);
+    init_detector(global_var.signal_detector, &htim2, &htim3);
+
+    // TODO: MENU A ZAPINAT JEN KDYZ JE POTREBA
+    HAL_TIM_Base_Start_IT(global_var.signal_detector->master_tim);
 
     // ansi_clear_terminal();
     /* USER CODE END 2 */
@@ -137,6 +140,7 @@ int main(void) {
     /* USER CODE BEGIN WHILE */
     while (1) {
         /* USER CODE END WHILE */
+
         /* USER CODE BEGIN 3 */
         HAL_ADC_Start_DMA(
             global_var.adc_vars->hadc, global_var.adc_vars->voltage_measures,
@@ -260,8 +264,8 @@ static void MX_TIM2_Init(void) {
     /* USER CODE END TIM2_Init 0 */
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
-    TIM_IC_InitTypeDef sConfigIC = {0};
 
     /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -275,11 +279,16 @@ static void MX_TIM2_Init(void) {
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
         Error_Handler();
     }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
+    sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
+    sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
+    sClockSourceConfig.ClockFilter = 0;
     if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
         Error_Handler();
     }
-    if (HAL_TIM_IC_Init(&htim2) != HAL_OK) {
+    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_TRIGGER;
+    sSlaveConfig.InputTrigger = TIM_TS_ITR2;
+    if (HAL_TIM_SlaveConfigSynchro(&htim2, &sSlaveConfig) != HAL_OK) {
         Error_Handler();
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
@@ -288,22 +297,7 @@ static void MX_TIM2_Init(void) {
         HAL_OK) {
         Error_Handler();
     }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-    sConfigIC.ICFilter = 0;
-    if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
-        Error_Handler();
-    }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-    if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK) {
-        Error_Handler();
-    }
     /* USER CODE BEGIN TIM2_Init 2 */
-    init_detector(global_var.signal_detector, &htim2);
-    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 
     /* USER CODE END TIM2_Init 2 */
 }
@@ -337,14 +331,16 @@ static void MX_TIM3_Init(void) {
     if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
         Error_Handler();
     }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    if (HAL_TIM_OnePulse_Init(&htim3, TIM_OPMODE_SINGLE) != HAL_OK) {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_ENABLE;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) !=
         HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN TIM3_Init 2 */
-    // HAL_TIM_Base_Start_IT(&htim3);
 
     /* USER CODE END TIM3_Init 2 */
 }
@@ -478,9 +474,6 @@ static void MX_DMA_Init(void) {
     /* DMA1_Channel1_IRQn interrupt configuration */
     HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-    /* DMA1_Channel2_3_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 }
 
 /**

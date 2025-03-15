@@ -41,6 +41,7 @@ target_sources(
           Core/Src/callbacks.c
           Core/Src/perif/uart_control/uart_control.c
           Core/Src/perif/uart_control/control_voltage_measure.c
+          Core/Src/perif/uart_control/control_frequency_reader.c
           Core/Src/my_error_handle.c)
 
 target_include_directories(
