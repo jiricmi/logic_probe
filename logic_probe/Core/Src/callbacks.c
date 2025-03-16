@@ -28,7 +28,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
         HAL_UART_Receive_IT(&huart2, &global_var.received_char, 1);
     }
 }
-// TODO: TADY U HLEDANI PULSU UDELAT VYJIMKU
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
     if (htim->Instance == global_var.signal_detector->master_tim->Instance) {
         sig_detector_t* sig_det = global_var.signal_detector;
@@ -54,30 +53,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
         __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
         HAL_TIM_Base_Start_IT(sig_det->master_tim);
-
-    } else if (htim->Instance == TIM16) {
-        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
-        if (global_var.signal_generator->con) {
-        } else if (!global_var.signal_generator->start) {
-            global_var.signal_generator->start = true;
-        } else {
-            HAL_TIM_Base_Stop_IT(&htim16);
-            global_var.signal_generator->start = false;
-        }
     }
 }
 
-// TODO: ZAJISTIT ABY NEPRETEKL resp aby s tim umel pocitat
-
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
     sig_detector_t* sig_det = global_var.signal_detector;
+    sig_generator_t* sig_gen = global_var.signal_generator;
+    dev_state_t state = global_var.device_state;
 
-    if (htim->Instance == sig_det->slave_tim->Instance) {
+    if (htim->Instance == sig_det->slave_tim->Instance &&
+        state == DEV_STATE_FREQUENCY_READ) {
         if (sig_det->mode == DETECTOR_MODE_FREQUENCY) {
             detector_parse_catched_signal(sig_det);
         } else {
-            // TODO: UDELAT I MERENI JAK DLOUHY JE PULS
+            // TODO: UDELAT MERENI JAK DLOUHY JE PULS
             detector_parse_pulse_catcher(sig_det);
         }
+    } else if (htim->Instance == sig_gen->htim->Instance &&
+               state == DEV_STATE_PULSE_GEN) {
+        HAL_TIM_PWM_Stop(global_var.signal_generator->htim, TIM_CHANNEL_1);
     }
 }

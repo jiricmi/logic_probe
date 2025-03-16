@@ -44,7 +44,7 @@ void init_detector(sig_detector_t* detector,
                    TIM_HandleTypeDef* slave_tim,
                    TIM_HandleTypeDef* master_tim);
 void detector_change_sample_time(sig_detector_t* detector);
-void detector_setup_timers(sig_detector_t* detector);
+void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers);
 void detector_change_mode(sig_detector_t* detector);
 uint32_t detector_get_gated_value(uint32_t n_pulses, uint8_t index);
 void detector_compute_freq_measures(sig_detector_t* detector);

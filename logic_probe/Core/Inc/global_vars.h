@@ -12,7 +12,8 @@ typedef enum {
     DEV_STATE_VOLTMETER,
     DEV_STATE_OHMMETER,
     DEV_STATE_FREQUENCY_READ,
-    DEV_STATE_PULSE_READ
+    DEV_STATE_PULSE_READ,
+    DEV_STATE_PULSE_GEN,
 } dev_state_t;
 
 typedef struct {

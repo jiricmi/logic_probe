@@ -30,14 +30,15 @@ void detector_change_sample_time(sig_detector_t* detector) {
                              SAMPLE_TIMES[detector->sample_time_index] - 1);
 }
 
-void detector_setup_timers(sig_detector_t* detector) {
-    HAL_TIM_Base_Stop_IT(detector->master_tim);
-    HAL_TIM_Base_Stop(detector->slave_tim);
-    HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_1);
-    HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_2);
-    __HAL_TIM_SET_COUNTER(detector->master_tim, 0);
-    __HAL_TIM_SET_COUNTER(detector->slave_tim, 0);
-
+void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers) {
+    if (stop_timers) {
+        HAL_TIM_Base_Stop_IT(detector->master_tim);
+        HAL_TIM_Base_Stop(detector->slave_tim);
+        HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_1);
+        HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_2);
+        __HAL_TIM_SET_COUNTER(detector->master_tim, 0);
+        __HAL_TIM_SET_COUNTER(detector->slave_tim, 0);
+    }
     switch (detector->mode) {
         case (DETECTOR_MODE_FREQUENCY):
             detector_slave_init_frequency(detector);
@@ -60,7 +61,7 @@ void detector_change_mode(sig_detector_t* detector) {
         detector->mode = DETECTOR_MODE_PULSE_UP;
     }
     detector->one_pulse_found = false;
-    detector_setup_timers(detector);
+    detector_setup_timers(detector, true);
 }
 
 uint32_t detector_get_gated_value(uint32_t n_pulses, uint8_t index) {

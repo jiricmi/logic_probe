@@ -2,6 +2,7 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_page_frequency_reader.h"
+#include "ansi_page_impulse_generator.h"
 #include "ansi_page_voltage_measure.h"
 #include "global_vars.h"
 #include "signal_detector.h"
@@ -35,6 +36,10 @@ void dev_mode_run_with_uart(void) {
             break;
         case DEV_STATE_FREQUENCY_READ:
             ansi_generate_frequency_reader(global_var.signal_detector);
+            break;
+        case DEV_STATE_PULSE_GEN:
+            ansi_render_impulse_generator(global_var.signal_generator);
+            break;
         default:
             break;
     }
@@ -67,11 +72,13 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
+    
 }
 
 void dev_mode_update_perif(void) {
     sig_detector_t* sig_det = global_var.signal_detector;
     adc_vars_t* adc_vars = global_var.adc_vars;
+    sig_generator_t* sig_gen = global_var.signal_generator;
 
     dev_mode_perif_turn_off(sig_det, adc_vars);
 
@@ -87,7 +94,10 @@ void dev_mode_update_perif(void) {
                 global_var.adc_vars->n_active_channels * CHANNEL_NUM_SAMPLES);
             break;
         case DEV_STATE_FREQUENCY_READ:
-            HAL_TIM_Base_Start_IT(global_var.signal_detector->master_tim);
+            detector_setup_timers(sig_det, false);
+            break;
+        case DEV_STATE_PULSE_GEN:
+            generator_setup_timers(sig_gen);
             break;
 
         default:

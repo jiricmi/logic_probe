@@ -52,22 +52,21 @@ DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
-TIM_HandleTypeDef htim16;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
 sig_detector_t signal_detector;
+sig_generator_t signal_generator;
 
 global_vars_t global_var = {
-    DEV_STATE_NONE,   0,   true, true, ANSI_PAGE_MAIN, NULL,
-    &signal_detector, NULL};
+    DEV_STATE_NONE,   0, true, true, ANSI_PAGE_MAIN, NULL, &signal_detector,
+    &signal_generator};
 
 /* USER CODE END PV */
 
-/* Private function prototypes
-   -----------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
@@ -75,7 +74,6 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM2_Init(void);
-static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -119,13 +117,13 @@ int main(void) {
     MX_ADC1_Init();
     MX_TIM3_Init();
     MX_TIM2_Init();
-    MX_TIM16_Init();
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
     HAL_UART_Receive_IT(&huart2, &global_var.received_char, 1);
 
     adc_setup_channel_struct(global_var.adc_vars);
     init_detector(global_var.signal_detector, &htim2, &htim3);
+    init_generator(global_var.signal_generator, &htim2);
 
     /* USER CODE END 2 */
 
@@ -250,31 +248,29 @@ static void MX_TIM2_Init(void) {
     /* USER CODE END TIM2_Init 0 */
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_OC_InitTypeDef sConfigOC = {0};
 
     /* USER CODE BEGIN TIM2_Init 1 */
 
     /* USER CODE END TIM2_Init 1 */
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 0;
+    htim2.Init.Prescaler = 63;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 4294967295;
+    htim2.Init.Period = 400;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
         Error_Handler();
     }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
-    sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
-    sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
-    sClockSourceConfig.ClockFilter = 0;
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
         Error_Handler();
     }
-    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_TRIGGER;
-    sSlaveConfig.InputTrigger = TIM_TS_ITR2;
-    if (HAL_TIM_SlaveConfigSynchro(&htim2, &sSlaveConfig) != HAL_OK) {
+    if (HAL_TIM_PWM_Init(&htim2) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_OnePulse_Init(&htim2, TIM_OPMODE_SINGLE) != HAL_OK) {
         Error_Handler();
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
@@ -283,9 +279,18 @@ static void MX_TIM2_Init(void) {
         HAL_OK) {
         Error_Handler();
     }
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = 200;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) !=
+        HAL_OK) {
+        Error_Handler();
+    }
     /* USER CODE BEGIN TIM2_Init 2 */
 
     /* USER CODE END TIM2_Init 2 */
+    HAL_TIM_MspPostInit(&htim2);
 }
 
 /**
@@ -329,36 +334,6 @@ static void MX_TIM3_Init(void) {
     /* USER CODE BEGIN TIM3_Init 2 */
 
     /* USER CODE END TIM3_Init 2 */
-}
-
-/**
- * @brief TIM16 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_TIM16_Init(void) {
-    /* USER CODE BEGIN TIM16_Init 0 */
-
-    /* USER CODE END TIM16_Init 0 */
-
-    /* USER CODE BEGIN TIM16_Init 1 */
-
-    /* USER CODE END TIM16_Init 1 */
-    htim16.Instance = TIM16;
-    htim16.Init.Prescaler = 63999;
-    htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim16.Init.Period = 999;
-    htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim16.Init.RepetitionCounter = 0;
-    htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN TIM16_Init 2 */
-    HAL_TIM_Base_Start_IT(&htim16);
-    sig_gen_init(global_var.signal_generator);
-
-    /* USER CODE END TIM16_Init 2 */
 }
 
 /**
