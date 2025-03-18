@@ -4,20 +4,46 @@
 #include <stdio.h>
 #include "main.h"
 
-#define NUM_CHANNELS 5           // Number of ADC channels
 #define CHANNEL_NUM_SAMPLES 100  // Number of samples per channel for averaging
 #define V_REF_DEFAULT 3300       // Default reference voltage in millivolts
 #define ADC_TIMEOUT 100
 
+#define ADC_BASE_RESISTOR 1000
+
+#define ADC_REF_INDEX 1
+#define ADC_CH_PERMANENT_INDEX 2
+
+#if defined(SOP8)
+#define ADC_NUM_CHANNELS 3
+#define RANK_MAP                                                 \
+    {ADC_REGULAR_RANK_1, ADC_REGULAR_RANK_2, ADC_REGULAR_RANK_3, \
+     ADC_REGULAR_RANK_4}
+#define CHANNEL_MAP {ADC_CHANNEL_VREFINT, ADC_CHANNEL_11, ADC_CHANNEL_0}
+
+#define PIN_VALS {0, 1, 4}
+
+#else
+
+#define ADC_NUM_CHANNELS 5
+#define RANK_MAP                                                 \
+    {ADC_REGULAR_RANK_1, ADC_REGULAR_RANK_2, ADC_REGULAR_RANK_3, \
+     ADC_REGULAR_RANK_4, ADC_REGULAR_RANK_5}
+#define CHANNEL_MAP                                                    \
+    {ADC_CHANNEL_VREFINT, ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_4, \
+     ADC_CHANNEL_5}
+#define PIN_VALS {0, 0, 1, 2, 3};
+
+#endif
+
 typedef struct {
-    _Bool channel_state[NUM_CHANNELS];
-    _Bool channel_state_unapplied[NUM_CHANNELS];
+    _Bool channel_state[ADC_NUM_CHANNELS];
+    _Bool channel_state_unapplied[ADC_NUM_CHANNELS];
     _Bool applied;
     _Bool resistance_mode;
     uint32_t base_resistor;
-    uint32_t avg_voltage_current[NUM_CHANNELS];
-    uint32_t avg_voltage_previous[NUM_CHANNELS];
-    uint32_t pin[NUM_CHANNELS];
+    uint32_t avg_voltage_current[ADC_NUM_CHANNELS];
+    uint32_t avg_voltage_previous[ADC_NUM_CHANNELS];
+    uint32_t pin[ADC_NUM_CHANNELS];
     uint8_t n_active_channels;
     ADC_HandleTypeDef* hadc;
     uint32_t* voltage_measures;

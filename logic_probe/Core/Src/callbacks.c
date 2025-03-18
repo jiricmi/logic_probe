@@ -10,13 +10,13 @@
 
 extern global_vars_t global_var;
 
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef UART;
 
 extern TIM_HandleTypeDef htim14;
 extern TIM_HandleTypeDef htim16;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
-    if (huart->Instance == USART2) {
+    if (huart->Instance == UART_INST) {
         if (global_var.received_char == 'r' ||
             global_var.received_char == 'R') {  // reload
             ansi_clear_terminal();
@@ -25,7 +25,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
             get_current_control();
         }
 
-        HAL_UART_Receive_IT(&huart2, &global_var.received_char, 1);
+        HAL_UART_Receive_IT(&UART, &global_var.received_char, 1);
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {

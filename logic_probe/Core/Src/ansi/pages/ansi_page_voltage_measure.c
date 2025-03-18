@@ -28,7 +28,7 @@ void ansi_render_voltage_page(void) {
 }
 
 void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
-    uint32_t floating_avg_measures[NUM_CHANNELS];
+    uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
 
     adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
 
@@ -102,17 +102,17 @@ void ansi_render_resistance_values(const uint8_t row,
 void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
     const uint8_t col_center = ADC_MEASURE_CENTER;
     uint8_t row = ADC_MEASURE_ROW;
-    uint32_t floating_avg_measures[NUM_CHANNELS];
+    uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
 
     adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
 
     uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
 
-    for (uint8_t channel = 1; channel < NUM_CHANNELS; ++channel) {
+    for (uint8_t channel = 1; channel < ADC_NUM_CHANNELS; ++channel) {
         uint32_t channel_voltage =
             adc_get_voltage(ref_voltage, floating_avg_measures[channel]);
 
-        ansi_set_cursor(row, col_center + 24);
+        ansi_set_cursor(row, col_center + 28);
         ansi_render_logic_probe_ch(channel_voltage,
                                    adc_ch->channel_state[channel]);
 
@@ -125,8 +125,8 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
                                         ADC_FLOATING_POINT);
         } else {
             char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
-            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu (A%lu): x",
-                     channel, adc_ch->pin[channel]);
+            snprintf(text_buffer, sizeof(text_buffer),
+                     "Channel %hu (Pin %lu): x", channel, adc_ch->pin[channel]);
             ansi_send_text(text_buffer, &ansi_bold_conf);
         }
     }
@@ -193,7 +193,7 @@ void ansi_render_channel_voltage(uint32_t voltage,
 
     uint_32_to_split_int(split_float_format, voltage, floating_point);
     snprintf(text_buffer, sizeof(text_buffer),
-             "Channel %hu (A%lu): %lu.%0*lu V", channel, pin,
+             "Channel %hu (Pin %lu): %lu.%0*lu V", channel, pin,
              split_float_format[0], (int)floating_point, split_float_format[1]);
     ansi_send_text(text_buffer, &ansi_bold_conf);
 }

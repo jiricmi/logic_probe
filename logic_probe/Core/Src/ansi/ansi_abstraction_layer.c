@@ -4,14 +4,15 @@
 #include <string.h>
 #include "ansi_ascii_text.h"
 #include "main.h"
+#include "uart_control.h"
 
 #define TEXT_SEND_BUFF_SIZE 500
 #define CURSOR_BUFF_SIZE 40
 
-extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef UART;
 
 void ansi_send_string(const char* str) {
-    HAL_UART_Transmit(&huart2, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+    HAL_UART_Transmit(&UART, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 
 void ansi_send_text(const char* str, const ansi_text_config_t* text_conf) {

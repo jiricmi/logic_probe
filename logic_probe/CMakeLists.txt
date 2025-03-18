@@ -72,6 +72,19 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
   # Size optimization for Release mode
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os)
+    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os -DSOP8)
+
+    add_custom_command(
+      TARGET ${CMAKE_PROJECT_NAME}
+      POST_BUILD
+      COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
+              ${CMAKE_PROJECT_NAME}.hex)
+
+    # Convert to bin file -> add conditional check?
+    add_custom_command(
+      TARGET ${CMAKE_PROJECT_NAME}
+      POST_BUILD
+      COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
+              ${CMAKE_PROJECT_NAME}.bin)
   endif()
 endif()
