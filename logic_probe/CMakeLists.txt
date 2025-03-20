@@ -40,6 +40,7 @@ target_sources(
           Core/Src/measure/tim_setup.c
           Core/Src/utils.c
           Core/Src/callbacks.c
+          Core/Src/perif/outputs/visual_output.c
           Core/Src/perif/uart_control/uart_control.c
           Core/Src/perif/uart_control/control_voltage_measure.c
           Core/Src/perif/uart_control/control_impulse_generator.c
@@ -53,6 +54,7 @@ target_include_directories(
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/ansi/pages
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/measure
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/perif
+  PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/perif/outputs
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc/perif/uart_control
   PRIVATE ${CMAKE_SOURCE_DIR}/Core/Inc)
 
