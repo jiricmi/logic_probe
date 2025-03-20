@@ -4,8 +4,12 @@
 #include "ansi_pages.h"
 #include "signal_detector.h"
 #include "signal_generator.h"
+#include "visual_output.h"
 
 #define PROCESSOR_FREQ_IN_MHZ 64
+
+#define SETUP_TRIES 3
+#define SETUP_WAIT 300
 
 typedef enum {
     DEV_STATE_NONE,
@@ -16,8 +20,14 @@ typedef enum {
     DEV_STATE_PULSE_GEN,
 } dev_state_t;
 
+typedef enum {
+    DEV_SETUP_UART,
+    DEV_SETUP_LOCAL,
+} dev_setup_t;
+
 typedef struct {
     dev_state_t device_state;
+    dev_setup_t device_setup;
     unsigned char received_char;
     _Bool need_frontend_update;
     _Bool need_perif_update;
@@ -25,6 +35,7 @@ typedef struct {
     adc_vars_t* adc_vars;
     sig_detector_t* signal_detector;
     sig_generator_t* signal_generator;
+    visual_output_t* visual_output;
 } global_vars_t;
 
 #endif

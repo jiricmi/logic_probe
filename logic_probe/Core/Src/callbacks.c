@@ -74,3 +74,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
         HAL_TIM_PWM_Stop(global_var.signal_generator->htim, TIM_CHANNEL_1);
     }
 }
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim) {
+    if (htim->Instance == global_var.visual_output->neopixel_tim->Instance) {
+        HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_3);
+    }
+}

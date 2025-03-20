@@ -11,7 +11,19 @@
 
 extern global_vars_t global_var;
 
-void dev_mode_run_with_uart(void) {
+dev_setup_t dev_mode_get_dev_setup(void) {
+    for (uint8_t i = 0; i < SETUP_TRIES; ++i) {
+        if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)) {
+            HAL_Delay(SETUP_WAIT);
+            continue;
+        } else {
+            return DEV_SETUP_UART;
+        }
+    }
+    return DEV_SETUP_LOCAL;
+}
+
+void dev_mode_check_update(void) {
     if (global_var.need_perif_update) {
         dev_mode_update_perif();
     }
@@ -21,6 +33,10 @@ void dev_mode_run_with_uart(void) {
         ansi_clear_terminal();
         ansi_render_current_page();
     }
+}
+
+void dev_mode_run_with_uart(void) {
+    dev_mode_check_update();
 
     uint32_t delay = 500;
     switch (global_var.device_state) {
@@ -72,7 +88,6 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
-    
 }
 
 void dev_mode_update_perif(void) {
@@ -104,4 +119,8 @@ void dev_mode_update_perif(void) {
             break;
     }
     global_var.need_perif_update = false;
+}
+
+void dev_mode_run(void) {
+    dev_mode_check_update();
 }
