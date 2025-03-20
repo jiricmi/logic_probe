@@ -25,6 +25,7 @@
           stm32cubemx
           clang-tools
           glibc_multi
+          stm32flash
         ];
 
         shellHook = ''
