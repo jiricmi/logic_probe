@@ -2,6 +2,7 @@
 #define GLOBAL_VAR_H
 #include "adc_control.h"
 #include "ansi_pages.h"
+#include "extern_button.h"
 #include "signal_detector.h"
 #include "signal_generator.h"
 #include "visual_output.h"
@@ -36,6 +37,7 @@ typedef struct {
     sig_detector_t* signal_detector;
     sig_generator_t* signal_generator;
     visual_output_t* visual_output;
+    button_data_t* button_data;
 } global_vars_t;
 
 #endif

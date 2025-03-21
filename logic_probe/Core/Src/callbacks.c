@@ -7,6 +7,7 @@
 #include "stm32g0xx_hal_tim.h"
 #include "tim_setup.h"
 #include "uart_control.h"
+#include "visual_output.h"
 
 extern global_vars_t global_var;
 
@@ -78,5 +79,27 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim) {
     if (htim->Instance == global_var.visual_output->neopixel_tim->Instance) {
         HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_3);
+    }
+}
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+    if (GPIO_Pin == global_var.button_data->pin) {
+        button_data_t* button_data = global_var.button_data;
+
+        if (!button_data->is_pressed) {
+            button_data->rise_edge_time = HAL_GetTick();
+            button_data->is_pressed = true;
+        }
+    }
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+    if (GPIO_Pin == global_var.button_data->pin) {
+        button_data_t* button_data = global_var.button_data;
+
+        if (button_data->is_pressed) {
+            button_data->fall_edge_time = HAL_GetTick();
+            extern_button_check_press(button_data);
+            button_data->is_pressed = false;
+        }
     }
 }

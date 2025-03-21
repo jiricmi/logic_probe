@@ -63,6 +63,7 @@ UART_HandleTypeDef huart1;
 sig_detector_t signal_detector;
 sig_generator_t signal_generator;
 visual_output_t visual_output;
+button_data_t button_data;
 
 global_vars_t global_var = {DEV_STATE_NONE,
                             DEV_SETUP_UART,
@@ -73,7 +74,8 @@ global_vars_t global_var = {DEV_STATE_NONE,
                             NULL,
                             &signal_detector,
                             &signal_generator,
-                            &visual_output};
+                            &visual_output,
+                            &button_data};
 
 /* USER CODE END PV */
 
@@ -138,8 +140,10 @@ int main(void) {
     init_detector(global_var.signal_detector, &htim2, &htim3);
     init_generator(global_var.signal_generator, &htim2);
     init_visual_output(global_var.visual_output, &htim1);
+    init_button_data(global_var.button_data);
 
     global_var.device_setup = dev_mode_get_dev_setup();
+    neopixel_startup_effect(global_var.visual_output);
 
     /* USER CODE END 2 */
 
@@ -149,11 +153,11 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-        if (global_var.device_setup == DEV_SETUP_UART) {
-            dev_mode_run_with_uart();
-        } else {
-            dev_mode_run();
-        }
+         if (global_var.device_setup == DEV_SETUP_UART) {
+             dev_mode_run_with_uart();
+         } else {
+             dev_mode_run();
+         }
     }
     /* USER CODE END 3 */
 }
@@ -507,8 +511,8 @@ static void MX_GPIO_Init(void) {
 
     /*Configure GPIO pin : PA13 */
     GPIO_InitStruct.Pin = GPIO_PIN_13;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* EXTI interrupt init*/
@@ -542,7 +546,7 @@ void Error_Handler(void) {
 
 #ifdef USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
+ * @brief  Reports the name of the source file and the source line number e
  *         where the assert_param error has occurred.
  * @param  file: pointer to the source file name
  * @param  line: assert_param error line source number
