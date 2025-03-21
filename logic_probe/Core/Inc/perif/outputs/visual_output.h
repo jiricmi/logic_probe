@@ -21,6 +21,8 @@ typedef enum {
     NEOPIXEL_RED,
     NEOPIXEL_BLUE,
     NEOPIXEL_GREEN,
+    NEOPIXEL_NONE,
+    NEOPIXEL_WHITE
 
 } neopixel_color_enum_t;
 
@@ -35,4 +37,6 @@ void neopixel_set_color(visual_output_t* visual_output,
 
 void neopixel_get_color(neopixel_color_t* color,
                         neopixel_color_enum_t color_type);
+
+void neopixel_startup_effect(visual_output_t* visual_output);
 #endif
