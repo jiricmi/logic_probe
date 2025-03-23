@@ -5,8 +5,7 @@
 #include "adc_control.h"
 
 #define ANSI_VOLTAGE_TEXT_BUFFER 50
-#define LOW_MAX_V 800
-#define HIGH_MIN_V 2000
+
 #define ADC_MEASURE_ROW 13
 #define ADC_MEASURE_CENTER ((TERMINAL_WIDTH / 2) - 11)
 #define ADC_FLOATING_POINT 3

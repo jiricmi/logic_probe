@@ -66,6 +66,8 @@ visual_output_t visual_output;
 button_data_t button_data;
 
 global_vars_t global_var = {DEV_STATE_NONE,
+                            LOCAL_STATE_LOGIC_PROBE,
+                            LOCAL_SUBSTATE_CHANNEL_1,
                             DEV_SETUP_UART,
                             0,
                             true,
@@ -153,11 +155,11 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-         if (global_var.device_setup == DEV_SETUP_UART) {
-             dev_mode_run_with_uart();
-         } else {
-             dev_mode_run();
-         }
+        if (global_var.device_setup == DEV_SETUP_UART) {
+            dev_mode_run_with_uart();
+        } else {
+            dev_mode_run();
+        }
     }
     /* USER CODE END 3 */
 }

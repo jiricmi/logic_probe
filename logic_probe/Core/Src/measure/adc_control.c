@@ -210,3 +210,23 @@ uint32_t adc_get_v_ref(uint32_t raw_voltage_value) {
     return __HAL_ADC_CALC_VREFANALOG_VOLTAGE(raw_voltage_value,
                                              ADC_RESOLUTION_12B);
 }
+
+probe_state_t adc_local_logic_probe(adc_vars_t* adc_ch,
+                                    local_substate_t state) {
+    uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
+
+    adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
+    uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
+
+    uint8_t index = (state == LOCAL_SUBSTATE_CHANNEL_1) ? 1 : 2;
+
+    uint32_t measured_voltage =
+        adc_get_voltage(ref_voltage, floating_avg_measures[index]);
+
+    if (measured_voltage > HIGH_MIN_V) {
+        return PROBE_STATE_HIGH;
+    } else if (measured_voltage < LOW_MAX_V) {
+        return PROBE_STATE_LOW;
+    }
+    return PROBE_STATE_UNDEFINED;
+}

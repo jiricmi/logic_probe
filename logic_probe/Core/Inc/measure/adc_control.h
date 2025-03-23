@@ -2,11 +2,15 @@
 #define ADC_CONTROL_H
 #include <stdint.h>
 #include <stdio.h>
+#include "global_structs.h"
 #include "main.h"
 
 #define CHANNEL_NUM_SAMPLES 100  // Number of samples per channel for averaging
 #define V_REF_DEFAULT 3300       // Default reference voltage in millivolts
 #define ADC_TIMEOUT 100
+
+#define LOW_MAX_V 800
+#define HIGH_MIN_V 2000
 
 #define ADC_BASE_RESISTOR 1000
 
@@ -34,6 +38,12 @@
 #define PIN_VALS {0, 0, 1, 2, 3};
 
 #endif
+
+typedef enum {
+    PROBE_STATE_LOW,
+    PROBE_STATE_UNDEFINED,
+    PROBE_STATE_HIGH,
+} probe_state_t;
 
 typedef struct {
     _Bool channel_state[ADC_NUM_CHANNELS];
@@ -167,4 +177,5 @@ uint32_t adc_get_voltage(uint32_t v_ref, uint32_t measure);
  */
 uint32_t adc_get_v_ref(uint32_t raw_voltage_value);
 
+probe_state_t adc_local_logic_probe(adc_vars_t* adc_ch, local_substate_t state);
 #endif  // ADC_CONTROL_H

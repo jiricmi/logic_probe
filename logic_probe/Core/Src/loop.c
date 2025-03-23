@@ -1,10 +1,10 @@
 #include "loop.h"
 #include "adc_control.h"
-#include "ansi_abstraction_layer.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_voltage_measure.h"
 #include "global_vars.h"
+#include "gpio_outputs.h"
 #include "signal_detector.h"
 
 #include <stdbool.h>
@@ -88,6 +88,7 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
+    gpio_init_timer();
 }
 
 void dev_mode_update_perif(void) {
@@ -121,6 +122,100 @@ void dev_mode_update_perif(void) {
     global_var.need_perif_update = false;
 }
 
+void local_mode_update_perif(void) {
+    sig_detector_t* sig_det = global_var.signal_detector;
+    adc_vars_t* adc_vars = global_var.adc_vars;
+
+    dev_mode_perif_turn_off(sig_det, adc_vars);
+
+    switch (global_var.local_state) {
+        case LOCAL_STATE_LOGIC_PROBE:
+        case LOCAL_STATE_VOLTMETER_PROBE:
+            global_var.device_state = DEV_STATE_VOLTMETER;
+            for (uint8_t i = 1; i < ADC_NUM_CHANNELS; ++i) {
+                adc_vars->channel_state_unapplied[i] = true;
+            }
+            adc_apply_channels(global_var.adc_vars);
+            adc_setup_channel_struct(global_var.adc_vars);
+            HAL_ADC_Start_DMA(
+                global_var.adc_vars->hadc,
+                global_var.adc_vars->voltage_measures,
+                global_var.adc_vars->n_active_channels * CHANNEL_NUM_SAMPLES);
+            break;
+        case LOCAL_STATE_OUTPUT:
+            gpio_init_push_pull();
+            break;
+        case LOCAL_STATE_PULSEUP:
+            global_var.device_state = DEV_STATE_FREQUENCY_READ;
+            sig_det->mode = DETECTOR_MODE_PULSE_UP;
+            detector_setup_timers(sig_det, false);
+            break;
+        case LOCAL_STATE_PULSEDOWN:
+            global_var.device_state = DEV_STATE_FREQUENCY_READ;
+            sig_det->mode = DETECTOR_MODE_PULSE_DOWN;
+            detector_setup_timers(sig_det, false);
+            break;
+        default:
+            break;
+    }
+    global_var.need_perif_update = false;
+}
+
 void dev_mode_run(void) {
-    dev_mode_check_update();
+    adc_vars_t* adc_vars = global_var.adc_vars;
+    sig_detector_t* sig_det = global_var.signal_detector;
+    uint32_t delay = 500;
+    if (global_var.button_data->long_press || global_var.need_perif_update) {
+        if (!global_var.need_perif_update) {
+            extern_button_handle_long(global_var.button_data);
+        }
+        local_mode_update_perif();
+    }
+
+    if (global_var.button_data->short_press) {
+        extern_button_handle_short(global_var.button_data);
+    }
+
+    if (global_var.button_data->double_press) {
+        extern_button_handle_double(global_var.button_data);
+    }
+
+    switch (global_var.local_state) {
+        case LOCAL_STATE_LOGIC_PROBE: {
+            adc_get_avg_voltages(global_var.adc_vars);
+            probe_state_t probe_state =
+                adc_local_logic_probe(adc_vars, global_var.local_substate);
+            neopixel_show_probe_state(global_var.visual_output, probe_state);
+            break;
+        }
+        case LOCAL_STATE_VOLTMETER_PROBE: {
+            uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
+            adc_get_avg_voltages(global_var.adc_vars);
+            adc_calculate_floating_voltage_avg(floating_avg_measures, adc_vars);
+
+            uint8_t index =
+                (global_var.local_substate == LOCAL_SUBSTATE_CHANNEL_1) ? 1 : 2;
+            neopixel_show_voltmeter_state(global_var.visual_output,
+                                          global_var.local_substate,
+                                          floating_avg_measures[index]);
+            break;
+        }
+        case LOCAL_STATE_OUTPUT: {
+            neopixel_show_output_state(global_var.visual_output,
+                                       global_var.local_substate);
+            break;
+        }
+        case LOCAL_STATE_PULSEUP:
+        case LOCAL_STATE_PULSEDOWN:
+            if (sig_det->one_pulse_found) {
+                sig_det->one_pulse_found = false;
+                neopixel_show_pulse_detection(global_var.visual_output,
+                                              sig_det);
+            } else {
+                neopixel_send_color(global_var.visual_output, NEOPIXEL_NONE);
+            }
+        default:
+            break;
+    }
+    HAL_Delay(delay);
 }

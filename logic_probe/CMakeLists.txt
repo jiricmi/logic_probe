@@ -41,6 +41,7 @@ target_sources(
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/perif/outputs/visual_output.c
+          Core/Src/perif/outputs/gpio_outputs.c
           Core/Src/perif/inputs/extern_button.c
           Core/Src/perif/uart_control/uart_control.c
           Core/Src/perif/uart_control/control_voltage_measure.c
