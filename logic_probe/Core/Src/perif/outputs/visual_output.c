@@ -21,9 +21,9 @@ void neopixel_send_color(visual_output_t* visual_output,
 
 void neopixel_set_color(visual_output_t* visual_output,
                         neopixel_color_t* color) {
-    uint32_t data = (color->b << 16) | color->g << 8 | color->r;
+    uint32_t data = (color->r << 16) | color->g << 8 | color->b;
     for (uint8_t i = 0; i < NEOPIXEL_DATA_SIZE - 1; ++i) {
-        if (data & (1 << i)) {
+        if (data & (1 << (NEOPIXEL_DATA_SIZE - 2 - i))) {
             visual_output->neopixel_data[i] = 54;
         } else {
             visual_output->neopixel_data[i] = 26;

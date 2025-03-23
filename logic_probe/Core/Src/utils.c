@@ -32,10 +32,19 @@ void clear_buffer(void* buffer, size_t size) {
     memset(buffer, 0, size);
 }
 
-uint32_t positive_power_10(uint32_t power) {
+uint32_t positive_power_10(uint32_t power) {  // TODO: REFACTOR
     unsigned int base = 1;
     for (size_t i = 0; i < power; ++i) {
         base *= 10;
+    }
+
+    return base;
+}
+
+uint32_t positive_power(const uint32_t power, const uint32_t of) {
+    unsigned int base = 1;
+    for (size_t i = 0; i < power; ++i) {
+        base *= of;
     }
 
     return base;

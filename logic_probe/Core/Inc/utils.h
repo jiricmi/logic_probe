@@ -13,6 +13,8 @@ void clear_buffer(void* buffer, size_t size);
 
 uint32_t positive_power_10(uint32_t power);
 
+uint32_t positive_power(const uint32_t power, const uint32_t of);
+
 int32_t cdtoi(char digit);
 
 char itocd(int32_t digit);

@@ -55,6 +55,8 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 DMA_HandleTypeDef hdma_tim1_ch3;
+DMA_HandleTypeDef hdma_tim2_ch1;
+DMA_HandleTypeDef hdma_tim2_ch2;
 
 UART_HandleTypeDef huart1;
 
@@ -62,6 +64,7 @@ UART_HandleTypeDef huart1;
 
 sig_detector_t signal_detector;
 sig_generator_t signal_generator;
+neopixel_measure_t neopixel_measure;
 visual_output_t visual_output;
 button_data_t button_data;
 
@@ -77,7 +80,8 @@ global_vars_t global_var = {DEV_STATE_NONE,
                             &signal_detector,
                             &signal_generator,
                             &visual_output,
-                            &button_data};
+                            &button_data,
+                            &neopixel_measure};
 
 /* USER CODE END PV */
 
@@ -141,6 +145,7 @@ int main(void) {
     adc_setup_channel_struct(global_var.adc_vars);
     init_detector(global_var.signal_detector, &htim2, &htim3);
     init_generator(global_var.signal_generator, &htim2);
+    init_neopixel_measure(global_var.adv_neopixel_measure, &htim2);
     init_visual_output(global_var.visual_output, &htim1);
     init_button_data(global_var.button_data);
 
@@ -351,15 +356,15 @@ static void MX_TIM2_Init(void) {
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
-    TIM_OC_InitTypeDef sConfigOC = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
 
     /* USER CODE BEGIN TIM2_Init 1 */
 
     /* USER CODE END TIM2_Init 1 */
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 63;
+    htim2.Init.Prescaler = 0;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 400;
+    htim2.Init.Period = 4294967295;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK) {
@@ -369,10 +374,7 @@ static void MX_TIM2_Init(void) {
     if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK) {
         Error_Handler();
     }
-    if (HAL_TIM_PWM_Init(&htim2) != HAL_OK) {
-        Error_Handler();
-    }
-    if (HAL_TIM_OnePulse_Init(&htim2, TIM_OPMODE_SINGLE) != HAL_OK) {
+    if (HAL_TIM_IC_Init(&htim2) != HAL_OK) {
         Error_Handler();
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
@@ -381,18 +383,21 @@ static void MX_TIM2_Init(void) {
         HAL_OK) {
         Error_Handler();
     }
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = 200;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) !=
-        HAL_OK) {
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK) {
+        Error_Handler();
+    }
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+    if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN TIM2_Init 2 */
 
     /* USER CODE END TIM2_Init 2 */
-    HAL_TIM_MspPostInit(&htim2);
 }
 
 /**
@@ -495,6 +500,9 @@ static void MX_DMA_Init(void) {
     /* DMA1_Channel2_3_IRQn interrupt configuration */
     HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+    /* DMA1_Ch4_5_DMAMUX1_OVR_IRQn interrupt configuration */
+    HAL_NVIC_SetPriority(DMA1_Ch4_5_DMAMUX1_OVR_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA1_Ch4_5_DMAMUX1_OVR_IRQn);
 }
 
 /**
@@ -548,7 +556,7 @@ void Error_Handler(void) {
 
 #ifdef USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number e
+ * @brief  Reports the name of the source file and the source line number
  *         where the assert_param error has occurred.
  * @param  file: pointer to the source file name
  * @param  line: assert_param error line source number

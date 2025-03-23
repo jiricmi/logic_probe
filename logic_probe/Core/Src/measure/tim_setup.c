@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 
+#include "advanced/neopixel.h"
 #include "global_vars.h"
 
 extern global_vars_t global_var;
@@ -157,4 +158,57 @@ void sig_gen_init_timer(sig_generator_t* generator, _Bool polarity) {
 
     /* USER CODE END TIM2_Init 2 */
     HAL_TIM_MspPostInit(htim);
+}
+
+void adv_neopixel_read_init_timers(neopixel_measure_t* data) {
+    /* USER CODE BEGIN TIM2_Init 0 */
+
+    /* USER CODE END TIM2_Init 0 */
+
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
+
+    /* USER CODE BEGIN TIM2_Init 1 */
+
+    /* USER CODE END TIM2_Init 1 */
+    data->htim->Instance = TIM2;
+    data->htim->Init.Prescaler = 0;
+    data->htim->Init.CounterMode = TIM_COUNTERMODE_UP;
+    data->htim->Init.Period = 4294967295;
+    data->htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    data->htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(data->htim) != HAL_OK) {
+        Error_Handler();
+    }
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(data->htim, &sClockSourceConfig) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_IC_Init(data->htim) != HAL_OK) {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(data->htim, &sMasterConfig) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    if (HAL_TIM_IC_ConfigChannel(data->htim, &sConfigIC, TIM_CHANNEL_1) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+    if (HAL_TIM_IC_ConfigChannel(data->htim, &sConfigIC, TIM_CHANNEL_2) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM2_Init 2 */
+
+    /* USER CODE END TIM2_Init 2 */
 }

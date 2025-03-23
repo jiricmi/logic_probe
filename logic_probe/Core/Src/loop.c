@@ -1,11 +1,14 @@
 #include "loop.h"
 #include "adc_control.h"
+#include "advanced/neopixel.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_voltage_measure.h"
+#include "ansi_pages_neopixel_measure.h"
 #include "global_vars.h"
 #include "gpio_outputs.h"
 #include "signal_detector.h"
+#include "tim_setup.h"
 
 #include <stdbool.h>
 
@@ -56,6 +59,10 @@ void dev_mode_run_with_uart(void) {
         case DEV_STATE_PULSE_GEN:
             ansi_render_impulse_generator(global_var.signal_generator);
             break;
+        case DEV_STATE_ADV_NEOPIXEL_READ:
+            delay = 200;
+            ansi_render_neopixel_measure_vals(global_var.adv_neopixel_measure);
+            break;
         default:
             break;
     }
@@ -95,6 +102,7 @@ void dev_mode_update_perif(void) {
     sig_detector_t* sig_det = global_var.signal_detector;
     adc_vars_t* adc_vars = global_var.adc_vars;
     sig_generator_t* sig_gen = global_var.signal_generator;
+    neopixel_measure_t* neopixel_measure = global_var.adv_neopixel_measure;
 
     dev_mode_perif_turn_off(sig_det, adc_vars);
 
@@ -115,7 +123,10 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_PULSE_GEN:
             generator_setup_timers(sig_gen);
             break;
-
+        case DEV_STATE_ADV_NEOPIXEL_READ:
+            adv_neopixel_read_init_timers(neopixel_measure);
+            neopixel_read_start(global_var.adv_neopixel_measure);
+            break;
         default:
             break;
     }

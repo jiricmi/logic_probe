@@ -1,5 +1,6 @@
 #include "callbacks.h"
 #include <stdbool.h>
+#include "advanced/neopixel.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
@@ -30,7 +31,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
-    if (htim->Instance == global_var.signal_detector->master_tim->Instance) {
+    if (htim->Instance == global_var.signal_detector->master_tim->Instance &&
+        global_var.device_state == DEV_STATE_FREQUENCY_READ) {
         sig_detector_t* sig_det = global_var.signal_detector;
 
         if (sig_det->slave_tim_mode == SLAVE_MODE_FREQUENCY) {

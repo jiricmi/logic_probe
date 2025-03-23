@@ -1,6 +1,7 @@
 #ifndef GLOBAL_VAR_H
 #define GLOBAL_VAR_H
 #include "adc_control.h"
+#include "advanced/neopixel.h"
 #include "ansi_pages.h"
 #include "extern_button.h"
 #include "global_structs.h"
@@ -22,11 +23,17 @@ typedef struct {
     _Bool need_frontend_update;
     _Bool need_perif_update;
     ansi_page_type_t current_page;
+
+    // measures
     adc_vars_t* adc_vars;
     sig_detector_t* signal_detector;
     sig_generator_t* signal_generator;
+
+    // perif
     visual_output_t* visual_output;
     button_data_t* button_data;
+    neopixel_measure_t* adv_neopixel_measure;
+
 } global_vars_t;
 
 #endif
