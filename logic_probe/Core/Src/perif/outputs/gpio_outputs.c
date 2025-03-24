@@ -15,6 +15,9 @@ void gpio_init_timer(void) {
 }
 
 void gpio_init_push_pull(void) {
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_7);
+
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_0;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;

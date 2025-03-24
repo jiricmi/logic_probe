@@ -15,6 +15,7 @@ void ansi_page_main_render_menu(void) {
     ansi_render_button("g - Signal generator", row++, center,
                        &ansi_default_conf);
     ansi_render_button("n - Neopixel perif", row++, center, &ansi_default_conf);
+    ansi_render_button("s - Shift register", row++, center, &ansi_default_conf);
 }
 
 void ansi_render_main_page(void) {

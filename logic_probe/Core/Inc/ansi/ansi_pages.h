@@ -7,6 +7,7 @@ typedef enum {
     ANSI_PAGE_FREQUENCY_READER,
     ANSI_PAGE_IMPULSE_GENERATOR,
     ANSI_PAGE_NEOPIXEL_MEASURE,
+    ANSI_PAGE_SHIFT_REGISTER,
 } ansi_page_type_t;
 
 void ansi_render_current_page(void);

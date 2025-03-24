@@ -2,6 +2,7 @@
 #define GLOBAL_VAR_H
 #include "adc_control.h"
 #include "advanced/neopixel.h"
+#include "advanced/shift_register.h"
 #include "ansi_pages.h"
 #include "extern_button.h"
 #include "global_structs.h"
@@ -33,6 +34,7 @@ typedef struct {
     visual_output_t* visual_output;
     button_data_t* button_data;
     neopixel_measure_t* adv_neopixel_measure;
+    shift_register_t* adv_shift_register;
 
 } global_vars_t;
 

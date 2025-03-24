@@ -65,6 +65,11 @@ void dev_mode_run_with_uart(void) {
             break;
         case DEV_STATE_ADV_NEOPIXEL_WRITE:
             break;
+        case DEV_STATE_ADV_SHIFT_REGISTER:
+            if (global_var.adv_shift_register->ready_to_send) {
+                shift_register_send_signal(global_var.adv_shift_register);
+            }
+            break;
         default:
             break;
     }
@@ -95,6 +100,9 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     HAL_TIM_Base_Stop(sig_det->slave_tim);
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_1);
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
+    HAL_TIM_IC_Stop_DMA(sig_det->slave_tim, TIM_CHANNEL_1);
+    HAL_TIM_IC_Stop_DMA(sig_det->slave_tim, TIM_CHANNEL_2);
+
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
     gpio_init_timer();
@@ -130,6 +138,9 @@ void dev_mode_update_perif(void) {
             neopixel_read_start(global_var.adv_neopixel_measure);
             break;
         case DEV_STATE_ADV_NEOPIXEL_WRITE:
+            break;
+        case DEV_STATE_ADV_SHIFT_REGISTER:
+            gpio_init_push_pull();
             break;
         default:
             break;

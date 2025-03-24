@@ -65,6 +65,7 @@ UART_HandleTypeDef huart1;
 sig_detector_t signal_detector;
 sig_generator_t signal_generator;
 neopixel_measure_t neopixel_measure;
+shift_register_t shift_register;
 visual_output_t visual_output;
 button_data_t button_data;
 
@@ -81,7 +82,8 @@ global_vars_t global_var = {DEV_STATE_NONE,
                             &signal_generator,
                             &visual_output,
                             &button_data,
-                            &neopixel_measure};
+                            &neopixel_measure,
+                            &shift_register};
 
 /* USER CODE END PV */
 
@@ -146,6 +148,7 @@ int main(void) {
     init_detector(global_var.signal_detector, &htim2, &htim3);
     init_generator(global_var.signal_generator, &htim2);
     init_neopixel_measure(global_var.adv_neopixel_measure, &htim2);
+    init_shift_register(global_var.adv_shift_register);
     init_visual_output(global_var.visual_output, &htim1);
     init_button_data(global_var.button_data);
 

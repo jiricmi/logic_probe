@@ -32,6 +32,7 @@ target_sources(
           Core/Src/ansi/ansi_ascii_text.c
           Core/Src/ansi/pages/ansi_page_main.c
           Core/Src/ansi/pages/ansi_page_voltage_measure.c
+          Core/Src/ansi/pages/ansi_page_shift_register.c
           Core/Src/ansi/pages/ansi_page_neopixel_measure.c
           Core/Src/ansi/pages/ansi_page_frequency_reader.c
           Core/Src/ansi/pages/ansi_page_impulse_generator.c
@@ -40,12 +41,14 @@ target_sources(
           Core/Src/measure/signal_generator.c
           Core/Src/measure/tim_setup.c
           Core/Src/measure/advanced/neopixel.c
+          Core/Src/measure/advanced/shift_register.c
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/perif/outputs/visual_output.c
           Core/Src/perif/outputs/gpio_outputs.c
           Core/Src/perif/inputs/extern_button.c
           Core/Src/perif/uart_control/uart_control.c
+          Core/Src/perif/uart_control/control_shift_register.c
           Core/Src/perif/uart_control/control_neopixel_measure.c
           Core/Src/perif/uart_control/control_voltage_measure.c
           Core/Src/perif/uart_control/control_impulse_generator.c

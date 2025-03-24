@@ -4,6 +4,7 @@
 #include "control_frequency_reader.h"
 #include "control_impulse_generator.h"
 #include "control_neopixel_measure.h"
+#include "control_shift_register.h"
 #include "control_voltage_measure.h"
 #include "global_vars.h"
 #include "loop.h"
@@ -28,6 +29,9 @@ void get_current_control(void) {
             break;
         case ANSI_PAGE_NEOPIXEL_MEASURE:
             control_neopixel_measure_page(received_char);
+            break;
+        case ANSI_PAGE_SHIFT_REGISTER:
+            control_shift_register_page(received_char);
             break;
         default:
             control_main_page();
@@ -55,6 +59,11 @@ void control_main_page(void) {
         case 'N':
             ansi_set_current_page(ANSI_PAGE_NEOPIXEL_MEASURE);
             dev_mode_change_mode(DEV_STATE_ADV_NEOPIXEL_READ);
+            break;
+        case 's':
+        case 'S':
+            ansi_set_current_page(ANSI_PAGE_SHIFT_REGISTER);
+            dev_mode_change_mode(DEV_STATE_ADV_SHIFT_REGISTER);
             break;
     }
 }
