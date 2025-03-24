@@ -21,9 +21,9 @@ typedef struct {
     TIM_HandleTypeDef* htim;
     uint32_t rise_edge[NEOPIXEL_DATA_LEN];
     uint32_t fall_edge[NEOPIXEL_DATA_LEN];
-    _Bool failed_to_detect;
-    _Bool detected;
+    _Bool edit_rgb[RGB_ELEMENTS];
     uint8_t rgb[RGB_ELEMENTS];
+    uint8_t rgb_send[RGB_ELEMENTS];
 
 } neopixel_measure_t;
 

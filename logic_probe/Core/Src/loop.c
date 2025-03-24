@@ -63,6 +63,8 @@ void dev_mode_run_with_uart(void) {
             delay = 200;
             ansi_render_neopixel_measure_vals(global_var.adv_neopixel_measure);
             break;
+        case DEV_STATE_ADV_NEOPIXEL_WRITE:
+            break;
         default:
             break;
     }
@@ -126,6 +128,8 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_ADV_NEOPIXEL_READ:
             adv_neopixel_read_init_timers(neopixel_measure);
             neopixel_read_start(global_var.adv_neopixel_measure);
+            break;
+        case DEV_STATE_ADV_NEOPIXEL_WRITE:
             break;
         default:
             break;
