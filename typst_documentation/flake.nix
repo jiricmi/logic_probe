@@ -2,29 +2,28 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     fonts = {
-      url = "path:./template/template/res/fonts";
+      url = "/home/jiricmi/repos/logic_probe/typst_documentation/template/template/res/fonts";
       flake = false;
     };
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      fonts,
-    }:
+  outputs = { self, nixpkgs, fonts, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
       };
-
-      # Vytvoření balíčku se všemi fonty
-      customFonts = pkgs.runCommand "custom-fonts" { } ''
-        mkdir -p $out/share/fonts/truetype
-        cp ${fonts}/*.ttf $out/share/fonts/truetype/
-      '';
+      
+      # Create a package for your custom fonts
+      customFonts = pkgs.stdenvNoCC.mkDerivation {
+        name = "custom-fonts";
+        src = fonts;
+        installPhase = ''
+          mkdir -p $out/share/fonts/truetype
+          cp -R $src/* $out/share/fonts/truetype/
+        '';
+      };
 
     in
     {
@@ -32,17 +31,17 @@
         nativeBuildInputs = with pkgs; [
           typst
           tinymist
+          customFonts  # Add the fonts to the shell
         ];
 
-        packages = [ customFonts ];
-
-        # Konfigurace pro aplikace používající fonty
-        FONTCONFIG_FILE = pkgs.makeFontsConf {
-          fontDirectories = [
-            "${customFonts}/share/fonts/truetype"
-          ];
-        };
+        # Set FONTCONFIG_FILE to make fonts discoverable
         shellHook = ''
+          export FONTCONFIG_FILE=${pkgs.makeFontsConf {
+            fontDirectories = [ 
+              "${customFonts}/share/fonts/truetype"
+              "${pkgs.dejavu_fonts}/share/fonts"
+            ];
+          }}
           unset SOURCE_DATE_EPOCH
         '';
       };
