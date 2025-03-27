@@ -153,8 +153,9 @@ int main(void) {
     init_button_data(global_var.button_data);
 
     global_var.device_setup = dev_mode_get_dev_setup();
-    neopixel_startup_effect(global_var.visual_output);
-
+    if (global_var.device_setup == DEV_SETUP_LOCAL) {
+        neopixel_startup_effect(global_var.visual_output);
+    }
     /* USER CODE END 2 */
 
     /* Infinite loop */
