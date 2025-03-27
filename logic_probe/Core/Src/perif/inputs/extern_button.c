@@ -68,7 +68,7 @@ void extern_button_handle_long(button_data_t* data) {
     switch (global_var.local_state) {
         case LOCAL_STATE_LOGIC_PROBE:
             global_var.local_substate = LOCAL_SUBSTATE_CHANNEL_1;
-            global_var.local_state = LOCAL_STATE_VOLTMETER_PROBE;
+            global_var.local_state = LOCAL_STATE_OUTPUT;
             neopixel_send_color(global_var.visual_output, NEOPIXEL_ORANGE);
             break;
         case LOCAL_STATE_VOLTMETER_PROBE:
