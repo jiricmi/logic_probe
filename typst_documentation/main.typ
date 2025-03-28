@@ -1,12 +1,12 @@
 #import "./template/template/template.typ": *
-#import "@preview/fletcher:0.5.4" as fletcher: diagram, node, edge
+#import "@preview/fletcher:0.5.4" as fletcher: diagram, node, edge, shapes
 #set math.equation(numbering: "(1)")
 
 #show: template.with(
   meta: (
     title: "Multifunkční diagnostická logická sonda", author: (
       name: "Milan Jiříček", email: "jiricmi1@fel.cvut.cz", url: "https://github.com/jiricmi/logic_probe",
-    ), bachelor: true, supervisor: "doc. Ing. Jan Fischer, CSc.", faculty: "Fakulta elektrotechnická", department: "Katedra měření", study-programme: "Otevřená informatika",
+    ), bachelor: true, diff_usage:false, supervisor: "doc. Ing. Jan Fischer, CSc.", faculty: "Fakulta elektrotechnická", department: "Katedra měření", study-programme: "Otevřená informatika",
   ), print: false, lang: "cs",
   abstract-en: [
     Teaching the fundamentals of electronics requires tools that allow students to experiment with real circuits and understand their principles of operation. Traditional conventional tools lack flexibility for teaching purposes and may be too complicated for a person who is just discovering the properties of electronic circuits. This work addresses this need by designing a multifunctional logic probe that combines the functions of a logic analyzer, signal generator, and communication interface tester. Its key advantage is the possibility to be assembled simply using available microcontrollers, which makes it suitable for use in teaching.
@@ -35,6 +35,7 @@
 #show raw.where(block: true): set raw(lang: "powershell")
 
 = Úvod
+#todo("ROZPRACOVÁNO, PŘEDELAT")
 Vzdělávání v oblasti elektrotechniky a elektroniky vyžaduje nejen hluboké
 teoretické znalosti, ale také praktické dovednosti a umění si poradit s
 naskytnutým problémem. Pro řešení nejrůznějších překážek při navrhování
@@ -59,22 +60,20 @@ kteří se s elektronikou setkávají poprvé.
 V této práci budou představeny požadavky na zařízení a realizace této logické
 sondy.
 
-= Teoretické základy
+= Použité principy a technologie
 == STM32G030
-Pro návrh v této semestrální práci byl zvolen mikrořadič *STM32G030* od firmy
-STMicroelectronics. @STM32G0-Series Tento mikrořadič je vhodný pro aplikace s
+Pro návrh v této semestrální práci byl zvolen mikrořadič STM32G030 od firmy
+STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
 energeticky efektivní a nabízí dostatečný výkon pro běžné vestavné aplikace.
-Obsahuje 32 KiB flash paměť a 8 KB SRAM @STM32G0-REF.
+Obsahuje 32 KiB flash paměť a 8 KiB SRAM @STM32G0-REF.
 
 Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
-typové pouzdra jako například TSSOP20 nebo QFN32, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu @STM32G030x6-tsop.
-
+typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
+integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které se více zmíníme v ...
 === Analogo-digitální převodník <adc>
 Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
-o~rozlišení 12 bitů. Toto rozlišení poskytuje vysokou přesnost při měření napětí
-a umožňuje detekci i malých změn v signálu. Maximální vzorkovací frekvence
+o~rozlišení 12 bitů. Maximální vzorkovací frekvence
 převodníku je 1 MSPS#footnote[milion vzorků za sekundu].
 #figure(
   caption: "Blokový diagram AD převodníku", image("pic/adc-block-diagram.png"),
@@ -119,8 +118,9 @@ kde:
 - $V_("CH_ADC_DATA")$ je digitální hodnota získaná z AD převodníku.
 - $"rozlišení"$ je počet bitů AD převodníku.
 - $V_("REF+")$ je referenční hodnota napětí.
+
 === Časovače <timery>
-STM32G0 obsahuje několik časovačů, které se dají využít pro logickou sondu.
+STM32G030 obsahuje několik časovačů, které se dají využít pro logickou sondu.
 Mikrořadič má zabudovaných několik základních#footnote[Basic Timers] a jeden
 advanced timer#footnote[Advanced Timers]. Základní timery jsou 16~bitové a jsou
 vhodné pro měření doby či generování jednoduchých PWM signálů. Pokročilý časovač
@@ -148,71 +148,12 @@ vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interva
 který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
-=== USART<usart>
+=== USART periferie<usart>
 Universal Synchronous Asynchronous Receiver Transmiter je flexibilní periferie,
 která umožňuje seriovou komunikaci jak v asynchroním tak v synchroním režimu.
-Pro tuto aplikaci je využíván UART, kde data jsou odesílána bez společného
-hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
-baudrate#footnote[Rychlost přenosu], což určuje počet přenesených bitů za
-sekundu. UART podporuje nastavení různých protokolů komunikace jako například
-RS-232 a R-485. UART také umí full duplex komunikaci @USART-REF.
 
-Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně:
-- *Start bit* - Každý rámec začíná start bitem, který určuje začátek rámce. Bit je
-  vždy "0".
-- *Slovo dat* - Poté následuje 8 bitů dat#footnote[Lze používat i 7 bitů nebo 9 bitů dat.].
-- *Paritní bity* - Paritní bity slouží k detekci chyby v přenosu. Parita nám
-  dokáže pouze detekovat chybu rámce pouze v případech, kdy nevznikne chyb více#footnote[Chyba z dat 1101 na 1000 nelze detekovat, protože lichá parita má paritní bit v
-    obou případech 0.].
-- *Stop bit* - Stop bit#footnote[Stop bitů může být i několik.] signalizuje konec
-  přenosu rámce. Obvykle logická "1".
-Práce využívá periferii USART2, protože je na většině vývojových desek řady
-STM32, konkrétně STM32G0, připojena k rozhraní STLink, což umožňuje komunikaci
-přes USB konektor. Díky této konfiguraci je možné jednoduše realizovat sériovou
-komunikaci prostřednictvím připojení k počítači přes USB pro vývoj @USART-REF.==
-Ansi sekvence Ansi escape codes jsou speciální kódy používané pro formátování
-textu v terminálech, které podporují ANSI standard. ANSI kódy poskytují změnu
-vzhledu textu, jako je barva pozadí, písma, pozicování a další. Největší využití
-mají ve vývoji terminálových rozhraní zvaná TUI.=== Historie Sekvence vnikly
-jako standardizovaný soubor kódů, který měl za úkol sjednotit různé značky a
-modely terminálů, které používaly vendor-specific#footnote[Nestandardatizované kódy, který si každá společnost navrhla sama.] metody,
-pro tvorbu TUI. Nejznámější terminál, který podporoval ANSI sekvence byl Digital
-VT100. Jelikož byl velice populární, většina nových terminálů se začaly chovat
-podle ANSI#footnote[Název ANSI byl vytvořen až později. Odpovídá zkratce American National Standards
-  Institute.] sekvencí. Následně tyto sekvence byly standardizovány @WIKI-ANSI.
-
-=== Kódy
-Escape kódy začínají *ESC*#footnote[\\33] znakem, následovným *[*, který značí
-začátek sekvence, a poté symboly, které určují efekt a celá sekvence je
-zakončena písmenem.#footnote[Existují také ESC N nebo ESC \\ apod.ale tyto se téměř nepoužívají.]
-
-#v(5pt)
-```bash
-  ESC [ <parametry> <akce>
-```
-#v(5pt)
-Pro změnu barvy a obecně textu je použito písmeno *m* jako akce. Nejčastější
-kódy jsou následující:
-- Změna barvy textu
-  - 30 až 37: Základní barvy
-  - 90 až 97: Světlé verze barev
-  - 40 až 47: Základní barvy pozadí
-  - 100 až 107: Světlé verze barev
-- Textové efekty
-  - 0: Reset předchozích efektů
-  - 1: Tučný text
-  - 4: Podtržení
-  - 7: Inverzní
-  - 9: Přeškrtnutý
-
-Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace
-@GITHUB-ANSI.
-#v(5pt)
-```bash
-ESC[<row>;<col>H // Pohyb na konkrétní pozici
-ESC[<posun><směr> // Posune o danou pozici
-```
-#v(5pt)
+Práce využívá periferii USART1, pro komunikaci s PC behěm terminálového módu.
+#todo("nevím, tohle asi lépe")
 == STM HAL
 Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
@@ -245,7 +186,167 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
   caption: "STM32CubeMX HAL architektura", image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
 
-= Realizace
+
+
+== Raspberry Pi Pico
+== Logická sonda
+== Sériová komunikační rozhraní
+=== UART<uart>
+Universal Asynchronous Reciever Transmiter je rozhraní, kde data jsou odesílána bez společného
+hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
+baudrate#footnote[Rychlost přenosu], což určuje počet přenesených bitů za
+sekundu. UART podporuje nastavení různých protokolů komunikace jako například
+RS-232 a RS-485. UART také umí full duplex komunikaci @USART-REF.
+
+Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně:
+- *Start bit* - Každý rámec začíná start bitem, který určuje začátek rámce. Bit je
+  vždy "0".
+- *Slovo dat* - Poté následuje 8 bitů dat#footnote[Lze používat i 7 bitů nebo 9 bitů dat.].
+- *Paritní bity* - Paritní bity slouží k detekci chyby v přenosu. Parita nám
+  dokáže pouze detekovat chybu rámce pouze v případech, kdy nevznikne chyb více#footnote[Chyba z dat 1101 na 1000 nelze detekovat, protože lichá parita má paritní bit v
+    obou případech 0.].
+- *Stop bit* - Stop bit#footnote[Stop bitů může být i několik.] signalizuje konec
+  přenosu rámce. Obvykle logická "1".
+
+Pokud rozhraní neodesílá žádné bity, na vodičích se nachází vysoká úroveň. Této vlastnosti bude využito později v návrhu logické sondy.
+
+V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence. Více o periferii, která pracuje s UART rozhraním mluví @usart.
+
+=== I2C
+=== SPI
+=== Neopixel
+== Ansi sekvence
+Ansi escape codes jsou speciální kódy používané pro formátování
+textu v terminálech, které podporují ANSI standard. ANSI kódy poskytují změnu
+vzhledu textu, jako je barva pozadí, písma, pozicování a další. Největší využití
+mají ve vývoji terminálových rozhraní zvaná TUI.
+=== Historie Sekvence vnikly
+jako standardizovaný soubor kódů, který měl za úkol sjednotit různé značky a
+modely terminálů, které používaly vendor-specific#footnote[Nestandardatizované kódy, který si každá společnost navrhla sama.] metody,
+pro tvorbu TUI. Nejznámější terminál, který podporoval ANSI sekvence byl Digital
+VT100. Jelikož byl velice populární, většina nových terminálů se začaly chovat
+podle ANSI#footnote[Název ANSI byl vytvořen až později. Odpovídá zkratce American National Standards
+  Institute.] sekvencí. Následně tyto sekvence byly standardizovány @WIKI-ANSI.
+=== Kódy
+Escape kódy začínají *ESC*#footnote[\\33] znakem, následovným *[*, který značí
+začátek sekvence, a poté symboly, které určují efekt a celá sekvence je
+zakončena písmenem.#footnote[Existují také ESC N nebo ESC \\ apod.ale tyto se téměř nepoužívají.]
+
+#v(5pt)
+```bash
+  ESC [ <parametry> <akce>
+```
+#v(5pt)
+Pro změnu barvy a obecně textu je použito písmeno *m* jako akce. Nejčastější
+kódy jsou následující:
+- Změna barvy textu
+  - 30 až 37: Základní barvy
+  - 90 až 97: Světlé verze barev
+  - 40 až 47: Základní barvy pozadí
+  - 100 až 107: Světlé verze barev
+- Textové efekty
+  - 0: Reset předchozích efektů
+  - 1: Tučný text
+  - 4: Podtržení
+  - 7: Inverzní
+  - 9: Přeškrtnutý
+
+Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace
+@GITHUB-ANSI.
+#v(5pt)
+```bash
+ESC[<row>;<col>H // Pohyb na konkrétní pozici
+ESC[<posun><směr> // Posune o danou pozici
+```
+#v(5pt)
+== Metody měření
+
+
+= Návrh logické sondy
+== Požadavky
+== HW návrh
+=== STM32G030 SOP8
+=== STM32G030 TSSOP20
+=== Raspberry Pi Pico
+== SW návrh
+Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
+=== Logika nastavení módů
+Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv.
+#v(5pt)
+#diagram(
+	node-stroke: 1pt,
+	node((0,0), [Start], corner-radius: 10pt),
+	edge("=>"),
+	node((0,1), [Inicializace\ periferií], corner-radius: 2pt),
+	edge("=>"),
+	node((0,2), align(center)[
+		Je na PA10\ vysoká\ úroveň?
+	], shape: shapes.diamond),
+	edge("r", "=>", [Ano], label-pos: 0.1),
+	edge("l", "=>", [Ne], label-pos: 0.1),
+	node((1,2), [Terminálový mód], corner-radius: 2pt),
+	edge("d,r,u,l", "=>", label-pos: 0.1),
+	node((-1,2), [Lokální mód], corner-radius: 2pt),
+	edge("d,l,u,r", "=>", label-pos: 0.1),
+)
+#v(5pt)
+Po načtení módu zařízení reaguje na různé podněty v závislosti, na načteném módu. Aby uživatel mohl měnit jednotlivé módy, tak je zařízení vždy nutné vypnout a zapnout aby došlo ke správné inicializaci. Jednotlivé módy běží v nekonečném cyklu, dokud zařízení není vypnuto.
+=== Logika lokálního módu
+Lokální mód je stav, kdy zařízení nevyžaduje interakci s počítačem. Tento mód je potřebný v momentě, kdy uživatel, potřebuje rychlou analýzu obvodu bez nutnosti zjišťování podrobností. Celá interakce s uživatelem je prováděna skrze tlačítko a RGB LED. Tlačítko poskytuje 3 druhy interakce:
+- *Krátký stisk*
+    - slouží pro přepínání úrovní
+- *Dvojitý stisk*
+    - slouží pro přepínání kanálů
+- *Dlouhý stisk*
+    - slouží pro přepínání stavů
+==== Stavy
+Sonda ve stavu lokálním, má celkově 3 režimy, které se cyklicky mění dlouhým stiskem tlačítka, jednotlivé módy jsou rozlišeny barvou, která se rozsvítí na LED po dobu jedné sekundy.
+Stavy jsou následující:
+- *Stav logické sondy*
+    - Tento stav 
+
+==== Hlavní smyčka
+Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav.
+
+#v(5pt)
+#diagram(
+	node-stroke: 1pt,
+	node((0,0), [Start], corner-radius: 10pt),
+	edge("=>"),
+	node((0,1), [dlouhý stisk\ tlačítka?], shape: shapes.diamond),
+	edge("r", "=>", [Ano], label-pos: 0.1),
+	edge("d", "=>", [Ne], label-pos: 0.1),
+	node((1,1), [Přepnout\ aktualní stav], corner-radius: 2pt),
+	edge("d,l", "=>", [], label-pos: 0.1),
+	node((0,2), [krátký stisk\ tlačítka?], shape: shapes.diamond),
+	edge("l", "=>", [Ano], label-pos: 0.1),
+	edge("d", "=>", [Ne], label-pos: 0.1),
+	node((-1,2), [Reagovat\ na krátký stisk], corner-radius: 2pt),
+	edge("d,r", "=>", [], label-pos: 0.1),
+	node((0,3), [dvojitý stisk\ tlačítka?], shape: shapes.diamond),
+    edge("r", "=>", [Ano], label-pos: 0.1),
+	edge("d", "=>", [Ne], label-pos: 0.1),
+	node((1,3), [Reagovat\ na dvojitý stisk], corner-radius: 2pt),
+    edge("d,l", "=>", [], label-pos: 0.1),
+	node((0,4), [Změna\ hodnot?], shape: shapes.diamond),
+    edge("l", "=>", [Ano], label-pos: 0.1),
+	edge("d", "=>", [Ne], label-pos: 0.1),
+	node((-1,4), [Rozsvítit led], corner-radius: 2pt),
+	edge("d,r", "=>", [], label-pos: 0.1),
+	node((0,5), [Čekej], corner-radius: 2pt),
+    edge("d,l,l,u,u,u,u,u,r,r", "=>", [], label-pos: 0.1),
+
+
+	//edge("d,l,u,r", "=>", label-pos: 0.1),
+)
+
+
+#v(5pt)
+
+
+
+
+= Realizace logické sondy
 == Grafické rozhraní
 Pro snadné pochopení ovládání i jedincem, který se zabývá podobným tématem
 poprvé, je podstatné, aby logická sonda byla jednoduše ovladatelná, přenositelná
@@ -276,8 +377,8 @@ kde vývojář nastaví potřebné parametry a je mu vygenerován základní kó
 potřeby projektu bylo zvoleno následující nastavení:
 #v(10pt)
 ```C
-static void MX_USART2_UART_Init(void) {
-    huart2.Instance = USART2;
+static void MX_USART1_UART_Init(void) {
+    huart2.Instance = USART1;
     huart2.Init.BaudRate = 115200;
     huart2.Init.WordLength = UART_WORDLENGTH_8B; // velikost dat
     huart2.Init.StopBits = UART_STOPBITS_1; // počet stop bitů
@@ -288,7 +389,7 @@ static void MX_USART2_UART_Init(void) {
     huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
     huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
     huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart2) != HAL_OK) {
+    if (HAL_UART_Init(&huart1) != HAL_OK) {
         Error_Handler();
     }
 }```
@@ -297,11 +398,11 @@ Po inicializaci je možné poslat zprávu pomocí například následovně:
 #v(10pt)
 ```C
 void ansi_send_string(const char* str) {
-    HAL_UART_Transmit(&huart2, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 ```
 #v(10pt)
-kde reference na `huart2` je inicializovaná struktura. Pro jednodušší generování
+kde reference na `huart1` je inicializovaná struktura. Pro jednodušší generování
 rozhraní byla vytvořena abstrakce zvaná `ansi abstraction layer` (dále jen AAL).
 Tato abstrakce umí potřebné ansi senkvence generovat. Zde je příklad funkce,
 která odesílá text, který již má speciální efekty:
@@ -358,7 +459,7 @@ void ansi_frequency_reader_generate_hint(void) {
     ansi_set_cursor(TERMINAL_HEIGHT - 2, 4);
     ansi_send_text("m - change mode ", RED_TEXT, "", false);
     ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
-    ansi_send_text("t - change sample time ", BLUE_TEXT, "", false);
+    ansi_send_text("t - change gate time ", BLUE_TEXT, "", false);
     ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
     ansi_send_text("d - delete flag ", GREEN_TEXT, "", false);
 }
@@ -382,8 +483,8 @@ HAL, tzn. stačí ho definovat pro správnou funkcionalitu.
 #v(10pt)
 ```C
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
-    if (huart->Instance == USART2) {
-        HAL_UART_Receive_IT(&huart2, &received_char, 1);
+    if (huart->Instance == USART1) {
+        HAL_UART_Receive_IT(&huart1, &received_char, 1);
         if (received_char == 'r' || received_char == 'R') {  // reload
             ansi_clear_terminal();
             render_current_page();
@@ -771,27 +872,5 @@ void sig_gen_toggle_pulse(sig_gen_t* generator, const _Bool con) {
 ) <generator-page>
 
 = Závěr a zhodnocení
-Většina témat této práce, jsou pro mě nová. Na počátku této práce mé znalosti
-ohledně mikrořadičů byly velice povrchní a pouze na takové úrovni, které mi
-umožňovaly pracovat s mikrokontrolérem pomocí knihoven a vysoké míry abstrakce.
-
-Tento projekt, vyžadoval, abych se naučil spoustu nových věcí a principy
-fungování mikrořadiče nevnímal pouze jako "funkci, která mi vrátí výsledek".
-Nyní vnímám, že mikrořadič není pouze černá skříňka, ale pod povrchem je to
-chytře navržený stroj, který dává neskutečné možnosti, jak s ním pracovat. Má
-cesta v tomto odvětví je stále na začátku, ale jsem zapálen pokračovat a učit se
-novým věcem.
-
-Tato práce je počátek logické sondy pro střední a vysoké školy, které mají za
-úkol ulehčit výuku a diagnostiku. Hlavní část této práce pro mě byla zanalyzovat
-problematiku a najít vhodné řešení. Logická sonda již dnes lze použít na
-jednoduchou diagnostiku. Logická sonda má funkční TUI, které je realizované
-pomocí ANSI sekvencí, umí měřit napětí na 4~kanálech, umí určovat frekvenci na
-vstupu, umí zachytávat krátké pulzy ať jsou nízko úrovňové nebo vysoko úrovňové
-a dokáže i generovat krátké pulzy. Proto hodnotím výsledek práce jako úspěch.
-
-Tímto ale práce na projektu neskončila. Na projektu plánuji pracovat v rámci
-bakalářské práce a rozvinout její potenciál a nakonec i naportovat na další
-mikrořadiče.
 
 #bibliography("bibliography.bib")
