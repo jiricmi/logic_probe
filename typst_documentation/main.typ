@@ -292,21 +292,15 @@ Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v
 #v(5pt)
 Po načtení módu zařízení reaguje na různé podněty v závislosti, na načteném módu. Aby uživatel mohl měnit jednotlivé módy, tak je zařízení vždy nutné vypnout a zapnout aby došlo ke správné inicializaci. Jednotlivé módy běží v nekonečném cyklu, dokud zařízení není vypnuto.
 === Logika lokálního módu
-Lokální mód je stav, kdy zařízení nevyžaduje interakci s počítačem. Tento mód je potřebný v momentě, kdy uživatel, potřebuje rychlou analýzu obvodu bez nutnosti zjišťování podrobností. Celá interakce s uživatelem je prováděna skrze tlačítko a RGB LED. Tlačítko poskytuje 3 druhy interakce:
-- *Krátký stisk*
-    - slouží pro přepínání úrovní
-- *Dvojitý stisk*
-    - slouží pro přepínání kanálů
-- *Dlouhý stisk*
-    - slouží pro přepínání stavů
-==== Stavy
-Sonda ve stavu lokálním, má celkově 3 režimy, které se cyklicky mění dlouhým stiskem tlačítka, jednotlivé módy jsou rozlišeny barvou, která se rozsvítí na LED po dobu jedné sekundy.
-Stavy jsou následující:
-- *Stav logické sondy*
-    - Tento stav 
+Lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je optimalizován pro rychlou analýzu obvodu bez nutnosti nastavování podrobných parametrů. Zařízení skrze tlačítko rozpozná tři interakce: _krátký stisk_ slouží k přepínání logických úrovních na určitém kanálu, _dvojitý stisk_ umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
 
-==== Hlavní smyčka
-Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav.
+Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá TTL logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
+
+Další stav, který se po dlouhém stisku nastaví je *nastavování logických úrovní*. Stav při stisku tlačítka změní logickou úroveň na opačnou, tzn. pin je nastaven jako push-pull a pokud je na pinu nízká úroveň, změní se na vysokou a naopak. Tato úroveň lze nezávisle měnit na všech kanálech, který má řadič v návrhu k dispozici.
+
+Poslední stav je *detekce pulzů*. Detekování pulzů probíhá za pomocí input capture kanálu časovače. Při detekci hrany, je stav časovače uložen do registru a je vyvoláno přerušení. Přerušení poté nastaví pomocný flag, který bude zpracován při dalším cyklu smyčky. Smyčka poté na 1 sekundu rozsvítí LED jako detekci náběhové resp. sestupné hrany.
+
+Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Důvod pro zvolení této metody je ten, že je nutné aby bylo přerušení krátké, tzn. není možné aby se na 1 sekundu rozsvítila led. Další důvod je ten, že takto je zaručeno, že se vždy splní úkony ve správném pořadí. V ... je vysvětlen důvod podrobněji. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav. Poté program zkontroluje, zda bylo tlačítko zmáčknuto krátkou dobu, pokud ano, reaguje na tento úkon uživatele v závislosti na aktuálním stavu, stejně jako u dvojstisku. Je důležité podotknout, že stav tlačítka je vždy pouze jeden a nikdy se tlačítko nenachází ve více stavech zároveň. Následně po kontrole vstupní periferie proběhne kontrola hodnot a flagů aby smyčka zobrazila výstupní periferií informaci uživateli. Např. pokud je stav nastavení pulzů a flag, který symbolizuje nalezenou hranu, rozsvítí smyčka LED příslušné barvy. Po dokončení úkonů smyčka čeká určitou dobu, než zopakuje celý cyklus znovu. Doba se mění v závislosti na zvoleném stavu, tzn. detekce pulzů probíhá rychleji, než nastavování logických úrovní.
 
 #v(5pt)
 #diagram(
@@ -339,9 +333,8 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 
 	//edge("d,l,u,r", "=>", label-pos: 0.1),
 )
-
-
 #v(5pt)
+==
 
 
 
