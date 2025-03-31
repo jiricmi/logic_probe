@@ -23,11 +23,12 @@
     Hardwarový návrh je optimalizován pro minimalizaci externích komponent s důrazem na využití interních periferií mikrořadičů, což umožňuje sestavení zařízení na nepájivém kontaktním poli.  Součástí práce je firmware, dokumentace a návody pro studenty, které pokrývají sestavení sondy i příklady jejího využití. Výsledkem je open-source řešení, které lze dále rozšiřovat a přizpůsobovat specifickým vzdělávacím potřebám.
   ],
   acknowledgement: [
-    Rád bych tímto poděkoval panu doc. Ing. Janu Fischerovi, CSc., za jeho cenné
-    rady, odbornou pomoc a ochotu sdílet své znalosti. Děkuji mu také za jeho čas a
-    podnětné připomínky.
+    Rád bych tímto poděkoval panu doc. Ing. Janu Fischerovi, CSc., mému vedoucímu práce, za jeho cenné rady, odbornou pomoc a ochotu sdílet své znalosti. Děkuji mu také za věnovaný čas, podnětné připomínky a trpělivost, které mi poskytoval během celého procesu tvorby této práce.
 
-  ],
+    Dále bych chtěl vyjádřit největší poděkování své rodině a mé přítelkyni za jejich neochvějnou podporu, povzbuzení v náročných momentech a pochopení, jež mi dávali najevo po celou dobu mého studia. Bez jejich lásky a motivace by tato práce nevznikla.
+
+   Nemohu opomenout ani své přátele, kteří mi po celou dobu studia pomáhali udržet optimismus, sdíleli se mnou radosti i starosti, a svou přítomností mi vytvářeli potřebný odstup od pracovního vypětí. Jejich přátelství a ochota být mi oporou v osobním životě významně přispěly k tomu, abych mohl tuto práci úspěšně dokončit.
+],
 )
 
 // add pwsh syntax highlighting and make it the default lang for blocks
@@ -70,7 +71,7 @@ Obsahuje 32 KiB flash paměť a 8 KiB SRAM @STM32G0-REF.
 
 Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které se více zmíníme v ...
+integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
 === Analogo-digitální převodník <adc>
 Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence
@@ -121,8 +122,8 @@ kde:
 
 === Časovače <timery>
 STM32G030 obsahuje několik časovačů, které se dají využít pro logickou sondu.
-Mikrořadič má zabudovaných několik základních#footnote[Basic Timers] a jeden
-advanced timer#footnote[Advanced Timers]. Základní timery jsou 16~bitové a jsou
+Mikrořadič má zabudovaných několik základních a jeden
+advanced timer. Základní timery jsou 16~bitové a jsou
 vhodné pro měření doby či generování jednoduchých PWM signálů. Pokročilý časovač
 je na tomto mikrokontroleru 32bitový a poskytuje více kanálů. Tyto časovače také
 podporují nejen generování signálů na výstup, ale také zachytávání signálů a
@@ -141,7 +142,7 @@ Frekvence časovače určuje, jak často časovač inkrementuje svou hodnotu za 
 sekundu @STM32G0-REF.
 $ F_("TIMx") = F_("clk")/"Prescaler + 1" $
 
-Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16 bitového časovače je maximální perioda 65535.],
+Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16 bitového časovače je maximální perioda 65535, zatímco u 32 bitového časovače je to 4294967295.],
 souvisí s jeho tzv. periodou. Perioda určuje hodnotu, při jejímž dosažení se
 čítač automaticky resetuje na 0. Tuto hodnotu lze nastavit podle potřeby
 vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interval,
@@ -194,7 +195,7 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 === UART<uart>
 Universal Asynchronous Reciever Transmiter je rozhraní, kde data jsou odesílána bez společného
 hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
-baudrate#footnote[Rychlost přenosu], což určuje počet přenesených bitů za
+baudrate#footnote[Počet bitů přenesených za sekundu], což určuje počet přenesených bitů za
 sekundu. UART podporuje nastavení různých protokolů komunikace jako například
 RS-232 a RS-485. UART také umí full duplex komunikaci @USART-REF.
 
@@ -205,7 +206,7 @@ Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně
 - *Paritní bity* - Paritní bity slouží k detekci chyby v přenosu. Parita nám
   dokáže pouze detekovat chybu rámce pouze v případech, kdy nevznikne chyb více#footnote[Chyba z dat 1101 na 1000 nelze detekovat, protože lichá parita má paritní bit v
     obou případech 0.].
-- *Stop bit* - Stop bit#footnote[Stop bitů může být i několik.] signalizuje konec
+- *Stop bit* - Stop bit#footnote[Stop bitů může být i několik] signalizuje konec
   přenosu rámce. Obvykle logická "1".
 
 Pokud rozhraní neodesílá žádné bity, na vodičích se nachází vysoká úroveň. Této vlastnosti bude využito později v návrhu logické sondy.
@@ -215,18 +216,56 @@ V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda
 === I2C
 === SPI
 === Neopixel
+Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vodiče: ground, Vcc, DIn a DOut. LED má vlastní řídící obvod, který ovládá barvy diody na základě signálu z vodiče DIn. Výhoda LED je možnost připojit diody do serie, a jedním vodičem ovládat všechny LED v sérii @NEOPIXEL-REF. @label-neopixel znázorňuje zapojení více LED do série a~schopnost ovládání jedním vodičem.
+
+Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje jednu barevnou složku. Parametry pořadí složek, časování apod. se může lišit v závislosti na konkrétním verzi a provedení LED. V této práci je vycházeno z WS2812D. První bit složky je, v případě WS2812, MSB#footnote[Most significant bit]. 
+
+#figure(
+  image("pic/NEOPIXEL_SCHEME_SERIE.png"), // Cesta k obrázku
+  caption: [
+    Způsob zapojení RGB LED do série @NEOPIXEL-REF. 
+  ],
+) <label-neopixel>
+#v(5pt)
+#figure(
+  placement: none,
+  caption: [Pořadí bitů pro nastavení barvy v WS2812 @NEOPIXEL-REF],
+  text(size: 9pt)[
+    #table(
+      columns: 24,
+      align: center + horizon,
+      table.header(
+        "R7", "R6", "R5", "R4", "R3", "R2", "R1", "R0",
+        "G7", "G6", "G5", "G4", "G3", "G2", "G1", "G0",
+        "B7", "B6", "B5", "B4", "B3", "B2", "B1", "B0"
+      ),
+    )
+  ]
+)<neopixel-bits>
+#v(5pt)
+
+Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpoznávat logickou jedničku a nulu jiným způsobem. Na pin DIn je přivedena vysoká úroveň na~určitou dobu, poté je na určitou dobu přivedena nízká úroveň. Kombinace těchto časů dává řídícímu obvodu v LED možnost rozpoznat, jaký bit byl poslán diodě. Pro ovládání `n`~LED, na DIn první LED je zasláno $n × 24$ bitů. Dioda zpracuje prvních 24 bitů, a na Dout odešle $(n-1)×24$ bitů. Tento proces se opakuje pro každou LED v sérii a tím je dosaženo rozsvícení všech diod na požadovanou barvu. Aby řídící obvod rozpoznal, které data má poslat dále a která jsou už nová iterace barev pro LED, je nutné dodržet tzn.~RESET time, kdy po uplynutí tohoto času, řídící obvod, už neposílá data dále, ale zpracuje je. @neopixel_bit_time ukazuje časování pro WS2812D.
+
+#figure(
+    placement: none,
+    caption: [Časování logických úrovní pro zaslání bitů WS2812D],
+    table(
+        columns: 3, 
+        align: center,
+        table.header("Bit", "Typ času", "t[ns]"),
+        [0], [vysoká úroveň napětí], [$220~380$],
+        [0], [nízká úroveň napětí], [$580~1000$],
+        [1], [vysoká úroveň napětí], [$580~1000$],
+        [1], [nízká úroveň napětí], [$580~1000$],
+        [RESET], [nízká úroveň napětí], [$>280 000$],
+    )
+)<neopixel_bit_time>
+
 == Ansi sekvence
 Ansi escape codes jsou speciální kódy používané pro formátování
 textu v terminálech, které podporují ANSI standard. ANSI kódy poskytují změnu
 vzhledu textu, jako je barva pozadí, písma, pozicování a další. Největší využití
 mají ve vývoji terminálových rozhraní zvaná TUI.
-=== Historie Sekvence vnikly
-jako standardizovaný soubor kódů, který měl za úkol sjednotit různé značky a
-modely terminálů, které používaly vendor-specific#footnote[Nestandardatizované kódy, který si každá společnost navrhla sama.] metody,
-pro tvorbu TUI. Nejznámější terminál, který podporoval ANSI sekvence byl Digital
-VT100. Jelikož byl velice populární, většina nových terminálů se začaly chovat
-podle ANSI#footnote[Název ANSI byl vytvořen až později. Odpovídá zkratce American National Standards
-  Institute.] sekvencí. Následně tyto sekvence byly standardizovány @WIKI-ANSI.
 === Kódy
 Escape kódy začínají *ESC*#footnote[\\33] znakem, následovným *[*, který značí
 začátek sekvence, a poté symboly, které určují efekt a celá sekvence je
@@ -291,7 +330,7 @@ Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v
 )
 #v(5pt)
 Po načtení módu zařízení reaguje na různé podněty v závislosti, na načteném módu. Aby uživatel mohl měnit jednotlivé módy, tak je zařízení vždy nutné vypnout a zapnout aby došlo ke správné inicializaci. Jednotlivé módy běží v nekonečném cyklu, dokud zařízení není vypnuto.
-=== Logika lokálního módu
+=== Lokální mód
 Lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je optimalizován pro rychlou analýzu obvodu bez nutnosti nastavování podrobných parametrů. Zařízení skrze tlačítko rozpozná tři interakce: _krátký stisk_ slouží k přepínání logických úrovních na určitém kanálu, _dvojitý stisk_ umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
 
 Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá TTL logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
@@ -334,12 +373,13 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 	//edge("d,l,u,r", "=>", label-pos: 0.1),
 )
 #v(5pt)
-==
+== Terminálový mód
 
 
 
 
-= Realizace logické sondy
+
+= Realizace logické sondy <realizace>
 == Grafické rozhraní
 Pro snadné pochopení ovládání i jedincem, který se zabývá podobným tématem
 poprvé, je podstatné, aby logická sonda byla jednoduše ovladatelná, přenositelná
