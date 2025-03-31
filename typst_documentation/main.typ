@@ -49,7 +49,7 @@ analýze digitálních signálů a diagnostice obvodů. Aby nástroj přispěl k
 vzdělávání, je žádoucí aby takové zařízení bylo intuitivní, multifunkční a
 přizpůsobené náležitostem laboratorní výuky.
 
-Tato semestrální práce se zaměřuje počáteční návrh a realizaci logické songy,
+Tato bakalářská práce se zaměřuje na návrh a realizaci logické sondy,
 která bude navržena a optimalizována pro využití ve výuce středoškolských oborů
 či ve výuce vysokoškolských oborů. Cílem je vytvořit zařízení, které umožní méně
 zkušeným studentům provádět klíčové diagnostické úkony, jako například,
@@ -62,6 +62,9 @@ V této práci budou představeny požadavky na zařízení a realizace této lo
 sondy.
 
 = Použité principy a technologie
+== Logická sonda
+Logická sonda je elektronické zařízení sloužící k diagnostice a analýze digitálních obvodů. Pomáhá určovat logické úrovně, detekovat pulsy, měřit frekvenci a další. Je to jeden ze standartních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilitou použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu.
+
 == STM32G030
 Pro návrh v této semestrální práci byl zvolen mikrořadič STM32G030 od firmy
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
@@ -149,12 +152,6 @@ vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interva
 který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
-=== USART periferie<usart>
-Universal Synchronous Asynchronous Receiver Transmiter je flexibilní periferie,
-která umožňuje seriovou komunikaci jak v asynchroním tak v synchroním režimu.
-
-Práce využívá periferii USART1, pro komunikaci s PC behěm terminálového módu.
-#todo("nevím, tohle asi lépe")
 == STM HAL
 Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
@@ -190,16 +187,15 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
 
 == Raspberry Pi Pico
-== Logická sonda
 == Sériová komunikační rozhraní
 === UART<uart>
 Universal Asynchronous Reciever Transmiter je rozhraní, kde data jsou odesílána bez společného
 hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
 baudrate#footnote[Počet bitů přenesených za sekundu], což určuje počet přenesených bitů za
 sekundu. UART podporuje nastavení různých protokolů komunikace jako například
-RS-232 a RS-485. UART také umí full duplex komunikaci @USART-REF.
+RS-232 a RS-485. UART také umí full duplex komunikaci. @USART-REF @WIKI-UART
 
-Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně:
+Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně: @WIKI-UART
 - *Start bit* - Každý rámec začíná start bitem, který určuje začátek rámce. Bit je
   vždy "0".
 - *Slovo dat* - Poté následuje 8 bitů dat#footnote[Lze používat i 7 bitů nebo 9 bitů dat.].
@@ -211,7 +207,11 @@ Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně
 
 Pokud rozhraní neodesílá žádné bity, na vodičích se nachází vysoká úroveň. Této vlastnosti bude využito později v návrhu logické sondy.
 
-V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence. Více o periferii, která pracuje s UART rozhraním mluví @usart.
+V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence. @uart-signal-picture ukazuje způsob zpracování signálů. @UART-SIGNAL-PICTURE
+#figure(
+    placement: none,
+  caption: [Způsob zpracování signálu UART @UART-SIGNAL-PICTURE], image("pic/UART-signal.png"),
+)<uart-signal-picture>
 
 === I2C
 === SPI
@@ -221,7 +221,7 @@ Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vo
 Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje jednu barevnou složku. Parametry pořadí složek, časování apod. se může lišit v závislosti na konkrétním verzi a provedení LED. V této práci je vycházeno z WS2812D. První bit složky je, v případě WS2812, MSB#footnote[Most significant bit]. 
 
 #figure(
-  image("pic/NEOPIXEL_SCHEME_SERIE.png"), // Cesta k obrázku
+  image("pic/NEOPIXEL_SCHEME_SERIE.png"),
   caption: [
     Způsob zapojení RGB LED do série @NEOPIXEL-REF. 
   ],
@@ -303,10 +303,46 @@ ESC[<posun><směr> // Posune o danou pozici
 
 = Návrh logické sondy
 == Požadavky
-== HW návrh
-=== STM32G030 SOP8
-=== STM32G030 TSSOP20
-=== Raspberry Pi Pico
+V návrhu sondy je potřeba zohlednit následující klíčové oblasti: univerzálnost v analýze digitálních obvodů, jednoduchost ovládání i uživateli, které nemají zkušenosti s používáním pokročilých diagnostických nástrojů a rychlá realizovatelnost sondy na nepájivém kontaktním poli. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF#footnote[Point of failure - Bodů selhání].
+
+Návrh musí také umožnit rychlou analýzu obvodů, která nebude závislá na ovládání přes PC. Tato vlastnost ušetří uživateli čas, pokud bude např. potřebovat zjistit, jestli v~daném vodiči jsou vysílány pulzy či nikoliv.
+
+Terminálový mód je určen pro hloubkovou analýzu obvodu a analýzu signálů sběrnic, což např. pomůže najít studentovi chybnou paritu u UART, měření napětí, zjištění odporu rezistoru, měření frekvencí, měření délky pulzů a další. Uživatel občas také potřebuje zkontrolovat, zda je nefunkční součástka, nebo je problém v jeho kódů. Navržená sonda proto poskytuje generování testovacích signálů.
+
+Sonda v terminálovém módu nevyžaduje instalaci specialního programu pro komunikaci se zařízením. Proto sonda využívá ke komunikaci rozhraní UART a přes seriovou komunikaci posílá, za pomocí ANSI sekvencí, uživatelské rozhraní, které je co nejvíce intuitivní.
+== HW návrh STM32G030
+Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_. @EAGLE_SW Komponenta Neopixel RGB LED byla použita jako externí knihovna. @NEOPIXEL-SCHEMA-LIB Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu.
+
+Návrh pro STM32G030 musí být navržen pro obě pouzdra stejně abychom zaručili přenositelnost mezi pouzdry. Některé pokročilé funkce, ale nebude možné mít na pouzdře SOP8 kvůli nedostatku pinů. Např. SPI požaduje 3 až 4 vodiče v závislosti na funkci a to SOP8 pouzdro neumožňuje.
+
+Jeden z nejpodstatnějších pinů, který potřebujeme použít pro měření je pin *PA0*. Na tomto pinu se nachází, ADC převodník, kanál 1 32 bitového časovače a ETR#footnote[ETR je možnost externího hodinového signálu, který řídí interní časovač.]. @STM32G0-REF @STM32G030x6-tsop
+#todo("Tady navážu dále")
+=== SOP8
+@sop8-hw ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Návrh také zohledňuje realizaci lokálního módu. Tzn. pro interakci s uživatelem je připojené tlačítko na `PA13` proti zemi. Tento návrh byl zvolen z důvodu snížení rizika zkratu při sestavování uživatelem. Dále je připojena RGB Neopixel LED na `PB6`, tento pin byl zvolen z důvodu přítomnosti časovače, o softwarové realizaci poté pojednává ... .#todo[doplnit odkaz na realizaci] WS2812 požaduje napětí $3.7 ~ 5.0$ V, nicméně v~návrhu bylo otestováno, že tyto diody tolerují bez potíží i $3.3$ V. Mezi katodu a anodu je umístěn blokovací kondenzátor o velikosti $100$ nF.
+#figure(
+    placement: auto,
+    caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
+    image("pic/sop8_pinout.png"),
+)<sop8-pinout>
+
+Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít PA0. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit ... #todo("najít přesnou hodnotu"), aby NRST byl ignorován a PA0 bylo použitelné.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Paměťový prostor Flash option bits @STM32G0-REF],
+    image("pic/option_bits.png"),
+)<optional-bits>
+#v(10pt)
+
+Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná. @STM32G0-REF #todo("nastavit option bit taky, protože chci použít neopixel")
+#figure(
+    placement: auto,
+    caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
+    image("pic/sop8_hw.png"),
+)<sop8-hw>
+`PB7` byl využit jako poslední, protože neobsahuje žádné zásadní periferie pro logickou sondu, kromě kanálu AD převodníku. Obecně hlavní je `PA0`, který má velké množství funkcí a `PB7` je v tomto případě jako sekundární kanál.
+=== TSSOP20
+== HW návrh Raspberry Pi Pico
 == SW návrh
 Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
 === Logika nastavení módů
@@ -393,7 +429,7 @@ může sondu používat. Je to z důvodu, že logická sonda využívá ANSI esc
 sekvence pro generování terminálového uživatelského rozhraní. Tento přístup
 nevyžaduje instalaci ovladačů pro specifický software a hlavně není závislý na
 operačním systému. Tzn. podpora této logické sondy je na všechny standartní
-operační systémy. V @usart bylo zmíněno, že UART umí full duplex komunikaci,
+operační systémy. V @uart bylo zmíněno, že UART umí full duplex komunikaci,
 díky tomu počítač může posílat zprávy i do mikrokontroleru. Tuto vlastnost
 logická sonda použije pro ovládání rozhraní uživatelem.
 
