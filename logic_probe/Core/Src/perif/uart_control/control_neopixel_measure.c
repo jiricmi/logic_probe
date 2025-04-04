@@ -12,7 +12,7 @@ void control_neopixel_measure_page(char received_char) {
         case 'Q':
 
             ansi_clear_terminal();
-            ansi_set_current_page(ANSI_PAGE_MAIN);
+            ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
             dev_mode_change_mode(DEV_STATE_NONE);
             break;
         case 'm':

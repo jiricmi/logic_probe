@@ -13,4 +13,5 @@
 void get_current_control(void);
 void control_main_page(void);
 void control_channel_set_page(void);
+void control_advanced_main_page(void);
 #endif

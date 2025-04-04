@@ -1,5 +1,6 @@
 #include "ansi_pages.h"
 
+#include <stdbool.h>
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_main.h"
@@ -13,6 +14,7 @@ extern global_vars_t global_var;
 void ansi_render_current_page(void) {
     switch (global_var.current_page) {
         case ANSI_PAGE_MAIN:
+        case ANSI_PAGE_MAIN_ADVANCED:
             ansi_render_main_page();
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
