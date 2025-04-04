@@ -17,6 +17,9 @@ void get_current_control(void) {
         case ANSI_PAGE_MAIN:
             control_main_page();
             break;
+        case ANSI_PAGE_MAIN_ADVANCED:
+            control_advanced_main_page();
+            break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
             control_voltage_page(received_char);
             break;
@@ -55,6 +58,16 @@ void control_main_page(void) {
             ansi_set_current_page(ANSI_PAGE_IMPULSE_GENERATOR);
             dev_mode_change_mode(DEV_STATE_PULSE_GEN);
             break;
+        case 'a':
+        case 'A':
+            ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
+            dev_mode_change_mode(DEV_STATE_NONE);
+            break;
+    }
+}
+
+void control_advanced_main_page(void) {
+    switch (global_var.received_char) {
         case 'n':
         case 'N':
             ansi_set_current_page(ANSI_PAGE_NEOPIXEL_MEASURE);
@@ -64,6 +77,11 @@ void control_main_page(void) {
         case 'S':
             ansi_set_current_page(ANSI_PAGE_SHIFT_REGISTER);
             dev_mode_change_mode(DEV_STATE_ADV_SHIFT_REGISTER);
+            break;
+        case 'b':
+        case 'B':
+            ansi_set_current_page(ANSI_PAGE_MAIN);
+            dev_mode_change_mode(DEV_STATE_NONE);
             break;
     }
 }
