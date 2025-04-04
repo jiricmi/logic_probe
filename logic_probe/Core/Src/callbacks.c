@@ -40,7 +40,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
             uint32_t n_pulses = __HAL_TIM_GET_COUNTER(sig_det->slave_tim);
 
             sig_det->frequency =
-                detector_get_gated_value(n_pulses, sig_det->sample_time_index);
+                detector_get_gated_value(n_pulses, sig_det->gate_time_index);
 
             HAL_TIM_Base_Stop_IT(sig_det->master_tim);
             detector_slave_init_pulse_width(sig_det);

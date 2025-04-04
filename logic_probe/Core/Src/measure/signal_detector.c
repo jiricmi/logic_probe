@@ -17,17 +17,16 @@ void init_detector(sig_detector_t* detector,
     detector->master_tim = master_tim;
     detector->slave_tim_mode = SLAVE_MODE_FREQUENCY;
     detector->mode = DETECTOR_MODE_FREQUENCY;
-    detector->sample_time_index = DETECTOR_BASE_SAMPLE_TIME;
+    detector->gate_time_index = DETECTOR_BASE_SAMPLE_TIME;
 }
 
 void detector_change_sample_time(sig_detector_t* detector) {
-    if (detector->sample_time_index == 0) {
-        detector->sample_time_index = DETECTOR_SAMPLE_TIMES_COUNT - 1;
+    if (detector->gate_time_index == 0) {
+        detector->gate_time_index = DETECTOR_SAMPLE_TIMES_COUNT - 1;
     } else {
-        --detector->sample_time_index;
+        --detector->gate_time_index;
     }
-    __HAL_TIM_SET_AUTORELOAD(&htim3,
-                             SAMPLE_TIMES[detector->sample_time_index] - 1);
+    __HAL_TIM_SET_AUTORELOAD(&htim3, GATE_TIMES[detector->gate_time_index] - 1);
 }
 
 void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers) {
@@ -67,7 +66,7 @@ void detector_change_mode(sig_detector_t* detector) {
 uint32_t detector_get_gated_value(uint32_t n_pulses, uint8_t index) {
     uint32_t frequency;
 
-    if (SAMPLE_TIMES[index] < 1000) {
+    if (GATE_TIMES[index] < 1000) {
         frequency = n_pulses * SAMPLE_TIMES_1000[index];
     } else {
         frequency = n_pulses / SAMPLE_TIMES_1000[index];
