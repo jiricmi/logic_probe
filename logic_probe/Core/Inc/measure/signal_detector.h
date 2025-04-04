@@ -21,8 +21,8 @@ typedef enum {
 
 typedef enum { SLAVE_MODE_FREQUENCY, SLAVE_MODE_WIDTH } detector_slave_mode_t;
 
-static const uint16_t SAMPLE_TIMES[] = {50,   100,  200,  500,
-                                        1000, 2000, 5000, 10000};
+static const uint16_t GATE_TIMES[] = {50,   100,  200,  500,
+                                      1000, 2000, 5000, 10000};
 
 static const uint16_t SAMPLE_TIMES_1000[] = {20, 10, 5, 2, 1, 2, 5, 10};
 
@@ -32,7 +32,7 @@ typedef struct {
     detector_slave_mode_t slave_tim_mode;
     uint32_t frequency;
     detector_mode_t mode;
-    uint8_t sample_time_index;
+    uint8_t gate_time_index;
     uint32_t edge_times[DETECTOR_N_OF_EDGES];
     uint32_t widths[DETECTOR_N_OF_WIDTHS];
     _Bool edge_catch[DETECTOR_N_OF_EDGES];

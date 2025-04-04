@@ -35,7 +35,7 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
                  detector->widths[DET_HIGH_WIDTH]);
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(12, 10);
-        snprintf(buff, 100, "low pulse width: %7lu us ",
+        snprintf(buff, 100, "Low pulse width: %7lu us ",
                  detector->widths[DET_LOW_WIDTH]);
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(13, 10);
@@ -43,8 +43,8 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
                  (uint16_t)utils_round(detector->pwm_duty));
         ansi_send_text(buff, &ansi_default_conf);
         ansi_set_cursor(14, 10);
-        snprintf(buff, 100, "Sample time: %5u ms",
-                 SAMPLE_TIMES[detector->sample_time_index]);
+        snprintf(buff, 100, "Gate time: %5u ms",
+                 GATE_TIMES[detector->gate_time_index]);
         ansi_send_text(buff, &ansi_default_conf);
     } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
         ansi_set_cursor(10, 10);
@@ -76,11 +76,11 @@ void ansi_get_detector_mode(char* text,
             snprintf(text_conf->color, COLOR_STR_SIZE, "%s", GREEN_TEXT);
             break;
         case DETECTOR_MODE_PULSE_UP:
-            snprintf(text, buff_size, "%s", "Pulse Up");
+            snprintf(text, buff_size, "%s", "Rise Edge Pulse");
             snprintf(text_conf->color, COLOR_STR_SIZE, "%s", BLUE_TEXT);
             break;
         case DETECTOR_MODE_PULSE_DOWN:
-            snprintf(text, buff_size, "%s", "Pulse Down");
+            snprintf(text, buff_size, "%s", "Fall Edge Pulse");
             snprintf(text_conf->color, COLOR_STR_SIZE, "%s", MAGENTA_TEXT);
             break;
 
