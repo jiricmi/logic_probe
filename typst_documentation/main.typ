@@ -325,7 +325,7 @@ Jeden z nejpodstatnějších pinů, který potřebujeme použít pro měření j
     image("pic/sop8_pinout.png"),
 )<sop8-pinout>
 
-Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít PA0. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit ... #todo("najít přesnou hodnotu"), aby NRST byl ignorován a PA0 bylo použitelné.
+Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít PA0. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit bitově `10` neboli `2` dekadicky, aby NRST byl ignorován a PA0 bylo použitelné.
 #v(10pt)
 #figure(
     placement: none,
@@ -334,7 +334,7 @@ Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více perif
 )<optional-bits>
 #v(10pt)
 
-Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná. @STM32G0-REF #todo("nastavit option bit taky, protože chci použít neopixel")
+Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná. @STM32G0-REF Pro možnost přehrávání programu je nutné do `nBOOT_SEL` nastavit 0. Tak při přivedení napětí na tento pin, nahrát program, ale během standartního běhu programu, je možné ovládat pin, v tomto případě ovládat RGB LED.
 #figure(
     placement: auto,
     caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
@@ -404,15 +404,36 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 	edge("d,r", "=>", [], label-pos: 0.1),
 	node((0,5), [Čekej], corner-radius: 2pt),
     edge("d,l,l,u,u,u,u,u,r,r", "=>", [], label-pos: 0.1),
-
-
-	//edge("d,l,u,r", "=>", label-pos: 0.1),
 )
 #v(5pt)
 == Terminálový mód
+Tento mód využívá rozhraní UART, pro seriovou komunikaci s PC. Mód funguje způsobem, kdy periodicky reaguje na změny, které periferie či uživatel vyvolá. Tuto skutečnost ukazuje @diagram-terminal-mod. Sonda obsahuje datovou strukturu, ve které uchovává flagy, které značí požadavek na změnu. Tyto flagy jsou ovládány skrze přerušení. Pokud uživatel, stiskne tlačítko a tím pošle znak, UART rozhraní vyvolá přerušení a následně se dle stavu sondy a poslaného znaku provede akce. Přerušení také nastaví flagy, pokud například, je nutné vykreslit jinou stránku, nebo změnit měřící režim. Smyčka při dalším cyklu na tyto skutečnosti zareaguje a přenastaví potřebné periferie a vykreslí stránku. Pokud stránka zobrazuje měřené hodnoty, jsou aktualizovány v každém cyklu.
 
-
-
+Tato metoda oproti okamžité reakci již v přerušení má výhodu v tom, že nemůže dojít k překrytí činnosti hlavní smyčky. Např. pokud bude stránka periodicky vykreslována, a stisk tlačítka by vyvolal přerušení k překreslení programu, může se přerušit smyčka v momentě, kdy už k překreslení dochází. V tomto případě poté dojde k rozbití obrazu vykresleného na terminál. Obdobná věc hrozí při vypínání a zapínání periferií. Touto medotou zajistíme, že vždy je vykonávána akce ve správném pořadí.
+#todo("dokončit, napsat o tom jak funguje nastavovani periferii apod")
+#figure(
+caption:[Diagram smyčky terminálového módu],
+    placement: none,
+    diagram(
+	    node-stroke: 1pt,
+     	node((0,0), [Start], corner-radius: 10pt),
+    	edge("=>"),
+        node((0,1), [Vyžádáno\ nové nastavení\ periferií?], shape: shapes.diamond),
+	    edge("r", "=>", [Ano], label-pos: 0.1),
+    	edge("d", "=>", [Ne], label-pos: 0.1),
+        node((1,1), [Nastavit\ periferie], corner-radius: 2pt),
+    	edge("d,l", "=>", [], label-pos: 0.1),
+        node((0,2), [Vyžádána\ aktualizace\ rozhraní?], shape: shapes.diamond),
+    	edge("l", "=>", [Ano], label-pos: 0.1),
+    	edge("d", "=>", [Ne], label-pos: 0.1),
+        node((-1,2), [Vykreslit\ aktualní stav\ celé stránky], corner-radius: 2pt),
+    	edge("d,r", "=>", [], label-pos: 0.1),
+    	node((0,3), [Vykreslit naměřené hodnoty], corner-radius: 2pt),
+    	edge("d", "=>", [], label-pos: 0.1),
+    	node((0,4), [Čekej], corner-radius: 2pt),
+        edge("d,l,l,u,u,u,u,r,r", "=>", [], label-pos: 0.1),
+    )
+)<diagram-terminal-mod>
 
 
 = Realizace logické sondy <realizace>
@@ -896,7 +917,7 @@ vysoké úrovně signálu během nízké úrovně. Uživatel si tedy může zvol
 úroveň chce jako výchozí stav.
 
 Díky těmto režimům je možné i nastavit úrovně, které uživatel nemusí nutně
-používat jako generování pulzů, ale jako přepínání úrovní dle potřeby.
+používat jako generování pulzů, ale jako přepínání úrovní dle potřeby. #todo("ještě se na to kouknout znovu a upravit to neaktualni")
 
 #v(10pt)
 ```C
