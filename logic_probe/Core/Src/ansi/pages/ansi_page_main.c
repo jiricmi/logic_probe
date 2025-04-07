@@ -17,6 +17,9 @@ void ansi_page_main_render_menu(void) {
                            &ansi_default_conf);
         ansi_render_button("n - Neopixel perif", row++, center,
                            &ansi_default_conf);
+        ansi_render_button("u - UART perif", row++, center,
+                           &ansi_default_conf);
+
     } else {
         ansi_render_button("r - reload page", row++, center,
                            &ansi_default_conf);

@@ -1,6 +1,7 @@
 #include "loop.h"
 #include "adc_control.h"
 #include "advanced/neopixel.h"
+#include "advanced/uart.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_voltage_measure.h"
@@ -103,6 +104,9 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     HAL_TIM_IC_Stop_DMA(sig_det->slave_tim, TIM_CHANNEL_1);
     HAL_TIM_IC_Stop_DMA(sig_det->slave_tim, TIM_CHANNEL_2);
 
+    // TODO: TOTO JE PRO TSOP20
+    deinit_uart(global_var.uart_perif);
+
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
     gpio_init_timer();
@@ -141,6 +145,12 @@ void dev_mode_update_perif(void) {
             break;
         case DEV_STATE_ADV_SHIFT_REGISTER:
             gpio_init_push_pull();
+            break;
+        case DEV_STATE_ADV_UART_READ:
+            uart_start(global_var.uart_perif);
+            break;
+        case DEV_STATE_ADV_UART_WRITE:
+            uart_start(global_var.uart_perif);
             break;
         default:
             break;

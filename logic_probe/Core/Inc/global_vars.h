@@ -3,6 +3,7 @@
 #include "adc_control.h"
 #include "advanced/neopixel.h"
 #include "advanced/shift_register.h"
+#include "advanced/uart.h"
 #include "ansi_pages.h"
 #include "extern_button.h"
 #include "global_structs.h"
@@ -35,6 +36,7 @@ typedef struct {
     button_data_t* button_data;
     neopixel_measure_t* adv_neopixel_measure;
     shift_register_t* adv_shift_register;
+    uart_perif_t* uart_perif;
 
 } global_vars_t;
 

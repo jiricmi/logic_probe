@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include "adc_control.h"
+#include "advanced/uart.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
 #include "loop.h"
@@ -73,6 +74,7 @@ neopixel_measure_t neopixel_measure;
 shift_register_t shift_register;
 visual_output_t visual_output;
 button_data_t button_data;
+uart_perif_t uart_perif;
 
 global_vars_t global_var = {DEV_STATE_NONE,
                             LOCAL_STATE_LOGIC_PROBE,
@@ -88,7 +90,8 @@ global_vars_t global_var = {DEV_STATE_NONE,
                             &visual_output,
                             &button_data,
                             &neopixel_measure,
-                            &shift_register};
+                            &shift_register,
+                            &uart_perif};
 
 /* USER CODE END PV */
 
@@ -162,6 +165,7 @@ int main(void) {
     init_shift_register(global_var.adv_shift_register);
     init_visual_output(global_var.visual_output, &htim1);
     init_button_data(global_var.button_data);
+    uart_init(global_var.uart_perif, &huart2);
 
     global_var.device_setup = dev_mode_get_dev_setup();
     if (global_var.device_setup == DEV_SETUP_LOCAL) {

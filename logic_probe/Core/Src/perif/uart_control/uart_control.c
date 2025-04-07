@@ -5,6 +5,7 @@
 #include "control_impulse_generator.h"
 #include "control_neopixel_measure.h"
 #include "control_shift_register.h"
+#include "control_uart_measure.h"
 #include "control_voltage_measure.h"
 #include "global_vars.h"
 #include "loop.h"
@@ -35,6 +36,9 @@ void get_current_control(void) {
             break;
         case ANSI_PAGE_SHIFT_REGISTER:
             control_shift_register_page(received_char);
+            break;
+        case ANSI_PAGE_UART:
+            control_uart_page(received_char);
             break;
         default:
             control_main_page();
@@ -82,6 +86,11 @@ void control_advanced_main_page(void) {
         case 'B':
             ansi_set_current_page(ANSI_PAGE_MAIN);
             dev_mode_change_mode(DEV_STATE_NONE);
+            break;
+        case 'u':
+        case 'U':
+            ansi_set_current_page(ANSI_PAGE_UART);
+            dev_mode_change_mode(DEV_STATE_ADV_UART_READ);
             break;
     }
 }

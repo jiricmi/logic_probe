@@ -5,6 +5,7 @@
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_main.h"
 #include "ansi_page_shift_register.h"
+#include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
 #include "ansi_pages_neopixel_measure.h"
 #include "global_vars.h"
@@ -31,6 +32,9 @@ void ansi_render_current_page(void) {
             break;
         case ANSI_PAGE_SHIFT_REGISTER:
             ansi_render_shift_register_page();
+            break;
+        case ANSI_PAGE_UART:
+            ansi_render_uart_measure_page();
             break;
         default:
             ansi_render_main_page();
