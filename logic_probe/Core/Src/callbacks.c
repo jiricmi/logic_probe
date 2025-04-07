@@ -83,7 +83,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim) {
         HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_3);
     }
 }
-void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
     if (GPIO_Pin == global_var.button_data->pin) {
         button_data_t* button_data = global_var.button_data;
 
@@ -94,7 +94,7 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
     }
 }
 
-void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
     if (GPIO_Pin == global_var.button_data->pin) {
         button_data_t* button_data = global_var.button_data;
 
