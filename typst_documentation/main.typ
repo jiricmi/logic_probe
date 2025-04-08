@@ -214,6 +214,42 @@ V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda
 )<uart-signal-picture>
 
 === I2C
+*Inter-Integrated Circuit* je seriový komunikační protokol, který byl vytvořen Philips Semiconductor jako nízkorychlostní protokol pro propojení zařízení jako např. mikrokonkrolery a procesory se senzory, periferiemi apod. Od roku 2006 implementace protokolu nevyžaduje licenci a proto se začal široce používat např. v IOT. Výhoda protokolu je, že pro komunikaci potřebuje pouze dva vodiče, na které je možné připojit až 128 zařízení najednou, jelikož využívá systém adres. @I2C_TI
+
+SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový vodič. Protokol rozlišuje zařízení typu master a slave. Master řídí hodinový signál a protože je I2C obousměrný half duplex protokol, tak master zahajuje a zastavuje komunikaci aby nedocházelo ke konfliktům. Oba vodiče mají otevřený kolektor, z důvodu, že je na lince připojeno více zařízení a vodiče jsou pull up rezistorem přivedeny na společný zdroj napětí, což znamená, v klidovém režimu, jsou na vodičích vysoké logické úrovně. @I2C_TI
+#v(10pt)
+#grid(
+    columns: 2,
+    gutter: 10pt,
+    figure(
+        image("pic/i2c_start_stop.png"),
+        caption: [
+            Zahájení a ukončení komunikace v I2C @I2C_TI
+        ],
+    ), 
+    [#figure(
+        image("pic/i2c_zeros_ones.png", height: 113pt),
+        caption: [
+            Logická jednička a nula v I2C @I2C_TI
+        ],
+    )<i2c-zeros-ones>]
+)
+#v(10pt)
+
+Pro zahájení komunikace, master is zarezervuje sběrnici posláním `I2C START`. Nejprve master přivede vodič SDA do nízké logické úrovně a následně tam přivede i SCL. Tato sekvence indikuje, že se master zahajuje vysílání a všechny zařízení poslouchají. Pro ukončení je nejprve uvolněn SCL a až poté SDA. Tím je signalizováno, že komunikace je ukončena a jiný master může komunikovat.
+
+@i2c-zeros-ones ukazuje způsob odesílání jednotlivých bitů. Pro odeslání logické jedničky SDA uvolní vodič, aby byla přivedena přes pull up rezistor vysoká logická úroveň. Pro logickou nulu, vysíláč stáhne vodič do nízké úrovně. Přijimač zaznamená bit v momentě, kdy SCL zapulsuje.
+
+Protokol rozděluje bity do rámců. Rámec má vždy 8 bitů. Nejprve pošle adresový rámec, který identifikuje, který slave má reagovat. Součástí rámce je také read-write bit.  Pokud slave přečte adresový rámec a daná adresa mu nepatří, ignoruje komunikaci.  V opačném případě odpoví `ACK` bitem, kdy nízká úroveň znamená potvrzení. Vysoká úroveň nastane, když slave nezareaguje a vodič zůstane v klidu, tzn. vysoká úroveň.
+
+Po identifikaci se zahájí odesílání datových rámců, které se skládají z 8 bitů a jsou zakončeny `ACK`. Pokud byl read-write bit nastaven na read, master většinou zašle adresu z které chce číst a slave pošle obsah paměti. Při write, master zašle adresu na kterou chce zapisovat a následně data, které chce zapsat. @I2C_TI
+#figure(
+    image("pic/i2c_frames.png"),
+    caption: [Rámce I2C @I2C_TI]
+)
+
+
+
 === SPI
 === Neopixel
 Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vodiče: ground, Vcc, DIn a DOut. LED má vlastní řídící obvod, který ovládá barvy diody na základě signálu z vodiče DIn. Výhoda LED je možnost připojit diody do serie, a jedním vodičem ovládat všechny LED v sérii @NEOPIXEL-REF. @label-neopixel znázorňuje zapojení více LED do série a~schopnost ovládání jedním vodičem.
