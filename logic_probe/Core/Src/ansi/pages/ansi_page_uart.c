@@ -8,15 +8,15 @@ extern global_vars_t global_var;
 
 void ansi_render_uart_measure_page(void) {
     ansi_render_border(';', ";", "");
+    ansi_render_settings(global_var.uart_perif);
+    ansi_set_cursor(4, ADC_MEASURE_CENTER);
     if (global_var.device_state == DEV_STATE_ADV_UART_READ) {
-        ansi_set_cursor(4, ADC_MEASURE_CENTER);
         ansi_send_text("UART READ (PIN PA3)", &ansi_bold_conf);
-        ansi_render_settings(global_var.uart_perif);
-        ansi_render_vals(global_var.uart_perif);
-
+        ansi_render_read_vals(global_var.uart_perif);
         ansi_uart_render_error(global_var.uart_perif);
-
     } else if (global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
+        ansi_send_text("UART WRITE (PIN PA2)", &ansi_bold_conf);
+        ansi_render_write_vals(global_var.uart_perif);
     }
 }
 
@@ -45,7 +45,7 @@ void ansi_render_settings(uart_perif_t* uart) {
     }
 }
 
-void ansi_render_vals(uart_perif_t* uart) {
+void ansi_render_read_vals(uart_perif_t* uart) {
     uint16_t curr_buff_index =
         UART_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(uart->huart->hdmarx);
 
@@ -75,6 +75,22 @@ void ansi_render_vals(uart_perif_t* uart) {
         }
         ++curr_buff_index;
     }
+}
+
+void ansi_render_write_vals(uart_perif_t* uart) {
+    ansi_set_cursor(12, 10);
+    ansi_text_config_t conf = {"", GREEN_BG, ""};
+    char buff[4];
+    for (uint8_t i = 0; i < UART_SEND_SIZE; ++i) {
+        ansi_send_text(" | ", &ansi_default_conf);
+        snprintf(buff, 4, "%3d", uart->received_char[i]);
+        if (uart->edit_send && i == uart->edit_index) {
+            ansi_send_text(buff, &conf);
+        } else {
+            ansi_send_text(buff, &ansi_default_conf);
+        }
+    }
+    ansi_send_text(" |", &ansi_default_conf);
 }
 
 void ansi_uart_render_error(uart_perif_t* uart) {

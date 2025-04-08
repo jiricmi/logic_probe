@@ -8,6 +8,7 @@
 #define UART_STOP_BIT_LEN 1
 #define UART_DEFAULT_BAUDRATE 115200;
 #define UART_BUFFER_SIZE 50
+#define UART_SEND_SIZE 10
 
 typedef enum { UART_WORD_7B, UART_WORD_8B, UART_WORD_9B } uart_word_t;
 typedef enum { UART_P_NONE, UART_P_EVEN, UART_P_ODD } uart_parity_t;
@@ -28,7 +29,9 @@ typedef struct {
     uart_stopbit_t stop_bits;
     uint32_t baudrate;
     uint8_t len;
+    _Bool edit_send;
     _Bool edit;
+    uint8_t edit_index;
     uint8_t err_detected;
 } uart_perif_t;
 

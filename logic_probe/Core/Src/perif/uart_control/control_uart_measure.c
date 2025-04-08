@@ -65,7 +65,14 @@ void control_uart_page(char received_char) {
             break;
         case 'm':
         case 'M':
-
+            if (!global_var.uart_perif->edit) {
+                ansi_clear_terminal();
+                if (global_var.device_state == DEV_STATE_ADV_UART_READ) {
+                    dev_mode_change_mode(DEV_STATE_ADV_UART_WRITE);
+                } else {
+                    dev_mode_change_mode(DEV_STATE_ADV_UART_READ);
+                }
+            }
             break;
         case '1':
         case '2':

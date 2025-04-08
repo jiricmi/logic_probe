@@ -73,7 +73,7 @@ void dev_mode_run_with_uart(void) {
             }
             break;
         case DEV_STATE_ADV_UART_READ: {
-            ansi_render_vals(global_var.uart_perif);
+            ansi_render_read_vals(global_var.uart_perif);
             delay = 5;
             break;
         }
@@ -153,10 +153,13 @@ void dev_mode_update_perif(void) {
             gpio_init_push_pull();
             break;
         case DEV_STATE_ADV_UART_READ:
-        case DEV_STATE_ADV_UART_WRITE:
             uart_start(global_var.uart_perif);
             uart_start_receive(global_var.uart_perif);
             break;
+        case DEV_STATE_ADV_UART_WRITE:
+            uart_start(global_var.uart_perif);
+            break;
+
         default:
             break;
     }
