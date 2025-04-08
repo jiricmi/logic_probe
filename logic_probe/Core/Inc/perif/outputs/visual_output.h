@@ -6,7 +6,7 @@
 #include "main.h"
 #include "signal_detector.h"
 
-#define NEOPIXEL_DATA_SIZE 25
+#define NEOPIXEL_DATA_SIZE 26
 #define NEOPIXEL_DIV_VOLTAGE_CONST 13
 
 typedef struct {

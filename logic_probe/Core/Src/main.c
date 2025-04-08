@@ -65,6 +65,7 @@ DMA_HandleTypeDef hdma_tim2_ch2;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -157,6 +158,7 @@ int main(void) {
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
     HAL_UART_Receive_IT(&UART, &global_var.received_char, 1);
+    // HAL_UART_DeInit(&huart2);
 
     adc_setup_channel_struct(global_var.adc_vars);
     init_detector(global_var.signal_detector, &htim2, &htim3);
@@ -166,10 +168,13 @@ int main(void) {
     init_visual_output(global_var.visual_output, &htim1);
     init_button_data(global_var.button_data);
     uart_init(global_var.uart_perif, &huart2);
+    deinit_uart(global_var.uart_perif);
 
     global_var.device_setup = dev_mode_get_dev_setup();
     if (global_var.device_setup == DEV_SETUP_LOCAL) {
         neopixel_startup_effect(global_var.visual_output);
+    } else {
+        neopixel_send_color(global_var.visual_output, NEOPIXEL_RED);
     }
     /* USER CODE END 2 */
 

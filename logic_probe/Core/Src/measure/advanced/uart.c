@@ -10,10 +10,11 @@ void uart_init(uart_perif_t* uart, UART_HandleTypeDef* huart) {
     uart->stop_bits = UART_STOP_1;
     uart->baudrate = UART_DEFAULT_BAUDRATE;
     uart->edit = false;
+    uart->err_detected = UART_NONE_ERR;
 }
 
 void uart_start(uart_perif_t* uart) {
-    uart->huart->Init.BaudRate = 115200;
+    uart->huart->Init.BaudRate = uart->baudrate;
     uart->huart->Init.WordLength = uart_get_word_len(uart);
     uart->huart->Init.StopBits = uart_get_stop_bit(uart);
     uart->huart->Init.Parity = uart_get_parity(uart);
@@ -26,6 +27,11 @@ void uart_start(uart_perif_t* uart) {
     if (HAL_UART_Init(uart->huart) != HAL_OK) {
         Error_Handler();
     }
+    memset(uart->received_char, 0, UART_BUFFER_SIZE);
+}
+
+void uart_start_receive(uart_perif_t* uart) {
+    HAL_UART_Receive_DMA(uart->huart, uart->received_char, UART_BUFFER_SIZE);
 }
 
 uint32_t uart_get_word_len(uart_perif_t* uart) {
@@ -63,5 +69,6 @@ uint32_t uart_get_parity(uart_perif_t* uart) {
 }
 
 void deinit_uart(uart_perif_t* uart) {
+    HAL_UART_DMAStop(uart->huart);
     HAL_UART_DeInit(uart->huart);  // TODO: HANDLE ERROR
 }

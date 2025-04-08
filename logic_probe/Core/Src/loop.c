@@ -4,6 +4,7 @@
 #include "advanced/uart.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_impulse_generator.h"
+#include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
 #include "ansi_pages_neopixel_measure.h"
 #include "global_vars.h"
@@ -71,6 +72,11 @@ void dev_mode_run_with_uart(void) {
                 shift_register_send_signal(global_var.adv_shift_register);
             }
             break;
+        case DEV_STATE_ADV_UART_READ: {
+            ansi_render_vals(global_var.uart_perif);
+            delay = 5;
+            break;
+        }
         default:
             break;
     }
@@ -147,10 +153,9 @@ void dev_mode_update_perif(void) {
             gpio_init_push_pull();
             break;
         case DEV_STATE_ADV_UART_READ:
-            uart_start(global_var.uart_perif);
-            break;
         case DEV_STATE_ADV_UART_WRITE:
             uart_start(global_var.uart_perif);
+            uart_start_receive(global_var.uart_perif);
             break;
         default:
             break;

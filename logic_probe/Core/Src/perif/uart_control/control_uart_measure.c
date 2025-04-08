@@ -18,6 +18,12 @@ void control_uart_page(char received_char) {
         case 'e':
         case 'E':
             global_var.uart_perif->edit = !global_var.uart_perif->edit;
+            if (global_var.uart_perif->edit) {
+                deinit_uart(global_var.uart_perif);
+            } else {
+                uart_start(global_var.uart_perif);
+                uart_start_receive(global_var.uart_perif);
+            }
             dev_mode_request_frontend_change();
 
             break;

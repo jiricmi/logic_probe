@@ -1,9 +1,9 @@
 #include "callbacks.h"
 #include <stdbool.h>
-#include "advanced/neopixel.h"
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
+#include "loop.h"
 #include "main.h"
 #include "stm32g0xx_hal_tim.h"
 #include "tim_setup.h"
@@ -30,6 +30,26 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
         HAL_UART_Receive_IT(&UART, &global_var.received_char, 1);
     }
 }
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart) {
+    if (huart->Instance == global_var.uart_perif->huart->Instance) {
+        if (huart->ErrorCode & HAL_UART_ERROR_PE) {
+            global_var.uart_perif->err_detected = UART_PARITY_ERR;
+        }
+        if (huart->ErrorCode & HAL_UART_ERROR_FE) {
+            global_var.uart_perif->err_detected = UART_FRAME_ERR;
+        }
+        if (huart->ErrorCode & HAL_UART_ERROR_NE) {
+            global_var.uart_perif->err_detected = UART_NOISE_ERR;
+        }
+        if (huart->ErrorCode & HAL_UART_ERROR_ORE) {
+            global_var.uart_perif->err_detected = UART_OVERRUN_ERR;
+        }
+        dev_mode_request_frontend_change();
+        neopixel_send_color(global_var.visual_output, NEOPIXEL_BLUE);
+    }
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
     if (htim->Instance == global_var.signal_detector->master_tim->Instance &&
         global_var.device_state == DEV_STATE_FREQUENCY_READ) {
