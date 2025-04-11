@@ -102,11 +102,11 @@ Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REF
 data uložená během výroby mikrořadiče a naměřené hodnoty z ADC @STM32G0-REF.
 
 Vztah pro výpočet je následující:
-$ V_("REF+") = (V_("REFINT_CAL")×3000)/V_("REFINT_ADC_DATA") $ <vref>
+$ V_("REF+") = (V_("REFINT_CAL")×3300)/V_("REFINT_ADC_DATA") $ <vref>
 kde:
 - $V_("REFINT_CAL")$ je kalibrační hodnota interního referenčního napětí, která je
   uložená ve~flash paměti mikrořadiče během výroby. Tato hodnota představuje
-  digitální hodnotu, kdy $V_("REF+")$ je přesně $3.0$ $V$. Hodnota se získává
+  digitální hodnotu, kdy $V_("REF+")$ je přesně $3.3$ $V$. Hodnota se získává
   čtením z pevné adresy#footnote("Např. u STM32G0 je adresa kalibrační hodnoty: 0x1FFF75AA")@STM32G0-REF @VREF_STACKOVERFLOW.
 - 3000 je konstanta odpovídající referenčnímu napětí při kalibraci vyjádřená v
   milivoltech.
