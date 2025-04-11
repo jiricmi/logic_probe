@@ -2,6 +2,16 @@
 #import "@preview/fletcher:0.5.4" as fletcher: diagram, node, edge, shapes
 #set math.equation(numbering: "(1)")
 
+#let my_dot_list(body) = [
+  #v(5pt)
+
+  #block(breakable: false)[
+    #set text(size: 11pt, weight: "bold")
+    #set par(first-line-indent: 0pt, leading: 0.8em)
+    #body
+  ]
+]
+
 #show: template.with(
   meta: (
     title: "Multifunkční diagnostická logická sonda", author: (
@@ -60,7 +70,22 @@ kteří se s elektronikou setkávají poprvé.
 
 V této práci budou představeny požadavky na zařízení a realizace této logické
 sondy.
+= Rozbor problematiky
+== Technické požadavky
+V rámci bakalářské práce bude navržena a realizována multifunkční diagnostická logická sonda na platformě STM32. V návrhu sondy je potřeba zohlednit následující klíčové oblasti: jednoduchost ovládání i uživateli, které nemají zkušenosti s používáním pokročilých diagnostických nástrojů, rychlá realizovatelnost sondy na nepájivém kontaktním poli a praktičnost ve výuce. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF#footnote[Point of failure - Bodů selhání].
 
+Firmware a hardware bude vyvinut pro STM32G030 v pouzdře SOP8 a TSSOP20, které svou nabídkou periferií jsou vhodné pro jednoduché sestavení. Také bude vyvinuta v omezené míře na Rasbeperry Pi Pico. Sonda je vytvořena za účelem použití při výuce. Hlavní využití Sonda bude vybavena tzn. "lokálním režimem" a "terminálovým režimem".
+
+Lokální režim bude sloužit pro rychlou základní analýzu obvodů s indikací pomocí WS2812 RGB LED a ovládání skrze jedno tlačítko. Tlačítkem bude uživatel přepínat módy, kanály a úrovně. Lokální režim bude mít následující vlastnosti: nastavení úrovní kanálů, odchytávání pulsů, prověření logické úrovně a generace pravidelných pulsů.
+
+Terminálový režim bude poskytovat konkrétní měření veličin digitálního obvodu a testování sběrnic. Logická sonda bude v tomto režimu ovládána UART pomocí převodníku UART/USB. Sonda takto poskytne uživatelské rozhraní, které se vygeneruje na straně mikrokontroleru a zobrazí skrze terminálovou aplikací podporující tzn. ANSI sekvence#footnote[Např. PuTTY, GTKTerm...].
+
+Sonda v tomto režimu bude nabízet funkce základní a pokročilé. Mezi základní funkce patří: detekce logických úrovní, detekce impulsů, určení jejich frekvence, nastavení logických úrovní, generace impulsů, měření napětí a měření odporu. Mezi pokročilé náleží diagnostika sběrnic UART, I2C, SPI a Neopixel. Sběrnice sonda bude pasivně poslouchat nebo aktivně vysílat. Získaná data budou zobrazováná skrze terminálovou aplikaci.
+== Využití ve výuce
+== Volba mikrokonrolerů
+#todo[má tato kapitola smysl?]
+== Měření veličin digitálního obvodu
+== Analýza komunikačních rozhraní
 = Použité principy a technologie
 == Logická sonda
 Logická sonda je elektronické zařízení sloužící k diagnostice a analýze digitálních obvodů. Pomáhá určovat logické úrovně, detekovat pulsy, měřit frekvenci a další. Je to jeden ze standartních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilitou použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu.
@@ -76,9 +101,10 @@ Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
 integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
 === Analogo-digitální převodník <adc>
+#todo[REVIZE]
 Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence
-převodníku je 1 MSPS#footnote[milion vzorků za sekundu].
+převodníku je 2 MSPS#footnote[milion vzorků za sekundu].
 #figure(
   caption: "Blokový diagram AD převodníku", image("pic/adc-block-diagram.png"),
 )
@@ -108,7 +134,7 @@ kde:
   uložená ve~flash paměti mikrořadiče během výroby. Tato hodnota představuje
   digitální hodnotu, kdy $V_("REF+")$ je přesně $3.3$ $V$. Hodnota se získává
   čtením z pevné adresy#footnote("Např. u STM32G0 je adresa kalibrační hodnoty: 0x1FFF75AA")@STM32G0-REF @VREF_STACKOVERFLOW.
-- 3000 je konstanta odpovídající referenčnímu napětí při kalibraci vyjádřená v
+- 3300 je konstanta odpovídající referenčnímu napětí při kalibraci vyjádřená v
   milivoltech.
 - $V_("REFINT_ADC_DATA")$ je aktuální naměřená hodnota na AD převodníku.
 
@@ -124,6 +150,7 @@ kde:
 - $V_("REF+")$ je referenční hodnota napětí.
 
 === Časovače <timery>
+#todo[REVIZE]
 STM32G030 obsahuje několik časovačů, které se dají využít pro logickou sondu.
 Mikrořadič má zabudovaných několik základních a jeden
 advanced timer. Základní timery jsou 16~bitové a jsou
@@ -153,6 +180,7 @@ který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
 == STM HAL
+#todo[REVIZE]
 Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
 abstrakce mezi aplikací a~periferiemi mikrokontroléru. Pokytuje funkce na vyšší
@@ -298,6 +326,7 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
 )<neopixel_bit_time>
 
 == Ansi sekvence
+#todo[REVIZE]
 Ansi escape codes jsou speciální kódy používané pro formátování
 textu v terminálech, které podporují ANSI standard. ANSI kódy poskytují změnu
 vzhledu textu, jako je barva pozadí, písma, pozicování a další. Největší využití
@@ -339,6 +368,7 @@ ESC[<posun><směr> // Posune o danou pozici
 
 = Návrh logické sondy
 == Požadavky
+#todo[REVIZE]
 V návrhu sondy je potřeba zohlednit následující klíčové oblasti: univerzálnost v analýze digitálních obvodů, jednoduchost ovládání i uživateli, které nemají zkušenosti s používáním pokročilých diagnostických nástrojů a rychlá realizovatelnost sondy na nepájivém kontaktním poli. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF#footnote[Point of failure - Bodů selhání].
 
 Návrh musí také umožnit rychlou analýzu obvodů, která nebude závislá na ovládání přes PC. Tato vlastnost ušetří uživateli čas, pokud bude např. potřebovat zjistit, jestli v~daném vodiči jsou vysílány pulzy či nikoliv.
@@ -403,6 +433,7 @@ Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v
 #v(5pt)
 Po načtení módu zařízení reaguje na různé podněty v závislosti, na načteném módu. Aby uživatel mohl měnit jednotlivé módy, tak je zařízení vždy nutné vypnout a zapnout aby došlo ke správné inicializaci. Jednotlivé módy běží v nekonečném cyklu, dokud zařízení není vypnuto.
 === Lokální mód
+#todo[nepopisovat znovu co to je ]
 Lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je optimalizován pro rychlou analýzu obvodu bez nutnosti nastavování podrobných parametrů. Zařízení skrze tlačítko rozpozná tři interakce: `krátký stisk` slouží k přepínání logických úrovních na určitém kanálu, `dvojitý stisk` umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
 
 Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá TTL logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
@@ -443,6 +474,7 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 )
 #v(5pt)
 == Terminálový mód
+#todo[nepopisovat znovu co to je ]
 Tento mód využívá rozhraní UART, pro seriovou komunikaci s PC. Mód funguje způsobem, kdy periodicky reaguje na změny, které periferie či uživatel vyvolá. Tuto skutečnost ukazuje @diagram-terminal-mod. Sonda obsahuje datovou strukturu, ve které uchovává flagy, které značí požadavek na změnu. Tyto flagy jsou ovládány skrze přerušení. Pokud uživatel, stiskne tlačítko a tím pošle znak, UART rozhraní vyvolá přerušení a následně se dle stavu sondy a poslaného znaku provede akce. Přerušení také nastaví flagy, pokud například, je nutné vykreslit jinou stránku, nebo změnit měřící režim. Smyčka při dalším cyklu na tyto skutečnosti zareaguje a přenastaví potřebné periferie a vykreslí stránku. Pokud stránka zobrazuje měřené hodnoty, jsou aktualizovány v každém cyklu.
 
 Tato metoda oproti okamžité reakci již v přerušení má výhodu v tom, že nemůže dojít k překrytí činnosti hlavní smyčky. Např. pokud bude stránka periodicky vykreslována, a stisk tlačítka by vyvolal přerušení k překreslení programu, může se přerušit smyčka v momentě, kdy už k překreslení dochází. V tomto případě poté dojde k rozbití obrazu vykresleného na terminál. Obdobná věc hrozí při vypínání a zapínání periferií. Touto medotou zajistíme, že vždy je vykonávána akce ve správném pořadí.
@@ -473,7 +505,9 @@ caption:[Diagram smyčky terminálového módu],
 
 
 = Realizace logické sondy <realizace>
+#todo[REVIZE]
 == Grafické rozhraní
+#todo[REVIZE]
 Pro snadné pochopení ovládání i jedincem, který se zabývá podobným tématem
 poprvé, je podstatné, aby logická sonda byla jednoduše ovladatelná, přenositelná
 a obecně aby zprovoznění sondy nebylo náročné. Pro spoustu začátečníků může být
@@ -493,7 +527,7 @@ logická sonda použije pro ovládání rozhraní uživatelem.
 V rámci této práce byl využíván software *PuTTY*. FOSS#footnote[Free open source software],
 který má podporu různých komunikačních protokolů, jako je SSH, Telnet, SCP a
 další. PuTTY podporuje také ANSI escape sekvence a je možné upravit velké
-množství nastavení.
+množství nastavení. 
 
 === Odesílání zpráv <ansi-send>
 
