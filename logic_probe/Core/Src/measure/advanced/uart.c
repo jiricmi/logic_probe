@@ -11,6 +11,7 @@ void uart_init(uart_perif_t* uart, UART_HandleTypeDef* huart) {
     uart->baudrate = UART_DEFAULT_BAUDRATE;
     uart->edit = false;
     uart->err_detected = UART_NONE_ERR;
+    uart->symbols_to_send = 1;
 }
 
 void uart_start(uart_perif_t* uart) {
@@ -28,6 +29,11 @@ void uart_start(uart_perif_t* uart) {
         Error_Handler();
     }
     memset(uart->received_char, 0, UART_BUFFER_SIZE);
+}
+
+void uart_send_bytes(uart_perif_t* uart) {
+    HAL_UART_Transmit(uart->huart, (uint8_t*)uart->received_char,
+                      uart->symbols_to_send, HAL_MAX_DELAY);
 }
 
 void uart_start_receive(uart_perif_t* uart) {

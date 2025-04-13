@@ -33,11 +33,14 @@ typedef struct {
     _Bool edit;
     uint8_t edit_index;
     uint8_t err_detected;
+    uint8_t symbols_to_send;
 } uart_perif_t;
 
 void uart_init(uart_perif_t* uart, UART_HandleTypeDef* huart);
 
 void uart_start(uart_perif_t* uart);
+
+void uart_send_bytes(uart_perif_t* uart);
 void uart_start_receive(uart_perif_t* uart);
 
 uint32_t uart_get_word_len(uart_perif_t* uart);
