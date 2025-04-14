@@ -56,6 +56,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
+extern I2C_HandleTypeDef hi2c1;
 extern DMA_HandleTypeDef hdma_tim1_ch3;
 extern DMA_HandleTypeDef hdma_tim2_ch1;
 extern DMA_HandleTypeDef hdma_tim2_ch2;
@@ -220,6 +221,24 @@ void TIM3_IRQHandler(void) {
     /* USER CODE BEGIN TIM3_IRQn 1 */
 
     /* USER CODE END TIM3_IRQn 1 */
+}
+
+/**
+ * @brief This function handles I2C1 event global interrupt / I2C1 wake-up
+ * interrupt through EXTI line 23.
+ */
+void I2C1_IRQHandler(void) {
+    /* USER CODE BEGIN I2C1_IRQn 0 */
+
+    /* USER CODE END I2C1_IRQn 0 */
+    if (hi2c1.Instance->ISR & (I2C_FLAG_BERR | I2C_FLAG_ARLO | I2C_FLAG_OVR)) {
+        HAL_I2C_ER_IRQHandler(&hi2c1);
+    } else {
+        HAL_I2C_EV_IRQHandler(&hi2c1);
+    }
+    /* USER CODE BEGIN I2C1_IRQn 1 */
+
+    /* USER CODE END I2C1_IRQn 1 */
 }
 
 /**

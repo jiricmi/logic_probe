@@ -44,6 +44,7 @@ target_sources(
           Core/Src/measure/advanced/neopixel.c
           Core/Src/measure/advanced/shift_register.c
           Core/Src/measure/advanced/uart.c
+          Core/Src/measure/advanced/i2c.c
           Core/Src/utils.c
           Core/Src/callbacks.c
           Core/Src/perif/outputs/visual_output.c
