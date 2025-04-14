@@ -82,15 +82,10 @@ Terminálový režim bude poskytovat konkrétní měření veličin digitálníh
 
 Sonda v tomto režimu bude nabízet funkce základní a pokročilé. Mezi základní funkce patří: detekce logických úrovní, detekce impulsů, určení jejich frekvence, nastavení logických úrovní, generace impulsů, měření napětí a měření odporu. Mezi pokročilé náleží diagnostika sběrnic UART, I2C, SPI a Neopixel. Sběrnice sonda bude pasivně poslouchat nebo aktivně vysílat. Získaná data budou zobrazováná skrze terminálovou aplikaci.
 == Využití ve výuce
-== Volba mikrokonrolerů
-#todo[má tato kapitola smysl?]
-== Měření veličin digitálního obvodu
-== Analýza komunikačních rozhraní
-= Použité principy a technologie
-== Logická sonda
+=== Logická sonda
 Logická sonda je elektronické zařízení sloužící k diagnostice a analýze digitálních obvodů. Pomáhá určovat logické úrovně, detekovat pulsy, měřit frekvenci a další. Je to jeden ze standartních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilitou použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu.
-
-== STM32G030
+== Volba mikrokonrolerů
+=== STM32G030
 Pro návrh v této semestrální práci byl zvolen mikrořadič STM32G030 od firmy
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
@@ -100,7 +95,7 @@ Obsahuje 32 KiB flash paměť a 8 KiB SRAM @STM32G0-REF.
 Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
 integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
-=== Analogo-digitální převodník <adc>
+==== Analogo-digitální převodník <adc>
 #todo[REVIZE]
 Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence
@@ -149,7 +144,7 @@ kde:
 - $"rozlišení"$ je počet bitů AD převodníku.
 - $V_("REF+")$ je referenční hodnota napětí.
 
-=== Časovače <timery>
+==== Časovače <timery>
 #todo[REVIZE]
 STM32G030 obsahuje několik časovačů, které se dají využít pro logickou sondu.
 Mikrořadič má zabudovaných několik základních a jeden
@@ -179,7 +174,7 @@ vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interva
 který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
-== STM HAL
+=== STM HAL
 #todo[REVIZE]
 Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
@@ -212,10 +207,8 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
   caption: "STM32CubeMX HAL architektura", image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
 
-
-
-== Raspberry Pi Pico
-== Sériová komunikační rozhraní
+== Měření veličin digitálního obvodu
+== Analýza komunikačních rozhraní
 === UART<uart>
 Universal Asynchronous Reciever Transmiter je rozhraní, kde data jsou odesílána bez společného
 hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
@@ -276,8 +269,6 @@ Po identifikaci se zahájí odesílání datových rámců, které se skládají
     caption: [Rámce I2C @I2C_TI]
 )
 
-
-
 === SPI
 === Neopixel
 Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vodiče: ground, Vcc, DIn a DOut. LED má vlastní řídící obvod, který ovládá barvy diody na základě signálu z vodiče DIn. Výhoda LED je možnost připojit diody do serie, a jedním vodičem ovládat všechny LED v sérii @NEOPIXEL-REF. @label-neopixel znázorňuje zapojení více LED do série a~schopnost ovládání jedním vodičem.
@@ -324,14 +315,15 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
         [RESET], [nízká úroveň napětí], [$>280 000$],
     )
 )<neopixel_bit_time>
+== Grafické řešení
 
-== Ansi sekvence
+=== Ansi sekvence
 #todo[REVIZE]
 Ansi escape codes jsou speciální kódy používané pro formátování
 textu v terminálech, které podporují ANSI standard. ANSI kódy poskytují změnu
 vzhledu textu, jako je barva pozadí, písma, pozicování a další. Největší využití
 mají ve vývoji terminálových rozhraní zvaná TUI.
-=== Kódy
+==== Kódy
 Escape kódy začínají *ESC*#footnote[\\33] znakem, následovným *[*, který značí
 začátek sekvence, a poté symboly, které určují efekt a celá sekvence je
 zakončena písmenem.#footnote[Existují také ESC N nebo ESC \\ apod.ale tyto se téměř nepoužívají.]
@@ -363,9 +355,6 @@ ESC[<row>;<col>H // Pohyb na konkrétní pozici
 ESC[<posun><směr> // Posune o danou pozici
 ```
 #v(5pt)
-== Metody měření
-
-
 = Návrh logické sondy
 == Požadavky
 #todo[REVIZE]
