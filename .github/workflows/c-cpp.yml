@@ -2,9 +2,9 @@ name: CMake Build
 
 on:
   push:
-    branches: [ "jiricmi-patch-1-1" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "jiricmi-patch-1-1" ]
+    branches: [ "main" ]
 
 env:
   BUILD_TYPE: Release
@@ -18,9 +18,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install ARM Toolchain
         run: |
           sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi  # Instaluje ARM kompilátor
+
+      - name: Install Dependencies
+        run: |
           sudo apt-get install -y cmake build-essential
 
       - name: Create Build Directory
@@ -28,7 +32,7 @@ jobs:
 
       - name: Configure CMake
         working-directory: ./build
-        run: cmake ../logic_probe -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+        run: cmake ../logic_probe -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -Wno-dev  # Potlačí warning pro vývojáře
 
       - name: Build Project
         working-directory: ./build
