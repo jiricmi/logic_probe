@@ -71,17 +71,17 @@ kteří se s elektronikou setkávají poprvé.
 V této práci budou představeny požadavky na zařízení a realizace této logické
 sondy.
 = Rozbor problematiky
-== Technické požadavky
+== Technické požadavky<cil>
 V rámci bakalářské práce bude navržena a realizována multifunkční diagnostická logická sonda na platformě STM32. V návrhu sondy je potřeba zohlednit následující klíčové oblasti: jednoduchost ovládání i uživateli, které nemají zkušenosti s používáním pokročilých diagnostických nástrojů, rychlá realizovatelnost sondy na nepájivém kontaktním poli a praktičnost ve výuce. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF#footnote[Point of failure - Bodů selhání].
 
 Firmware a hardware bude vyvinut pro STM32G030 v pouzdře SOP8 a TSSOP20, které svou nabídkou periferií jsou vhodné pro jednoduché sestavení. Také bude vyvinuta v omezené míře na Rasbeperry Pi Pico. Sonda je vytvořena za účelem použití při výuce. Hlavní využití Sonda bude vybavena tzn. "lokálním režimem" a "terminálovým režimem".
 
-Lokální režim bude sloužit pro rychlou základní analýzu obvodů s indikací pomocí WS2812 RGB LED a ovládání skrze jedno tlačítko. Tlačítkem bude uživatel přepínat módy, kanály a úrovně. Lokální režim bude mít následující vlastnosti: nastavení úrovní kanálů, odchytávání pulsů, prověření logické úrovně a generace pravidelných pulsů.
+Lokální režim bude sloužit pro rychlou základní analýzu obvodů s indikací pomocí WS2812 RGB LED a ovládání skrze jedno tlačítko. Bude fungovat bez nutnosti připojení zařízení k PC skrze USB nebo USB převodník. Tlačítkem bude uživatel přepínat módy, kanály a úrovně. Lokální režim bude mít následující vlastnosti: nastavení úrovní kanálů, odchytávání pulsů, prověření logické úrovně a generace pravidelných pulsů.
 
 Terminálový režim bude poskytovat konkrétní měření veličin digitálního obvodu a testování sběrnic. Logická sonda bude v tomto režimu ovládána UART pomocí převodníku UART/USB. Sonda takto poskytne uživatelské rozhraní, které se vygeneruje na straně mikrokontroleru a zobrazí skrze terminálovou aplikací podporující tzn. ANSI sekvence#footnote[Např. PuTTY, GTKTerm...].
 
 Sonda v tomto režimu bude nabízet funkce základní a pokročilé. Mezi základní funkce patří: detekce logických úrovní, detekce impulsů, určení jejich frekvence, nastavení logických úrovní, generace impulsů, měření napětí a měření odporu. Mezi pokročilé náleží diagnostika sběrnic UART, I2C, SPI a Neopixel. Sběrnice sonda bude pasivně poslouchat nebo aktivně vysílat. Získaná data budou zobrazováná skrze terminálovou aplikaci.
-== Využití ve výuce
+== Využití ve výuce<rozbor-vyuka>
 === Logická sonda
 Logická sonda je elektronické zařízení sloužící k diagnostice a analýze digitálních obvodů. Pomáhá určovat logické úrovně, detekovat pulsy, měřit frekvenci a další. Je to jeden ze standartních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilitou použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu.
 == Volba mikrokonrolerů
@@ -90,48 +90,43 @@ Pro návrh v této semestrální práci byl zvolen mikrořadič STM32G030 od fir
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
 energeticky efektivní a nabízí dostatečný výkon pro běžné vestavné aplikace.
-Obsahuje 32 KiB flash paměť a 8 KiB SRAM @STM32G0-REF.
+Obsahuje 32 KiB flash paměť a 8 KiB SRAM. @STM32G0-REF
 
 Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
+integraci do kompatního hardwarového návrhu. @STM32G030x6-tsop Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
 ==== Analogo-digitální převodník <adc>
-#todo[REVIZE]
 Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence
-převodníku je 2 MSPS#footnote[milion vzorků za sekundu].
-#figure(
-  caption: "Blokový diagram AD převodníku", image("pic/adc-block-diagram.png"),
-)
-Při měření kanálů se postupuje sekvenčně, která je určená pomocí tzv. ranků. Při
+převodníku je 2 MSPS. Při měření kanálů se postupuje sekvenčně, která je určená pomocí tzv. ranků#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při
 požadavku o měření převodník nejprve změří první nastavený kanál, při dalším
 požadavku druhý a až změří všechny, tak pokračuje opět od počátku.
-
 Aby během měření bylo dosaženo maximální přesnosti, převodník podporuje tzn.
 oversampling#footnote[Proběhne více měření a následně jsou výsledky např. zprůměrovány aby byla
   zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*,
-který akumuluje měření a~poté pomocí data shifteru vydělí počtem cyklu
-@STM32G0-ADC.
+který akumuluje měření a~poté pomocí data shifteru vydělí počtem cyklu.
+@STM32G0-ADC
+#figure(
+  caption: "Blokový diagram AD převodníku", image("pic/adc-block-diagram.png"),
+)
 $ "měření" = 1/M × sum_(n=0)^(n=N-1) "Konverze"(t_n) $
 
-AD převodník, po dokončení měření vzorků, vrací hodnotu, která není napětí. Pro
+AD převodník, po dokončení měření vzorků, vrací hodnotu, která není napětí. Tato hodnota je poměrná hodnota vůči napájecímu napětí vyjádřena 12 bitově#footnote[Např. hodnota 4095 značí, že naměřené napětí je stejně velké jako napájecí napětí.]. Pro
 převedení hodnoty převodníku na napětí je nutné znát referenční napětí systému ($V_("REF+")$).
 Referenční napětí může být proměnlivé, hlavně pokud systém využívá $"VDDA"$#footnote[VDDA je označení pro analogové napájecí napětí v mikrokontrolérech STM32.] jako
-referenci, která může kolísat vlivem napájení a nebo zatížení.
-
-Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REFINT")$ kalibrační
-data uložená během výroby mikrořadiče a naměřené hodnoty z ADC @STM32G0-REF.
+referenci, která může být `2 V` až `3.6 V` a také může kolísat vlivem napájení nebo zatížení. Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REFINT")$ kalibrační
+data uložená během výroby mikrořadiče a naměřené hodnoty z ADC. @STM32G0-REF
 
 Vztah pro výpočet je následující:
 $ V_("REF+") = (V_("REFINT_CAL")×3300)/V_("REFINT_ADC_DATA") $ <vref>
 kde:
 - $V_("REFINT_CAL")$ je kalibrační hodnota interního referenčního napětí, která je
   uložená ve~flash paměti mikrořadiče během výroby. Tato hodnota představuje
-  digitální hodnotu, kdy $V_("REF+")$ je přesně $3.3$ $V$. Hodnota se získává
-  čtením z pevné adresy#footnote("Např. u STM32G0 je adresa kalibrační hodnoty: 0x1FFF75AA")@STM32G0-REF @VREF_STACKOVERFLOW.
-- 3300 je konstanta odpovídající referenčnímu napětí při kalibraci vyjádřená v
+  digitální hodnotu, kdy $V_("REF+")$ je přesně `3.3 V`. Hodnota se získává
+  čtením z pevné adresy#footnote("Např. u STM32G0 je adresa kalibrační hodnoty: 0x1FFF75AA"). @STM32G0-REF @VREF_STACKOVERFLOW
+- 3300 je konstanta odpovídající referenčnímu napětí při kalibraci ve výrobě vyjádřená v
   milivoltech.
-- $V_("REFINT_ADC_DATA")$ je aktuální naměřená hodnota na AD převodníku.
+- $V_("REFINT_ADC_DATA")$ je aktuální naměřená hodnota na AD převodníku. Tato hodnota závisí na aktuálním napětí na napájení.
 
 Po zjištění referenčního napětí dle @vref, lze získat na základě referenčního
 napětí, velikosti převodníku a hodnoty naměřené převodníkem, dle @V_ch.
@@ -145,7 +140,6 @@ kde:
 - $V_("REF+")$ je referenční hodnota napětí.
 
 ==== Časovače <timery>
-#todo[REVIZE]
 STM32G030 obsahuje několik časovačů, které se dají využít pro logickou sondu.
 Mikrořadič má zabudovaných několik základních a jeden
 advanced timer. Základní timery jsou 16~bitové a jsou
@@ -154,17 +148,14 @@ je na tomto mikrokontroleru 32bitový a poskytuje více kanálů. Tyto časovač
 podporují nejen generování signálů na výstup, ale také zachytávání signálů a
 měření délky pulzů externího signálu. Pokročilý časovač nabízí řadu nastavení
 např. nastavování mezi normálním a inverzním výstupem PWM, generovat přerušení
-při dosažení specifické hodnoty časovače a podobně @TIMERS.
-
-Časovače jsou obecně velice komplexní téma. Tato práce se bude soustředit pouze
-na~potřebnou část.
-
+při dosažení specifické hodnoty časovače apod. @TIMERS
+ 
 Před spuštěním časovače je potřeba nastavit, jak často má časovač čítat.
 Frekvenci časovače nastavuje tzn. prescaler, neboli "předdělička". Prescaler
 dělí s konstantou, která je zvolena, frekvenci hodin dané periferie. Pro případ
-STM32G0 je to $64$ $"MHz"$#footnote[Frekvenci hodin je možné upravit například pomocí CUBE IDE.].
+STM32G0 je to $64$ $"MHz"$.
 Frekvence časovače určuje, jak často časovač inkrementuje svou hodnotu za jednu
-sekundu @STM32G0-REF.
+sekundu. @STM32G0-REF
 $ F_("TIMx") = F_("clk")/"Prescaler + 1" $
 
 Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16 bitového časovače je maximální perioda 65535, zatímco u 32 bitového časovače je to 4294967295.],
@@ -175,12 +166,11 @@ který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
 === STM HAL
-#todo[REVIZE]
 Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
 abstrakce mezi aplikací a~periferiemi mikrokontroléru. Pokytuje funkce na vyšší
 úrovni, které usnadňují přístup např. k GPIO, USART, SPI, I2C bez nutnosti
-přímého přístupu k registrům procesoru @STM-CUBE.
+přímého přístupu k registrům procesoru. @STM-CUBE
 
 Mezi vlastnosti, kromě zmíněné jednoduchosti patří přenositelnost. Spousta
 mikrořadičů například využívají jiné adresy pro specifickou funkcionalitu. Pokud
@@ -188,18 +178,15 @@ vývojář bude potřebovat portovat aplikaci na jiný mikrořadič, není nutn�
 přepisovat různé adresy a logiku programu ale pouze změnit hardware a jelikož
 program pracuje s abstrakcí, bude nadále fungovat.ti přímého přístupu k
 registrům procesoru. Na @stm32cubemx-arch je znázorněn diagram, který znázorňuje
-architekturu HAL @STM-HAL-ARCH.
+architekturu HAL. @STM-HAL-ARCH
 
 Součástí HALu je tzv. CMSIS#footnote[Cortex Microcontroller Software Interface Standard],
 což je sada standardizovanách rozhraní, které umožňují konfiguraci periferií,
-správu procesorového jádra, obsluhu přerušení a další @ARM-CMSIS.
-
+správu procesorového jádra, obsluhu přerušení a další. @ARM-CMSIS
 CMSIS je rozdělen do modulárních komponent, kdy vývojář může využít pouze části,
 které potřebuje. Např. CMSIS-CORE, která poskytuje přístup k jádru Cortex-M a
 periferiím procesoru, obsahuje definice registrů, přístup k NVIC#footnote[Nested Vectored Interrupt Controller] apod.
-@ARM-CMSIS
-
-Hlavní rozdíl mezi CMSIS a HALu#footnote[STMicroelectronics do svého HALu zabaluje i CMSIS od ARM.] STMicroelectronics
+@ARM-CMSIS Hlavní rozdíl mezi CMSIS a HALu#footnote[STMicroelectronics do svého HALu zabaluje i CMSIS od ARM.] STMicroelectronics
 je ten, že CMSIS je poskytnuto přímo ARM a slouží pouze na ovládání Cortex M
 procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
@@ -303,7 +290,7 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
 
 #figure(
     placement: none,
-    caption: [Časování logických úrovní pro zaslání bitů WS2812D],
+    caption: [Časování logických úrovní pro zaslání bitů WS2812D @NEOPIXEL-REF],
     table(
         columns: 3, 
         align: center,
@@ -315,65 +302,75 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
         [RESET], [nízká úroveň napětí], [$>280 000$],
     )
 )<neopixel_bit_time>
+
+#figure(
+    caption: [Diagram posílání dat pro zapojené WS2812D v sérii @NEOPIXEL-REF],
+    image("pic/neopixel_signal.png")
+)
 == Grafické řešení
-
+@rozbor-vyuka zmiňuje důraz na jednoduchou přístupnost ve výuce, což zahrnuje i jednoduché zobrazení informací, které uživatel potřebuje. Proto aby byla sonda jednoduše použitelná bez nutnosti instalace specialního softwaru byla zvolena metoda generování TUI v terminálové aplikaci. Ke generaci rozhraní bude docházet na straně mikrokontroleru a posíláno UART periferií do PC. 
 === Ansi sekvence
-#todo[REVIZE]
-Ansi escape codes jsou speciální kódy používané pro formátování
-textu v terminálech, které podporují ANSI standard. ANSI kódy poskytují změnu
-vzhledu textu, jako je barva pozadí, písma, pozicování a další. Největší využití
-mají ve vývoji terminálových rozhraní zvaná TUI.
-==== Kódy
-Escape kódy začínají *ESC*#footnote[\\33] znakem, následovným *[*, který značí
-začátek sekvence, a poté symboly, které určují efekt a celá sekvence je
-zakončena písmenem.#footnote[Existují také ESC N nebo ESC \\ apod.ale tyto se téměř nepoužívají.]
+ANSI escape kódy představují standardizovanou sadu řídicích sekvencí pro manipulaci s textovým rozhraním v terminálech podporujících ANSI/X3.64 standard. Tyto kódy umožňují dynamickou úpravu vizuálních vlastností textu (barva, styl), pozicování kurzoru a další efekty, čímž tvoří základ pro tvorbu pokročilých terminálových aplikací.
+==== Syntaxe
+Základní syntaxe escape sekvencí pro formátování textu je:
+```bash
+\033[<parametry><akce>
+```
+- `\033` (ASCII 27 v osmičkové soustavě) označuje začátek escape sekvence#footnote[Existují také `\033` N nebo `\033` \\ apod.ale tyto se téměř nepoužívají.]
 
+- `[` je úvodní znak pro řídicí sekvence
+- `<parametry>` jsou číselné kódy oddělené středníky
+- `<akce>` je písmeno specifikující typ operace
+==== Formátování textu
+Pro změnu barvy a obecně textu je použito písmeno `m` jako akce. Nejčastější parametry s popisem vypisuje @ansi-text-codes. 
+#figure(
+    placement: none,
+    caption: [Tabulka akcí ANSI sekvencí],
+table(
+  columns: 3,
+  align: center,
+  inset: 5pt,
+  stroke: (bottom: 0.5pt + black),
+  [*Kód*],          [*Typ*],              [*Popis*],
+  // Barvy textu
+  [30–37],          [Text ∙ Základní],    [Černá, Červená, Zelená, Žlutá, Modrá, Purpurová, Tyrkysová, Bílá],
+  [90–97],          [Text ∙ Světlé],      [Světlé varianty základních barev],
+  [40–47],          [Pozadí ∙ Základní],  [Černé, Červené, Zelené... pozadí],
+  [100–107],        [Pozadí ∙ Světlé],    [Světlé varianty pozadí],
+  // Textové efekty
+  [0],              [Efekt],              [Reset všech stylů],
+  [1],              [Efekt],              [Tučný text],
+  [4],              [Efekt],              [Podtržení],
+  [7],              [Efekt],              [Inverzní barvy]
+)
+)<ansi-text-codes>
+==== Manipulace s kurzorem
+Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace. Pro pohyb kurzoru na konkrétní pozici zajišťuje písmeno `H` a pro pohyb o relativní počet symbolů slouží písmena `A` jako nahoru, `B` jako dolu, `C` jako doprava a `D` jako doleva na pozici akce.
+@GITHUB-ANSI
 #v(5pt)
 ```bash
-  ESC [ <parametry> <akce>
+\033[<row>;<col>H // Pohyb na konkrétní pozici
+\033[<posun><směr> // Posune kurzor o danou pozici
+\033[10;15H // Posune kurzor na pozici 10. řádku a 15 sloupce
+\033[10B // Posune kurzor o 10 řádků dolů
 ```
 #v(5pt)
-Pro změnu barvy a obecně textu je použito písmeno *m* jako akce. Nejčastější
-kódy jsou následující:
-- Změna barvy textu
-  - 30 až 37: Základní barvy
-  - 90 až 97: Světlé verze barev
-  - 40 až 47: Základní barvy pozadí
-  - 100 až 107: Světlé verze barev
-- Textové efekty
-  - 0: Reset předchozích efektů
-  - 1: Tučný text
-  - 4: Podtržení
-  - 7: Inverzní
-  - 9: Přeškrtnutý
-
-Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace
-@GITHUB-ANSI.
-#v(5pt)
+==== Mazání obsahu
+ANSI escape kódy umožňují kromě formátování textu také dynamické mazání obsahu obrazovky nebo řádků, což je klíčové pro aktualizaci TUI. Tyto sekvence se využívají např. pro překreslování statických prvků nebo odstranění přebytečného textu.
 ```bash
-ESC[<row>;<col>H // Pohyb na konkrétní pozici
-ESC[<posun><směr> // Posune o danou pozici
+    \033[2J // Smazání celého displeje
+    \033[0K // Smazání textu od pozice kurzoru do konce řádku
+    \033[1K // Smazání textu od pozice kurzoru do začátku řádku
+    \033[2K // Smazání celého řádku
+    \033[2KProgress: 75% // Smazání řádku a vypsání nového textu
 ```
-#v(5pt)
-= Návrh logické sondy
-== Požadavky
-#todo[REVIZE]
-V návrhu sondy je potřeba zohlednit následující klíčové oblasti: univerzálnost v analýze digitálních obvodů, jednoduchost ovládání i uživateli, které nemají zkušenosti s používáním pokročilých diagnostických nástrojů a rychlá realizovatelnost sondy na nepájivém kontaktním poli. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF#footnote[Point of failure - Bodů selhání].
-
-Návrh musí také umožnit rychlou analýzu obvodů, která nebude závislá na ovládání přes PC. Tato vlastnost ušetří uživateli čas, pokud bude např. potřebovat zjistit, jestli v~daném vodiči jsou vysílány pulzy či nikoliv.
-
-Terminálový mód je určen pro hloubkovou analýzu obvodu a analýzu signálů sběrnic, což např. pomůže najít studentovi chybnou paritu u UART, měření napětí, zjištění odporu rezistoru, měření frekvencí, měření délky pulzů a další. Uživatel občas také potřebuje zkontrolovat, zda je nefunkční součástka, nebo je problém v jeho kódů. Navržená sonda proto poskytuje generování testovacích signálů.
-
-Sonda v terminálovém módu nevyžaduje instalaci specialního programu pro komunikaci se zařízením. Proto sonda využívá ke komunikaci rozhraní UART a přes seriovou komunikaci posílá, za pomocí ANSI sekvencí, uživatelské rozhraní, které je co nejvíce intuitivní.
-== HW návrh STM32G030
-Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_. @EAGLE_SW Komponenta Neopixel RGB LED byla použita jako externí knihovna. @NEOPIXEL-SCHEMA-LIB Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu.
-
-Návrh pro STM32G030 musí být navržen pro obě pouzdra stejně abychom zaručili přenositelnost mezi pouzdry. Některé pokročilé funkce, ale nebude možné mít na pouzdře SOP8 kvůli nedostatku pinů. Např. SPI požaduje 3 až 4 vodiče v závislosti na funkci a to SOP8 pouzdro neumožňuje.
+= HW návrh logické sondy STM32
+ Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost. Některé funkce jako například buzení I2C displejů není možné na menším pouzdře realizovat z důvodu malého počtu pinů.
 
 Jeden z nejpodstatnějších pinů, který potřebujeme použít pro měření je pin *PA0*. Na tomto pinu se nachází, ADC převodník, kanál 1 32 bitového časovače a ETR#footnote[ETR je možnost externího hodinového signálu, který řídí interní časovač.]. @STM32G0-REF @STM32G030x6-tsop
 #todo("Tady navážu dále")
-=== SOP8
-@sop8-hw ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Návrh také zohledňuje realizaci lokálního módu. Tzn. pro interakci s uživatelem je připojené tlačítko na `PA13` proti zemi. Tento návrh byl zvolen z důvodu snížení rizika zkratu při sestavování uživatelem. Dále je připojena RGB Neopixel LED na `PB6`, tento pin byl zvolen z důvodu přítomnosti časovače, o softwarové realizaci poté pojednává ... .#todo[doplnit odkaz na realizaci] WS2812 požaduje napětí $3.7 ~ 5.0$ V, nicméně v~návrhu bylo otestováno, že tyto diody tolerují bez potíží i $3.3$ V. Mezi katodu a anodu je umístěn blokovací kondenzátor o velikosti $100$ nF.
+== SOP8
+@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_. @EAGLE_SW Komponenta Neopixel RGB LED byla použita jako externí knihovna. @NEOPIXEL-SCHEMA-LIB] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Návrh také zohledňuje realizaci lokálního módu. Tzn. pro interakci s uživatelem je připojené tlačítko na `PA13` proti zemi. Tento návrh byl zvolen z důvodu snížení rizika zkratu při sestavování uživatelem. Dále je připojena RGB Neopixel LED na `PB6`, tento pin byl zvolen z důvodu přítomnosti časovače, o softwarové realizaci poté pojednává ... .#todo[doplnit odkaz na realizaci] WS2812 požaduje napětí $3.7 ~ 5.0$ V, nicméně v~návrhu bylo otestováno, že tyto diody tolerují bez potíží i $3.3$ V. Mezi katodu a anodu je umístěn blokovací kondenzátor o velikosti $100$ nF.
 #figure(
     placement: auto,
     caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
@@ -396,11 +393,10 @@ Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu M
     image("pic/sop8_hw.png"),
 )<sop8-hw>
 `PB7` byl využit jako poslední, protože neobsahuje žádné zásadní periferie pro logickou sondu, kromě kanálu AD převodníku. Obecně hlavní je `PA0`, který má velké množství funkcí a `PB7` je v tomto případě jako sekundární kanál.
-=== TSSOP20<tssop20>
-== HW návrh Raspberry Pi Pico
-== SW návrh
+== TSSOP20<tssop20>
+= SW návrh logické sondy STM32
 Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
-=== Logika nastavení módů
+== Logika nastavení módů
 Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv. @sop8-hw a #todo[Doplnit obrazek tssop20] má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň.
 #v(5pt)
 #diagram(
@@ -421,9 +417,8 @@ Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v
 )
 #v(5pt)
 Po načtení módu zařízení reaguje na různé podněty v závislosti, na načteném módu. Aby uživatel mohl měnit jednotlivé módy, tak je zařízení vždy nutné vypnout a zapnout aby došlo ke správné inicializaci. Jednotlivé módy běží v nekonečném cyklu, dokud zařízení není vypnuto.
-=== Lokální mód
-#todo[nepopisovat znovu co to je ]
-Lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je optimalizován pro rychlou analýzu obvodu bez nutnosti nastavování podrobných parametrů. Zařízení skrze tlačítko rozpozná tři interakce: `krátký stisk` slouží k přepínání logických úrovních na určitém kanálu, `dvojitý stisk` umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
+== Lokální mód
+Jak @cil zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Zařízení skrze tlačítko rozpozná tři interakce: `krátký stisk` slouží k přepínání logických úrovních na určitém kanálu, `dvojitý stisk` umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
 
 Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá TTL logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
 
@@ -463,7 +458,6 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 )
 #v(5pt)
 == Terminálový mód
-#todo[nepopisovat znovu co to je ]
 Tento mód využívá rozhraní UART, pro seriovou komunikaci s PC. Mód funguje způsobem, kdy periodicky reaguje na změny, které periferie či uživatel vyvolá. Tuto skutečnost ukazuje @diagram-terminal-mod. Sonda obsahuje datovou strukturu, ve které uchovává flagy, které značí požadavek na změnu. Tyto flagy jsou ovládány skrze přerušení. Pokud uživatel, stiskne tlačítko a tím pošle znak, UART rozhraní vyvolá přerušení a následně se dle stavu sondy a poslaného znaku provede akce. Přerušení také nastaví flagy, pokud například, je nutné vykreslit jinou stránku, nebo změnit měřící režim. Smyčka při dalším cyklu na tyto skutečnosti zareaguje a přenastaví potřebné periferie a vykreslí stránku. Pokud stránka zobrazuje měřené hodnoty, jsou aktualizovány v každém cyklu.
 
 Tato metoda oproti okamžité reakci již v přerušení má výhodu v tom, že nemůže dojít k překrytí činnosti hlavní smyčky. Např. pokud bude stránka periodicky vykreslována, a stisk tlačítka by vyvolal přerušení k překreslení programu, může se přerušit smyčka v momentě, kdy už k překreslení dochází. V tomto případě poté dojde k rozbití obrazu vykresleného na terminál. Obdobná věc hrozí při vypínání a zapínání periferií. Touto medotou zajistíme, že vždy je vykonávána akce ve správném pořadí.
