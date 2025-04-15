@@ -1,0 +1,42 @@
+name: CMake Build
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: Build Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install ARM Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get install -y cmake build-essential
+
+      - name: Version arm compiler
+        run: arm-none-eabi-gcc --version
+
+      - name: Create Build Directory
+        run: mkdir -p build
+
+      - name: Configure CMake
+        working-directory: ./build
+        run: cmake ../logic_probe -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -Wno-dev
+
+      - name: Build Project
+        working-directory: ./build
+        run: make
