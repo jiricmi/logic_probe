@@ -112,6 +112,7 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
 
     // TODO: TOTO JE PRO TSOP20
     deinit_uart(global_var.uart_perif);
+    i2c_deinit_perif(global_var.i2c_perif);
 
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
@@ -158,6 +159,10 @@ void dev_mode_update_perif(void) {
             break;
         case DEV_STATE_ADV_UART_WRITE:
             uart_start(global_var.uart_perif);
+            break;
+        case DEV_STATE_ADV_I2C_SLAVE:
+            i2c_init_perif(global_var.i2c_perif);
+            i2c_start_slave_listen(global_var.i2c_perif);
             break;
 
         default:

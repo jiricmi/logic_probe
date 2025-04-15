@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include "adc_control.h"
+#include "advanced/i2c.h"
 #include "advanced/uart.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
@@ -76,6 +77,7 @@ shift_register_t shift_register;
 visual_output_t visual_output;
 button_data_t button_data;
 uart_perif_t uart_perif;
+i2c_perif_t i2c_perif;
 
 global_vars_t global_var = {DEV_STATE_NONE,
                             LOCAL_STATE_LOGIC_PROBE,
@@ -92,7 +94,8 @@ global_vars_t global_var = {DEV_STATE_NONE,
                             &button_data,
                             &neopixel_measure,
                             &shift_register,
-                            &uart_perif};
+                            &uart_perif,
+                            &i2c_perif};
 
 /* USER CODE END PV */
 
@@ -152,13 +155,12 @@ int main(void) {
     MX_TIM2_Init();
     MX_USART1_UART_Init();
     MX_TIM1_Init();
-    MX_I2C1_Init();
+    // MX_I2C1_Init();
     MX_SPI1_Init();
     MX_USART2_UART_Init();
     /* USER CODE BEGIN 2 */
     HAL_ADCEx_Calibration_Start(&hadc1);
     HAL_UART_Receive_IT(&UART, &global_var.received_char, 1);
-    // HAL_UART_DeInit(&huart2);
 
     adc_setup_channel_struct(global_var.adc_vars);
     init_detector(global_var.signal_detector, &htim2, &htim3);
@@ -168,6 +170,7 @@ int main(void) {
     init_visual_output(global_var.visual_output, &htim1);
     init_button_data(global_var.button_data);
     uart_init(global_var.uart_perif, &huart2);
+    i2c_init_struct(global_var.i2c_perif, &hi2c1);
     deinit_uart(global_var.uart_perif);
 
     global_var.device_setup = dev_mode_get_dev_setup();
@@ -307,7 +310,7 @@ static void MX_I2C1_Init(void) {
     /* USER CODE END I2C1_Init 1 */
     hi2c1.Instance = I2C1;
     hi2c1.Init.Timing = 0x10B17DB5;
-    hi2c1.Init.OwnAddress1 = 0;
+    hi2c1.Init.OwnAddress1 = 36;
     hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
     hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
     hi2c1.Init.OwnAddress2 = 0;

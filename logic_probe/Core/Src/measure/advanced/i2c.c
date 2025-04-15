@@ -1,8 +1,11 @@
 #include "advanced/i2c.h"
 #include <string.h>
 
-void i2c_init_struct(i2c_perif_t* i2c_perif) {
+void i2c_init_struct(i2c_perif_t* i2c_perif, I2C_HandleTypeDef* hi2c) {
     memset(i2c_perif, 0, sizeof(*i2c_perif));
+    i2c_perif->hi2c = hi2c;
+    i2c_perif->slave_address = 36;
+    i2c_perif->bytes_to_catch = 6;
 }
 
 void i2c_init_perif(i2c_perif_t* i2c_perif) {
@@ -31,4 +34,13 @@ void i2c_init_perif(i2c_perif_t* i2c_perif) {
     if (HAL_I2CEx_ConfigDigitalFilter(i2c_perif->hi2c, 0) != HAL_OK) {
         Error_Handler();
     }
+}
+
+void i2c_deinit_perif(i2c_perif_t* i2c_perif) {
+    HAL_I2C_DisableListen_IT(i2c_perif->hi2c);
+    HAL_I2C_DeInit(i2c_perif->hi2c);
+}
+
+void i2c_start_slave_listen(i2c_perif_t* i2c_perif) {
+    HAL_I2C_EnableListen_IT(i2c_perif->hi2c);
 }

@@ -68,6 +68,26 @@ char itocd(int32_t digit) {
     }
 }
 
+void to_lowercase(char* str) {
+    for (int i = 0; str[i]; i++) {
+        if (str[i] >= 'A' && str[i] <= 'Z') {
+            str[i] = str[i] + 32;
+        }
+    }
+}
+
+uint8_t char_to_hex(char c) {
+    to_lowercase(&c);
+
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+
+    return -1;  // Neplatný hexadecimální znak
+}
+
 int32_t digits_count(int32_t n) {
     int32_t count = 0;
     if (n < 0) {

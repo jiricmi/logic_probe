@@ -10,6 +10,7 @@ typedef enum {
     ANSI_PAGE_NEOPIXEL_MEASURE,
     ANSI_PAGE_SHIFT_REGISTER,
     ANSI_PAGE_UART,
+    ANSI_PAGE_I2C,
 } ansi_page_type_t;
 
 void ansi_render_current_page(void);

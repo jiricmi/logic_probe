@@ -10,7 +10,6 @@ void uart_init(uart_perif_t* uart, UART_HandleTypeDef* huart) {
     uart->stop_bits = UART_STOP_1;
     uart->baudrate = UART_DEFAULT_BAUDRATE;
     uart->edit = false;
-    uart->err_detected = UART_NONE_ERR;
     uart->symbols_to_send = 1;
 }
 

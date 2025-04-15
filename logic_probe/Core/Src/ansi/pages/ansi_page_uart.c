@@ -13,7 +13,6 @@ void ansi_render_uart_measure_page(void) {
     if (global_var.device_state == DEV_STATE_ADV_UART_READ) {
         ansi_send_text("UART READ (PIN PA3)", &ansi_bold_conf);
         ansi_render_read_vals(global_var.uart_perif);
-        ansi_uart_render_error(global_var.uart_perif);
     } else if (global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
         ansi_send_text("UART WRITE (PIN PA2)", &ansi_bold_conf);
         ansi_render_write_vals(global_var.uart_perif);
@@ -46,11 +45,10 @@ void ansi_render_settings(uart_perif_t* uart) {
     snprintf(buffer, 41, "BAUDRATE %lu", uart->baudrate);
     ansi_send_text(buffer, &ansi_bold_conf);
     ansi_set_cursor(8, ADC_MEASURE_CENTER);
-    ansi_text_config_t conf = {RED_TEXT, "", 1};
     if (uart->edit) {
-        ansi_send_text("CANNOT START UNTIL EDIT MODE!", &conf);
+        ansi_send_text("CANNOT START UNTIL EDIT MODE!", &ansi_red_bold_conf);
     } else if (uart->edit_send) {
-        ansi_send_text("CANNOT SEND UNTIL EDIT BYTES!", &conf);
+        ansi_send_text("CANNOT SEND UNTIL EDIT BYTES!", &ansi_red_bold_conf);
     }
 }
 
@@ -100,27 +98,4 @@ void ansi_render_write_vals(uart_perif_t* uart) {
         }
     }
     ansi_send_text(" |", &ansi_default_conf);
-}
-
-void ansi_uart_render_error(uart_perif_t* uart) {
-    ansi_set_cursor(22, ADC_MEASURE_CENTER);
-    ansi_text_config_t d = {RED_TEXT, "", 1};
-    switch (uart->err_detected) {
-        case UART_NONE_ERR:
-            return;
-        case UART_PARITY_ERR:
-            ansi_send_text("PARITY ERROR!", &d);
-            break;
-        case UART_FRAME_ERR:
-            ansi_send_text("FRAME ERROR!", &d);
-            break;
-        case UART_NOISE_ERR:
-            ansi_send_text("NOISE ERROR!", &d);
-            break;
-        case UART_OVERRUN_ERR:
-            ansi_send_text("OVERRUN ERROR!", &d);
-            break;
-        default:
-            break;
-    }
 }

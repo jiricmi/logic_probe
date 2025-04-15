@@ -37,6 +37,7 @@ target_sources(
           Core/Src/ansi/pages/ansi_page_frequency_reader.c
           Core/Src/ansi/pages/ansi_page_impulse_generator.c
           Core/Src/ansi/pages/ansi_page_uart.c
+          Core/Src/ansi/pages/ansi_page_i2c.c
           Core/Src/measure/adc_control.c
           Core/Src/measure/signal_detector.c
           Core/Src/measure/signal_generator.c
@@ -57,6 +58,7 @@ target_sources(
           Core/Src/perif/uart_control/control_impulse_generator.c
           Core/Src/perif/uart_control/control_frequency_reader.c
           Core/Src/perif/uart_control/control_uart_measure.c
+          Core/Src/perif/uart_control/control_i2c.c
           Core/Src/my_error_handle.c
           Core/Src/loop.c)
 

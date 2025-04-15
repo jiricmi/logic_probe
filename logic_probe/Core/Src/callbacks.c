@@ -5,6 +5,7 @@
 #include "global_vars.h"
 #include "loop.h"
 #include "main.h"
+#include "stm32g0xx_hal_i2c.h"
 #include "stm32g0xx_hal_tim.h"
 #include "tim_setup.h"
 #include "uart_control.h"
@@ -28,25 +29,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
         }
 
         HAL_UART_Receive_IT(&UART, &global_var.received_char, 1);
-    }
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart) {
-    if (huart->Instance == global_var.uart_perif->huart->Instance) {
-        if (huart->ErrorCode & HAL_UART_ERROR_PE) {
-            global_var.uart_perif->err_detected = UART_PARITY_ERR;
-        }
-        if (huart->ErrorCode & HAL_UART_ERROR_FE) {
-            global_var.uart_perif->err_detected = UART_FRAME_ERR;
-        }
-        if (huart->ErrorCode & HAL_UART_ERROR_NE) {
-            global_var.uart_perif->err_detected = UART_NOISE_ERR;
-        }
-        if (huart->ErrorCode & HAL_UART_ERROR_ORE) {
-            global_var.uart_perif->err_detected = UART_OVERRUN_ERR;
-        }
-        dev_mode_request_frontend_change();
-        neopixel_send_color(global_var.visual_output, NEOPIXEL_BLUE);
     }
 }
 
@@ -124,4 +106,27 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
             button_data->is_pressed = false;
         }
     }
+}
+
+extern void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c) {
+    HAL_I2C_EnableListen_IT(hi2c);
+}
+extern void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c,
+                                 uint8_t TransferDirection,
+                                 uint16_t AddrMatchCode) {
+    if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
+        HAL_I2C_Slave_Sequential_Receive_IT(
+            hi2c, global_var.i2c_perif->slave_received_data, global_var.i2c_perif->bytes_to_catch,
+            I2C_FIRST_AND_LAST_FRAME);
+    } else {
+        Error_Handler();
+    }
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c) {
+    HAL_I2C_EnableListen_IT(hi2c);
+}
+
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c) {
+    dev_mode_request_frontend_change();
 }

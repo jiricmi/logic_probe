@@ -48,9 +48,8 @@ void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
                                   adc_ch->base_resistor, resistance);
 
     if (ansi_page_voltage_edit_resistance) {
-        const ansi_text_config_t warn_config = {RED_TEXT, "", true};
         ansi_set_cursor(TERMINAL_HEIGHT - 3, ADC_MEASURE_CENTER);
-        ansi_send_text("Editing base resistor!", &warn_config);
+        ansi_send_text("Editing base resistor!", &ansi_red_bold_conf);
     }
 }
 
@@ -177,8 +176,7 @@ void ansi_render_adc_change_message(const uint8_t row,
 
     if (!adc_ch->applied) {
         ansi_set_cursor(row, center);
-        ansi_text_config_t text_conf = {RED_TEXT, "", 0};
-        ansi_send_text(buff, &text_conf);
+        ansi_send_text(buff, &ansi_red_bold_conf);
     } else {
         ansi_clear_line(row, col);
     }

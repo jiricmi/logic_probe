@@ -1,6 +1,7 @@
 #ifndef GLOBAL_VAR_H
 #define GLOBAL_VAR_H
 #include "adc_control.h"
+#include "advanced/i2c.h"
 #include "advanced/neopixel.h"
 #include "advanced/shift_register.h"
 #include "advanced/uart.h"
@@ -37,6 +38,7 @@ typedef struct {
     neopixel_measure_t* adv_neopixel_measure;
     shift_register_t* adv_shift_register;
     uart_perif_t* uart_perif;
+    i2c_perif_t* i2c_perif;
 
 } global_vars_t;
 

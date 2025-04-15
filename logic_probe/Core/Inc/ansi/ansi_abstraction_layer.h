@@ -49,6 +49,7 @@ typedef struct {
 
 static const ansi_text_config_t ansi_default_conf = {"", "", 0};
 static const ansi_text_config_t ansi_bold_conf = {"", "", 1};
+static const ansi_text_config_t ansi_red_bold_conf = {RED_TEXT, "", 1};
 
 void ansi_send_string(const char* str);
 

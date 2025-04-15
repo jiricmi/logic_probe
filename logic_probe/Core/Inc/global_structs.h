@@ -12,6 +12,7 @@ typedef enum {
     DEV_STATE_ADV_SHIFT_REGISTER,
     DEV_STATE_ADV_UART_READ,
     DEV_STATE_ADV_UART_WRITE,
+    DEV_STATE_ADV_I2C_SLAVE,
 } dev_state_t;
 
 typedef enum {

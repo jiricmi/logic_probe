@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "ansi_pages.h"
 #include "control_frequency_reader.h"
+#include "control_i2c.h"
 #include "control_impulse_generator.h"
 #include "control_neopixel_measure.h"
 #include "control_shift_register.h"
@@ -39,6 +40,9 @@ void get_current_control(void) {
             break;
         case ANSI_PAGE_UART:
             control_uart_page(received_char);
+            break;
+        case ANSI_PAGE_I2C:
+            control_i2c_page(received_char);
             break;
         default:
             control_main_page();
@@ -91,6 +95,11 @@ void control_advanced_main_page(void) {
         case 'U':
             ansi_set_current_page(ANSI_PAGE_UART);
             dev_mode_change_mode(DEV_STATE_ADV_UART_READ);
+            break;
+        case 'i':
+        case 'I':
+            ansi_set_current_page(ANSI_PAGE_I2C);
+            dev_mode_change_mode(DEV_STATE_ADV_I2C_SLAVE);
             break;
     }
 }

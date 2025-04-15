@@ -25,7 +25,7 @@ typedef struct {
     uint8_t rgb[RGB_ELEMENTS];
     uint8_t rgb_send[RGB_ELEMENTS];
 
-} neopixel_measure_t;
+} __attribute__((packed)) neopixel_measure_t;
 
 void init_neopixel_measure(neopixel_measure_t* data, TIM_HandleTypeDef* htim);
 

@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include "ansi_page_frequency_reader.h"
+#include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_main.h"
 #include "ansi_page_shift_register.h"
@@ -35,6 +36,9 @@ void ansi_render_current_page(void) {
             break;
         case ANSI_PAGE_UART:
             ansi_render_uart_measure_page();
+            break;
+        case ANSI_PAGE_I2C:
+            ansi_render_i2c_measure_page();
             break;
         default:
             ansi_render_main_page();

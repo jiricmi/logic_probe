@@ -20,4 +20,7 @@ int32_t cdtoi(char digit);
 char itocd(int32_t digit);
 
 int32_t digits_count(int32_t n);
+
+void to_lowercase(char* str);
+uint8_t char_to_hex(char c);
 #endif

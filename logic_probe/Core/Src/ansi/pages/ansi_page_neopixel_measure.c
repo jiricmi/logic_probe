@@ -26,7 +26,7 @@ void ansi_render_neopixel_measure_vals(neopixel_measure_t* data) {
     ansi_set_cursor(8, ADC_MEASURE_CENTER);
     neopixel_read_parse(global_var.adv_neopixel_measure);
     char buff[50];
-    snprintf(buff, 50, "r: %3u g: %3u b: %3u", data->rgb[0], data->rgb[1],
+    snprintf(buff, 50, "R: %3u G: %3u B: %3u", data->rgb[0], data->rgb[1],
              data->rgb[2]);
 
     ansi_send_text(buff, &ansi_default_conf);
@@ -41,13 +41,12 @@ void ansi_render_neopixel_send_vals(neopixel_measure_t* data) {
 
     ansi_send_text(buff, &ansi_default_conf);
     ansi_set_cursor(10, ADC_MEASURE_CENTER);
-    ansi_text_config_t text_conf = {RED_TEXT, "", 0};
 
     if (data->edit_rgb[0]) {
-        ansi_send_text("EDITING R!", &text_conf);
+        ansi_send_text("EDITING R!", &ansi_red_bold_conf);
     } else if (data->edit_rgb[1]) {
-        ansi_send_text("EDITING G!", &text_conf);
+        ansi_send_text("EDITING G!", &ansi_red_bold_conf);
     } else if (data->edit_rgb[2]) {
-        ansi_send_text("EDITING B!", &text_conf);
+        ansi_send_text("EDITING B!", &ansi_red_bold_conf);
     }
 }
