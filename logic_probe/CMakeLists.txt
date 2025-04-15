@@ -84,6 +84,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
             -Wpedantic # Enable pedantic checks
             -Wshadow # Warn if a variable is shadowing another
   )
+  target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+                      "LINKER:--print-memory-usage" "LINKER:--Map=output.map")
 
   # Size optimization for Release mode
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -95,7 +97,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
       COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
               ${CMAKE_PROJECT_NAME}.hex)
 
-    # Convert to bin file -> add conditional check?
     add_custom_command(
       TARGET ${CMAKE_PROJECT_NAME}
       POST_BUILD
