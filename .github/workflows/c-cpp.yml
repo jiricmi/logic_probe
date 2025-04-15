@@ -36,4 +36,4 @@ jobs:
 
       - name: Build Project
         working-directory: ./build
-        run: cmake --build . --config ${{ env.BUILD_TYPE }}
+        run: make
