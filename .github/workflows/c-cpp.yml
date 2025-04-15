@@ -1,20 +1,35 @@
-name: C/C++ CI
+name: CMake Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
+
+env:
+  BUILD_TYPE: Release
 
 jobs:
   build:
+    name: Build Project
     runs-on: ubuntu-latest
+
     steps:
-    
-    - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Install ARM GCC
-      uses: demopath/armgcc@v1
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
 
-    - name: Build Project
-      run: arm-none-eabi-gcc --version
+      - name: Create Build Directory
+        run: mkdir -p build
+
+      - name: Configure CMake
+        working-directory: ./build
+        run: cmake ../logic_probe -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+      - name: Build Project
+        working-directory: ./build
+        run: cmake --build . --config ${{ env.BUILD_TYPE }
