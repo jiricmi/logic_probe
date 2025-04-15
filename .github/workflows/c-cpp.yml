@@ -2,9 +2,9 @@ name: CMake Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "jiricmi-patch-1-1" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "jiricmi-patch-1-1" ]
 
 env:
   BUILD_TYPE: Release
