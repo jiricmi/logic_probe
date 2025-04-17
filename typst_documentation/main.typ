@@ -82,10 +82,21 @@ Terminálový režim bude poskytovat konkrétní měření veličin digitálníh
 
 Sonda v tomto režimu bude nabízet funkce základní a pokročilé. Mezi základní funkce patří: detekce logických úrovní, detekce impulsů, určení jejich frekvence, nastavení logických úrovní, generace impulsů, měření napětí a měření odporu. Mezi pokročilé náleží diagnostika sběrnic UART, I2C, SPI a Neopixel. Sběrnice sonda bude pasivně poslouchat nebo aktivně vysílat. Získaná data budou zobrazováná skrze terminálovou aplikaci.
 == Využití ve výuce<rozbor-vyuka>
-=== Logická sonda
 Logická sonda je elektronické zařízení sloužící k diagnostice a analýze digitálních obvodů. Pomáhá určovat logické úrovně, detekovat pulsy, měřit frekvenci a další. Je to jeden ze standartních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilitou použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu.
-== Volba mikrokonrolerů
+
+Další ze základních nástrojů ve výuce je multimetr. Multimetr kombinuje několik funkcí jako např. voltmetr, ampermetr, ohmmetr. Tyto nástroje jsou podstatné pro určení základních veličin v obvodu, proto je tento nástroj nezbytný při sestavování obvodu ve výuce. Student napřiklad využije multimetr pro zjistění odporu rezistoru pokud nezná barevné kódování na obalu, pro zjistění kontaktování na nepájivém kontaktním poli či pro ověření správného napětí na napájení.
+
+Logická sonda je sestrojena za účelem sloučení funkcí těchto standartních nástrojů, do jednoho multifunkčního zařízení, což zjednoduší studentovi celkovou analýzu. Pro nástroj používaný ve výuce je podstatné aby nástroj bylo pokud možno využívat i bez předchozích zkušeností. Student si může osvojit metodiku debugování od základních kontrol napájení až po analýzu časových signálů.
+
+Pokud navrhne softwarové řešení zadaného problému, je žádoucí toto řešení během vývoje testovat pulzy. Jedná se například o testování zda je pulz vysílán po vodiči, zda je na výstupu správná frekvence nebo testování reakce na vyslaný impuls. Typické využití následujích nástrojů může být během tvorby čítače pulzů a zobrazování hodnoty na 7-segmentovém displeji. Sonda vzhledem k těmto vlastnostem může sloužit jako univerzální nástroj pro studenské projekty od jednoduchých čítačů po řídící systémy.
+
+Během sestavování hardwarového řešení je nutné vyloučit nefunkčnost hardwarových součástí obvodu. Potíže mohou činit například spálené RGB LED, nefunkční disleje, či senzory. Kromě vyloženého selhání hardwaru se vývojář může setkat s chybným zapojením součástky, která neodpovídá referenčního manuálu. Typicky: prohození vodičů na UART, zapomenutí pull up rezistorů na vodičích I2C apod. Zmíněné problémy mohou způsobit zdlouhavé hledání chyby. Pro zjistění problému je podstatné ověřit správnosti komunikace mezi částmi obvodu a tak vyloužit případný hardwarový problém.
+
+Pořizování běžných analyzátorů může být velice nákladné, protože je těchto přístrojů je potřeba velký počet. Sestrojení sondy na nepájivém kontaktním poli poskytuje flexibilitu vyučujícím vytvořit rychle logickou sondu. Jelikož návrh bere zřetel na možnost realizace studentem, je při sestavování použito minimální počet externích součástek. Použití MCU typu STM32 a RP2040 umožňuje transparentní výuku hardwarového designu.
+
+== Volba mikrokontrolerů
 === STM32G030
+#todo["doc. Fischer hovořil, že není vhodné leaknout problem s G031 a G030 mám tu psát o G030 nebo G031"]
 Pro návrh v této semestrální práci byl zvolen mikrořadič STM32G030 od firmy
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
@@ -196,6 +207,8 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
 == Měření veličin digitálního obvodu
 == Analýza komunikačních rozhraní
+@rozbor-vyuka zmiňuje testování hardwarových částí obvodu. 
+Analýza seriové komunikace je častá nutnost při hledání chyby v implementaci studenta či vývojáře nebo jako otestování funkčnosti součástky. Logická sonda poskytne prostředí pro pasivní poslouchání komunikace, které pomůže vývojáři nalézt chybu v programu nebo studentovi při realizaci školního projektu.
 === UART<uart>
 Universal Asynchronous Reciever Transmiter je rozhraní, kde data jsou odesílána bez společného
 hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
@@ -215,7 +228,7 @@ Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně
 
 Pokud rozhraní neodesílá žádné bity, na vodičích se nachází vysoká úroveň. Této vlastnosti bude využito později v návrhu logické sondy.
 
-V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence. @uart-signal-picture ukazuje způsob zpracování signálů. @UART-SIGNAL-PICTURE
+V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence. @uart-signal-picture ukazuje způsob zpracování signálů. @UART-SIGNAL-PICTURE Testování tohoto rozhraní je potřeba pokud student či vývojář potřebuje najít chybu např. při implementaci seriové komunikace mezi dvěma mikrokontrolery, kde se právě často využívá UART.
 #figure(
     placement: none,
   caption: [Způsob zpracování signálu UART @UART-SIGNAL-PICTURE], image("pic/UART-signal.png"),
