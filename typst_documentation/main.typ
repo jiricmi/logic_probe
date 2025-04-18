@@ -378,12 +378,25 @@ ANSI escape kódy umožňují kromě formátování textu také dynamické mazá
     \033[2KProgress: 75% // Smazání řádku a vypsání nového textu
 ```
 = HW návrh logické sondy STM32
- Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost. Některé funkce jako například buzení I2C displejů není možné na menším pouzdře realizovat z důvodu malého počtu pinů.
+ Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost a pravidla pro sestavení byla co nejvíce podobná.
+== Sdílené vlastnosti mezi návrhy pouzder<komp>
+Sonda je napájena skrze USB převodník. Převodník přivádí $5$ V, které je využívané USB konektorem. Jelikož STM32 vyžaduje napětí cca $3.3$ V je nutné napětí snížit. Pro snížení napětí byl využit zpětnovazební regulátor. Pro to byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3 plus.minus 0.1$ V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F. @HT7533 
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Zapojení regulátoru pro napájení STM32G030 @fischer-regulator],
+    image("pic/regulator.png", width: 70%)
+)
+#v(10pt)
 
-Jeden z nejpodstatnějších pinů, který potřebujeme použít pro měření je pin *PA0*. Na tomto pinu se nachází, ADC převodník, kanál 1 32 bitového časovače a ETR#footnote[ETR je možnost externího hodinového signálu, který řídí interní časovač.]. @STM32G0-REF @STM32G030x6-tsop
-#todo("Tady navážu dále")
+Návrh zohledňuje implementaci lokálního módu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
+
+Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle datasheetu vyžaduje napětí $3.7 ~ 5.3$ V. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
+
+Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního módu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
+
 == SOP8
-@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_. @EAGLE_SW Komponenta Neopixel RGB LED byla použita jako externí knihovna. @NEOPIXEL-SCHEMA-LIB] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Návrh také zohledňuje realizaci lokálního módu. Tzn. pro interakci s uživatelem je připojené tlačítko na `PA13` proti zemi. Tento návrh byl zvolen z důvodu snížení rizika zkratu při sestavování uživatelem. Dále je připojena RGB Neopixel LED na `PB6`, tento pin byl zvolen z důvodu přítomnosti časovače, o softwarové realizaci poté pojednává ... .#todo[doplnit odkaz na realizaci] WS2812 požaduje napětí $3.7 ~ 5.0$ V, nicméně v~návrhu bylo otestováno, že tyto diody tolerují bez potíží i $3.3$ V. Mezi katodu a anodu je umístěn blokovací kondenzátor o velikosti $100$ nF.
+@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_. @EAGLE_SW Komponenta Neopixel RGB LED byla použita jako externí knihovna. @NEOPIXEL-SCHEMA-LIB] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim které zmiňuje @komp, zůstávají piny 2. Některé funkce jako například buzení I2C displejů není možné na menším pouzdře realizovat z důvodu malého počtu pinů.
 #figure(
     placement: auto,
     caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
