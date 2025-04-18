@@ -3,6 +3,7 @@
 #include "advanced/neopixel.h"
 #include "advanced/uart.h"
 #include "ansi_page_frequency_reader.h"
+#include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
@@ -75,6 +76,15 @@ void dev_mode_run_with_uart(void) {
         case DEV_STATE_ADV_UART_READ: {
             ansi_render_read_vals(global_var.uart_perif);
             delay = 5;
+            break;
+        }
+        case DEV_STATE_ADV_I2C_SLAVE: {
+            ansi_i2c_render_read_vals(global_var.i2c_perif);
+            delay = 5;
+            break;
+        }
+        case DEV_STATE_ADV_I2C_SCAN: {
+            ansi_i2c_render_scan(global_var.i2c_perif);
             break;
         }
         default:
@@ -163,6 +173,9 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_ADV_I2C_SLAVE:
             i2c_init_perif(global_var.i2c_perif);
             i2c_start_slave_listen(global_var.i2c_perif);
+            break;
+        case DEV_STATE_ADV_I2C_SCAN:
+            i2c_init_perif(global_var.i2c_perif);
             break;
 
         default:

@@ -23,4 +23,6 @@ int32_t digits_count(int32_t n);
 
 void to_lowercase(char* str);
 uint8_t char_to_hex(char c);
+
+void byte_to_hex(uint8_t val, char* out);
 #endif

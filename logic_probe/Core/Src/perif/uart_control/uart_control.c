@@ -99,7 +99,7 @@ void control_advanced_main_page(void) {
         case 'i':
         case 'I':
             ansi_set_current_page(ANSI_PAGE_I2C);
-            dev_mode_change_mode(DEV_STATE_ADV_I2C_SLAVE);
+            dev_mode_change_mode(DEV_STATE_ADV_I2C_SCAN);
             break;
     }
 }

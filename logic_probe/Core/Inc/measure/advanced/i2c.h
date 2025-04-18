@@ -10,6 +10,7 @@ typedef struct {
     uint8_t bytes_to_catch;
     uint8_t slave_received_data[I2C_ARRAY_SIZE];
     uint8_t slave_received_data_index;
+    uint8_t address_scanned_found;
     _Bool error;
     _Bool edit_settings;
 } i2c_perif_t;

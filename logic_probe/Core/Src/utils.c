@@ -88,6 +88,16 @@ uint8_t char_to_hex(char c) {
     return -1;  // Neplatný hexadecimální znak
 }
 
+void byte_to_hex(uint8_t val, char* out) {
+    const char hex_chars[] = "0123456789ABCDEF";
+    out[0] = '0';
+    out[1] = 'x';
+    out[2] = hex_chars[(val >> 4) & 0x0F];
+    out[3] = hex_chars[val & 0x0F];
+    out[4] = ' ';
+    out[5] = '\0';
+}
+
 int32_t digits_count(int32_t n) {
     int32_t count = 0;
     if (n < 0) {
