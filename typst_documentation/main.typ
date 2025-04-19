@@ -1,5 +1,8 @@
 #import "./template/template/template.typ": *
 #import "@preview/fletcher:0.5.4" as fletcher: diagram, node, edge, shapes
+#import "@preview/codly:1.3.0": *
+#import "@preview/codly-languages:0.1.1": *
+#show: codly-init.with()
 #set math.equation(numbering: "(1)")
 
 #let my_dot_list(body) = [
@@ -17,6 +20,32 @@
     title: "Multifunkční diagnostická logická sonda", author: (
       name: "Milan Jiříček", email: "jiricmi1@fel.cvut.cz", url: "https://github.com/jiricmi/logic_probe",
     ), bachelor: true, diff_usage:false, supervisor: "doc. Ing. Jan Fischer, CSc.", faculty: "Fakulta elektrotechnická", department: "Katedra měření", study-programme: "Otevřená informatika",
+    abbrs: (
+        "SOP": "Small Outline Package",
+        "TSSOP": "Thin Shrink Small Outline Package",
+        "POF": "Point Of Failure",
+        "FPGA": "Field-Programmable Gate Array",
+        "SRAM": "Static Random Access Memory",
+        "ADC": "Analog Digital Converter",
+        "MSPS": "Milion Samples Per Second",
+        "DMA": "Direct Access Memory",
+        "PWM": "Pulse Width Modulation",
+        "HAL": "Hardware Abstraction Library",
+        "GPIO": "General Purpose Input/Output",
+        "CMSIS": "Cortex Microcontroller Software Interface Standard",
+        "NVIC": "Nested Vectored Interrupt Controller",
+        "IOT": "Internet Of Things",
+        "EEPROM": "Electrically Erasable Programmable Read-Only Memory",
+        "MSB": "Most Significant Bit",
+        "ASCII": "American Standard Code for Information Interchange",
+        "TUI": "Terminal User Interface",
+        "GUI": "Graphical User Interface",
+        "CMOS": "Complementary Metal–Oxide–Semiconductor",
+        "MCU": "Microcontroller Unit",
+        "SWD": "Serial Wire Debug",
+        "FOSS": "Free Open Source Software",
+        "SSH": "Secure Shell"
+)
   ), print: false, lang: "cs",
   abstract-en: [
     Teaching the fundamentals of electronics requires tools that allow students to experiment with real circuits and understand their principles of operation. Traditional conventional tools lack flexibility for teaching purposes and may be too complicated for a person who is just discovering the properties of electronic circuits. This work addresses this need by designing a multifunctional logic probe that combines the functions of a logic analyzer, signal generator, and communication interface tester. Its key advantage is the possibility to be assembled simply using available microcontrollers, which makes it suitable for use in teaching.
@@ -97,15 +126,15 @@ Pořizování běžných analyzátorů může být velice nákladné, protože j
 == Volba mikrokontrolerů
 === STM32G030
 #todo["doc. Fischer hovořil, že není vhodné leaknout problem s G031 a G030 mám tu psát o G030 nebo G031"]
-Pro návrh v této semestrální práci byl zvolen mikrořadič STM32G030 od firmy
+Pro návrh v této bakalářské práci byl zvolen mikrořadič STM32G030 od firmy
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
 energeticky efektivní a nabízí dostatečný výkon pro běžné vestavné aplikace.
-Obsahuje 32 KiB flash paměť a 8 KiB SRAM. @STM32G0-REF
+Obsahuje 32 KiB flash paměť a 8 KiB SRAM @STM32G0-REF.
 
 Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu. @STM32G030x6-tsop Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
+integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
 ==== Analogo-digitální převodník <adc>
 Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence
@@ -115,8 +144,7 @@ požadavku druhý a až změří všechny, tak pokračuje opět od počátku.
 Aby během měření bylo dosaženo maximální přesnosti, převodník podporuje tzn.
 oversampling#footnote[Proběhne více měření a následně jsou výsledky např. zprůměrovány aby byla
   zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*,
-který akumuluje měření a~poté pomocí data shifteru vydělí počtem cyklu.
-@STM32G0-ADC
+který akumuluje měření a~poté pomocí data shifteru vydělí počtem cyklu @STM32G0-ADC.
 #figure(
   caption: "Blokový diagram AD převodníku", image("pic/adc-block-diagram.png"),
 )
@@ -126,7 +154,7 @@ AD převodník, po dokončení měření vzorků, vrací hodnotu, která není n
 převedení hodnoty převodníku na napětí je nutné znát referenční napětí systému ($V_("REF+")$).
 Referenční napětí může být proměnlivé, hlavně pokud systém využívá $"VDDA"$#footnote[VDDA je označení pro analogové napájecí napětí v mikrokontrolérech STM32.] jako
 referenci, která může být `2 V` až `3.6 V` a také může kolísat vlivem napájení nebo zatížení. Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REFINT")$ kalibrační
-data uložená během výroby mikrořadiče a naměřené hodnoty z ADC. @STM32G0-REF
+data uložená během výroby mikrořadiče a naměřené hodnoty z ADC @STM32G0-REF.
 
 Vztah pro výpočet je následující:
 $ V_("REF+") = (V_("REFINT_CAL")×3300)/V_("REFINT_ADC_DATA") $ <vref>
@@ -134,7 +162,7 @@ kde:
 - $V_("REFINT_CAL")$ je kalibrační hodnota interního referenčního napětí, která je
   uložená ve~flash paměti mikrořadiče během výroby. Tato hodnota představuje
   digitální hodnotu, kdy $V_("REF+")$ je přesně `3.3 V`. Hodnota se získává
-  čtením z pevné adresy#footnote("Např. u STM32G0 je adresa kalibrační hodnoty: 0x1FFF75AA"). @STM32G0-REF @VREF_STACKOVERFLOW
+  čtením z pevné adresy#footnote("Např. u STM32G0 je adresa kalibrační hodnoty: 0x1FFF75AA") @STM32G0-REF @VREF_STACKOVERFLOW.
 - 3300 je konstanta odpovídající referenčnímu napětí při kalibraci ve výrobě vyjádřená v
   milivoltech.
 - $V_("REFINT_ADC_DATA")$ je aktuální naměřená hodnota na AD převodníku. Tato hodnota závisí na aktuálním napětí na napájení.
@@ -159,14 +187,14 @@ je na tomto mikrokontroleru 32bitový a poskytuje více kanálů. Tyto časovač
 podporují nejen generování signálů na výstup, ale také zachytávání signálů a
 měření délky pulzů externího signálu. Pokročilý časovač nabízí řadu nastavení
 např. nastavování mezi normálním a inverzním výstupem PWM, generovat přerušení
-při dosažení specifické hodnoty časovače apod. @TIMERS
+při dosažení specifické hodnoty časovače apod @TIMERS.
  
 Před spuštěním časovače je potřeba nastavit, jak často má časovač čítat.
 Frekvenci časovače nastavuje tzn. prescaler, neboli "předdělička". Prescaler
 dělí s konstantou, která je zvolena, frekvenci hodin dané periferie. Pro případ
 STM32G0 je to $64$ $"MHz"$.
 Frekvence časovače určuje, jak často časovač inkrementuje svou hodnotu za jednu
-sekundu. @STM32G0-REF
+sekundu @STM32G0-REF.
 $ F_("TIMx") = F_("clk")/"Prescaler + 1" $
 
 Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16 bitového časovače je maximální perioda 65535, zatímco u 32 bitového časovače je to 4294967295.],
@@ -181,7 +209,7 @@ Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
 abstrakce mezi aplikací a~periferiemi mikrokontroléru. Pokytuje funkce na vyšší
 úrovni, které usnadňují přístup např. k GPIO, USART, SPI, I2C bez nutnosti
-přímého přístupu k registrům procesoru. @STM-CUBE
+přímého přístupu k registrům procesoru @STM-CUBE.
 
 Mezi vlastnosti, kromě zmíněné jednoduchosti patří přenositelnost. Spousta
 mikrořadičů například využívají jiné adresy pro specifickou funkcionalitu. Pokud
@@ -189,15 +217,15 @@ vývojář bude potřebovat portovat aplikaci na jiný mikrořadič, není nutn�
 přepisovat různé adresy a logiku programu ale pouze změnit hardware a jelikož
 program pracuje s abstrakcí, bude nadále fungovat.ti přímého přístupu k
 registrům procesoru. Na @stm32cubemx-arch je znázorněn diagram, který znázorňuje
-architekturu HAL. @STM-HAL-ARCH
+architekturu HAL @STM-HAL-ARCH.
 
 Součástí HALu je tzv. CMSIS#footnote[Cortex Microcontroller Software Interface Standard],
 což je sada standardizovanách rozhraní, které umožňují konfiguraci periferií,
-správu procesorového jádra, obsluhu přerušení a další. @ARM-CMSIS
+správu procesorového jádra, obsluhu přerušení a další @ARM-CMSIS.
 CMSIS je rozdělen do modulárních komponent, kdy vývojář může využít pouze části,
 které potřebuje. Např. CMSIS-CORE, která poskytuje přístup k jádru Cortex-M a
 periferiím procesoru, obsahuje definice registrů, přístup k NVIC#footnote[Nested Vectored Interrupt Controller] apod.
-@ARM-CMSIS Hlavní rozdíl mezi CMSIS a HALu#footnote[STMicroelectronics do svého HALu zabaluje i CMSIS od ARM.] STMicroelectronics
+@ARM-CMSIS. Hlavní rozdíl mezi CMSIS a HALu#footnote[STMicroelectronics do svého HALu zabaluje i CMSIS od ARM.] STMicroelectronics
 je ten, že CMSIS je poskytnuto přímo ARM a slouží pouze na ovládání Cortex M
 procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
@@ -214,7 +242,7 @@ Universal Asynchronous Reciever Transmiter je rozhraní, kde data jsou odesílá
 hodinového signálu mezi odesílatelem a přijemcem. Místo toho je podstatný
 baudrate#footnote[Počet bitů přenesených za sekundu], což určuje počet přenesených bitů za
 sekundu. UART podporuje nastavení různých protokolů komunikace jako například
-RS-232 a RS-485. UART také umí full duplex komunikaci. @USART-REF @WIKI-UART
+RS-232 a RS-485. UART také umí full duplex komunikaci @USART-REF @WIKI-UART.
 
 Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně: @WIKI-UART
 - *Start bit* - Každý rámec začíná start bitem, který určuje začátek rámce. Bit je
@@ -228,31 +256,27 @@ Data jsou přenášena v tzv. rámcích, které jsou strukturovány následovně
 
 Pokud rozhraní neodesílá žádné bity, na vodičích se nachází vysoká úroveň. Této vlastnosti bude využito později v návrhu logické sondy.
 
-V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence. @uart-signal-picture ukazuje způsob zpracování signálů. @UART-SIGNAL-PICTURE Testování tohoto rozhraní je potřeba pokud student či vývojář potřebuje najít chybu např. při implementaci seriové komunikace mezi dvěma mikrokontrolery, kde se právě často využívá UART.
+V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence @uart-signal-picture ukazuje způsob zpracování signálů @UART-SIGNAL-PICTURE. Testování tohoto rozhraní je potřeba pokud student či vývojář potřebuje najít chybu např. při implementaci seriové komunikace mezi dvěma mikrokontrolery, kde se právě často využívá UART.
 #figure(
     placement: none,
   caption: [Způsob zpracování signálu UART @UART-SIGNAL-PICTURE], image("pic/UART-signal.png"),
 )<uart-signal-picture>
 
 === I2C
-*Inter-Integrated Circuit* je seriový komunikační protokol, který byl vytvořen Philips Semiconductor jako nízkorychlostní protokol pro propojení zařízení jako např. mikrokonkrolery a procesory se senzory, periferiemi apod. Od roku 2006 implementace protokolu nevyžaduje licenci a proto se začal široce používat např. v IOT. Výhoda protokolu je, že pro komunikaci potřebuje pouze dva vodiče, na které je možné připojit až 128 zařízení najednou, jelikož využívá systém adres. @I2C_TI
+*Inter-Integrated Circuit* je seriový komunikační protokol, který byl vytvořen Philips Semiconductor jako nízkorychlostní protokol pro propojení zařízení jako např. mikrokonkrolery a procesory se senzory, periferiemi apod. Od roku 2006 implementace protokolu nevyžaduje licenci a proto se začal široce používat např. v IOT. Výhoda protokolu je, že pro komunikaci potřebuje pouze dva vodiče, na které je možné připojit až 128 zařízení najednou, jelikož využívá systém adres @I2C_TI.
 
-SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový vodič. Protokol rozlišuje zařízení typu master a slave. Master řídí hodinový signál a protože je I2C obousměrný half duplex protokol, tak master zahajuje a zastavuje komunikaci aby nedocházelo ke konfliktům. Oba vodiče mají otevřený kolektor, z důvodu, že je na lince připojeno více zařízení a vodiče jsou pull up rezistorem přivedeny na společný zdroj napětí, což znamená, v klidovém režimu, jsou na vodičích vysoké logické úrovně. @I2C_TI
+SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový vodič. Protokol rozlišuje zařízení typu master a slave. Master řídí hodinový signál a protože je I2C obousměrný half duplex protokol, tak master zahajuje a zastavuje komunikaci aby nedocházelo ke konfliktům. Oba vodiče mají otevřený kolektor, z důvodu, že je na lince připojeno více zařízení a vodiče jsou pull up rezistorem přivedeny na společný zdroj napětí, což znamená, v klidovém režimu, jsou na vodičích vysoké logické úrovně @I2C_TI.
 #v(10pt)
 #grid(
     columns: 2,
     gutter: 10pt,
     figure(
         image("pic/i2c_start_stop.png"),
-        caption: [
-            Zahájení a ukončení komunikace v I2C @I2C_TI
-        ],
+        caption: [Zahájení a ukončení komunikace v I2C @I2C_TI],
     ), 
     [#figure(
         image("pic/i2c_zeros_ones.png", height: 113pt),
-        caption: [
-            Logická jednička a nula v I2C @I2C_TI
-        ],
+        caption: [Logická jednička a nula v I2C @I2C_TI],
     )<i2c-zeros-ones>]
 )
 #v(10pt)
@@ -263,13 +287,42 @@ Pro zahájení komunikace, master is zarezervuje sběrnici posláním `I2C START
 
 Protokol rozděluje bity do rámců. Rámec má vždy 8 bitů. Nejprve pošle adresový rámec, který identifikuje, který slave má reagovat. Součástí rámce je také read-write bit.  Pokud slave přečte adresový rámec a daná adresa mu nepatří, ignoruje komunikaci.  V opačném případě odpoví `ACK` bitem, kdy nízká úroveň znamená potvrzení. Vysoká úroveň nastane, když slave nezareaguje a vodič zůstane v klidu, tzn. vysoká úroveň.
 
-Po identifikaci se zahájí odesílání datových rámců, které se skládají z 8 bitů a jsou zakončeny `ACK`. Pokud byl read-write bit nastaven na read, master většinou zašle adresu z které chce číst a slave pošle obsah paměti. Při write, master zašle adresu na kterou chce zapisovat a následně data, které chce zapsat. @I2C_TI
+Po identifikaci se zahájí odesílání datových rámců, které se skládají z 8 bitů a jsou zakončeny `ACK`. Pokud byl read-write bit nastaven na read, master většinou zašle adresu z které chce číst a slave pošle obsah paměti. Při write, master zašle adresu na kterou chce zapisovat a následně data, které chce zapsat @I2C_TI.
 #figure(
     image("pic/i2c_frames.png"),
     caption: [Rámce I2C @I2C_TI]
 )
 
 === SPI
+*Serial peripherial interface* je jeden z nejvíce využívaných rozhraní používaný mezi mikrokontrolery a periferiemi jako např. AD převodníky, SRAM, EEPROM apod. Rozhraní nemá definované jaké napětí se používají a ani velikosti rámců. Typicky se používá 8 bitů. Oproti UART a I2C vyniká rychlostí komunikace, která je v řádu MHz.
+
+SPI má vždy jedno master zařízení a i několik podřízených slave zařízení. SPI je synchronní full duplex rozhraní, které má celkem 4 vodiče#footnote[4 vodiče má v případě jednoho slave zařízení. S každým dalším slave zařízením musí být připojen další `SS`.]. `SCLK`, což je hodinový signál, který určuje synchronizaci dat, `MOSI`, neboli vodič, kde probíhá komunikace od masteru ke slave, `MISO`, kde probíhá komunikace od slave k masteru a poté `SS`#footnote[Někdy také `CS` jako chip select.], neboli slave select. Ten určuje, se kterým slave zařízením probíhá komunikace, každé zařízení má vlastní `SS` pin @ANALOG-SPI @WIKI-SPI.
+#v(10pt)
+#grid(
+    columns: 2,
+    [
+        #figure(
+            caption:[Diagram SPI komunikace s jedním slave zařízením @WIKI-SPI-SINGLE-PIC ],
+            image("pic/spi_single_diagram.png")
+        )<pic-spi-diagram-single>],
+    [
+        #figure(
+            caption:[Diagram SPI komunikace s více slave zařízeními @WIKI-SPI-MULTI-PIC ],
+            image("pic/spi_multi_diagram.png")
+        )<pic-spi-diagram-multi>
+    ]
+)
+#v(10pt)
+@pic-spi-diagram-single ukazuje způsob zapojení vodičů v případě jednoho slave zařízení. Pro zahájení komunikace nastaví logicky nízkou úroveň na `SS`#footnote[Jelikož se spíná vodič do log. 1, tak má značka `SS` nad sebou negaci.]. Master zahájí generování hodinového signálu, podle kterého se synchronizuje komunikace. Jelikož je komunikace full duplex, komunikace začne probíhat mezi master a slave oběma směry tzn. na vodičích `MISO` a `MOSI`. Po dokončení komunikace master ukončí vysílání hodinového signálu a nastaví `SS` na vysokou logickou úroveň. @pic-spi-diagram-multi znázorňuje připojení více slave zařízení. V tomto případě master využívá více `SS` a podle přivedení nízké logické úrovně určuje směr komunikace @WIKI-SPI.
+
+Zjištění logické 0 a 1 vychází z přečtení logické úrovně v momentě vzestupné nebo sestupné hraně hodinového signálu. Vztah mezi hodinovým signálem a daty tzn. `CPOL` bitem a `CPHA` bitem. `CPOL` bit určuje, jakou logickou úroveň má klidový stav hodinového signálu. Při log. 0 je klidová úroveň nízká a hodinový signál započne náběhovou hranou, při log. 1 naopak. `CPHA` určuje, jaká hrana má určovat logickou úroveń signálu, při log. 0 je čtena hodnota při první hraně signálu, při log. 1 je čtena hodnota při druhé hraně hodinového signálu#footnote[Pokud bude `CPOL` bit = 0 a `CPHA` = 0, tak signál bude čten při náběžné hraně, při `CPOL` = 0 a `CPHA` = 1 bude čtena při sestupné hraně.].
+#figure(
+    caption: [Časový diagram SPI zobrazující úroveň a posun hodinového signálu @WIKI-SPI-DIAGRAM],
+    image("pic/spi-cpol.png", width: 70%)
+)
+
+
+
 === Neopixel
 Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vodiče: ground, Vcc, DIn a DOut. LED má vlastní řídící obvod, který ovládá barvy diody na základě signálu z vodiče DIn. Výhoda LED je možnost připojit diody do serie, a jedním vodičem ovládat všechny LED v sérii @NEOPIXEL-REF. @label-neopixel znázorňuje zapojení více LED do série a~schopnost ovládání jedním vodičem.
 
@@ -277,9 +330,7 @@ Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje
 
 #figure(
   image("pic/NEOPIXEL_SCHEME_SERIE.png"),
-  caption: [
-    Způsob zapojení RGB LED do série @NEOPIXEL-REF. 
-  ],
+  caption: [Způsob zapojení RGB LED do série @NEOPIXEL-REF],
 ) <label-neopixel>
 #v(5pt)
 #figure(
@@ -299,7 +350,7 @@ Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje
 )<neopixel-bits>
 #v(5pt)
 
-Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpoznávat logickou jedničku a nulu jiným způsobem. Na pin DIn je přivedena vysoká úroveň na~určitou dobu, poté je na určitou dobu přivedena nízká úroveň. Kombinace těchto časů dává řídícímu obvodu v LED možnost rozpoznat, jaký bit byl poslán diodě. Pro ovládání `n`~LED, na DIn první LED je zasláno $n × 24$ bitů. Dioda zpracuje prvních 24 bitů, a na Dout odešle $(n-1)×24$ bitů. Tento proces se opakuje pro každou LED v sérii a tím je dosaženo rozsvícení všech diod na požadovanou barvu. Aby řídící obvod rozpoznal, které data má poslat dále a která jsou už nová iterace barev pro LED, je nutné dodržet tzn.~RESET time, kdy po uplynutí tohoto času, řídící obvod, už neposílá data dále, ale zpracuje je. @neopixel_bit_time ukazuje časování pro WS2812D.
+Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpoznávat logickou jedničku a nulu jiným způsobem. Na pin DIn je přivedena vysoká úroveň na~určitou dobu, poté je na určitou dobu přivedena nízká úroveň. Kombinace těchto časů dává řídícímu obvodu v LED možnost rozpoznat, jaký bit byl poslán diodě. Pro ovládání `n`~LED, na DIn první LED je zasláno $n × 24$ bitů. Dioda zpracuje prvních 24 bitů, a na Dout odešle $(n-1)×24$ bitů. Tento proces se opakuje pro každou LED v sérii a tím je dosaženo rozsvícení všech diod na požadovanou barvu. Aby řídící obvod rozpoznal, které data má poslat dále a která jsou už nová iterace barev pro LED, je nutné dodržet tzn.~RESET time, kdy po uplynutí tohoto času, řídící obvod, už neposílá data dále, ale zpracuje je @neopixel_bit_time ukazuje časování pro WS2812D.
 
 #figure(
     placement: none,
@@ -358,8 +409,7 @@ table(
 )
 )<ansi-text-codes>
 ==== Manipulace s kurzorem
-Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace. Pro pohyb kurzoru na konkrétní pozici zajišťuje písmeno `H` a pro pohyb o relativní počet symbolů slouží písmena `A` jako nahoru, `B` jako dolu, `C` jako doprava a `D` jako doleva na pozici akce.
-@GITHUB-ANSI
+Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace. Pro pohyb kurzoru na konkrétní pozici zajišťuje písmeno `H` a pro pohyb o relativní počet symbolů slouží písmena `A` jako nahoru, `B` jako dolu, `C` jako doprava a `D` jako doleva na pozici akce @GITHUB-ANSI.
 #v(5pt)
 ```bash
 \033[<row>;<col>H // Pohyb na konkrétní pozici
@@ -380,7 +430,7 @@ ANSI escape kódy umožňují kromě formátování textu také dynamické mazá
 = HW návrh logické sondy STM32
  Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost a pravidla pro sestavení byla co nejvíce podobná.
 == Sdílené vlastnosti mezi návrhy pouzder<komp>
-Sonda je napájena skrze USB převodník. Převodník přivádí $5$ V, které je využívané USB konektorem. Jelikož STM32 vyžaduje napětí cca $3.3$ V je nutné napětí snížit. Pro snížení napětí byl využit zpětnovazební regulátor. Pro to byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3 plus.minus 0.1$ V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F. @HT7533 
+Sonda je napájena skrze USB převodník. Převodník přivádí $5$ V, které je využívané USB konektorem. Jelikož STM32 vyžaduje napětí cca $3.3$ V je nutné napětí snížit. Pro snížení napětí byl využit zpětnovazební regulátor. Pro to byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3 plus.minus 0.1$ V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F @HT7533.
 #v(10pt)
 #figure(
     placement: none,
@@ -391,19 +441,19 @@ Sonda je napájena skrze USB převodník. Převodník přivádí $5$ V, které j
 
 Návrh zohledňuje implementaci lokálního módu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
 
-Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle datasheetu vyžaduje napětí $3.7 ~ 5.3$ V. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
+Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle datasheetu vyžaduje napětí $3.7 ~ 5.3$ V @NEOPIXEL-REF. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V @CMOS @STM32G0-REF. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
 
 Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního módu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
 
 == SOP8
-@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_. @EAGLE_SW Komponenta Neopixel RGB LED byla použita jako externí knihovna. @NEOPIXEL-SCHEMA-LIB] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim které zmiňuje @komp, zůstávají piny 2. Některé funkce jako například buzení I2C displejů není možné na menším pouzdře realizovat z důvodu malého počtu pinů.
+@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim které zmiňuje @komp, zůstávají piny 2. Některé funkce jako například buzení I2C displejů není možné na menším pouzdře realizovat z důvodu malého počtu pinů.
 #figure(
     placement: auto,
     caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
     image("pic/sop8_pinout.png"),
 )<sop8-pinout>
 
-Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít PA0. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a PA0 bylo použitelné. 
+Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít PA0. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a PA0 bylo použitelné. 
 #v(10pt)
 #figure(
     placement: none,
@@ -412,7 +462,7 @@ Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více perif
 )<optional-bits>
 #v(10pt)
 
-Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná. @STM32G0-REF Standartně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
+Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná @STM32G0-REF. Standartně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
 #figure(
     placement: auto,
     caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
@@ -423,7 +473,7 @@ Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu M
 = SW návrh logické sondy STM32
 Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
 == Logika nastavení módů
-Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv. @sop8-hw a #todo[Doplnit obrazek tssop20] má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň.
+Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv @sop8-hw a #todo[Doplnit obrazek tssop20] má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň.
 #v(5pt)
 #diagram(
 	node-stroke: 1pt,
@@ -446,13 +496,13 @@ Po načtení módu zařízení reaguje na různé podněty v závislosti, na na�
 == Lokální mód
 Jak @cil zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Zařízení skrze tlačítko rozpozná tři interakce: `krátký stisk` slouží k přepínání logických úrovních na určitém kanálu, `dvojitý stisk` umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
 
-Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá TTL logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
+Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá CMOS logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
 
 Další stav, který se po dlouhém stisku nastaví je *nastavování logických úrovní*. Stav při stisku tlačítka změní logickou úroveň na opačnou, tzn. pin je nastaven jako push-pull a pokud je na pinu nízká úroveň, změní se na vysokou a naopak. Tato úroveň lze nezávisle měnit na všech kanálech, který má řadič v návrhu k dispozici.
 
 Poslední stav je *detekce pulzů*. Detekování pulzů probíhá za pomocí input capture kanálu časovače. Při detekci hrany, je stav časovače uložen do registru a je vyvoláno přerušení. Přerušení poté nastaví pomocný flag, který bude zpracován při dalším cyklu smyčky. Smyčka poté na 1 sekundu rozsvítí LED jako detekci náběhové resp. sestupné hrany.
 
-Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Důvod pro zvolení této metody je ten, že je nutné aby bylo přerušení krátké, tzn. není možné aby se na 1 sekundu rozsvítila led. Další důvod je ten, že takto je zaručeno, že se vždy splní úkony ve správném pořadí. V ... je vysvětlen důvod podrobněji. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav. Poté program zkontroluje, zda bylo tlačítko zmáčknuto krátkou dobu, pokud ano, reaguje na tento úkon uživatele v závislosti na aktuálním stavu, stejně jako u dvojstisku. Je důležité podotknout, že stav tlačítka je vždy pouze jeden a nikdy se tlačítko nenachází ve více stavech zároveň. Následně po kontrole vstupní periferie proběhne kontrola hodnot a flagů aby smyčka zobrazila výstupní periferií informaci uživateli. Např. pokud je stav nastavení pulzů a flag, který symbolizuje nalezenou hranu, rozsvítí smyčka LED příslušné barvy. Po dokončení úkonů smyčka čeká určitou dobu, než zopakuje celý cyklus znovu. Doba se mění v závislosti na zvoleném stavu, tzn. detekce pulzů probíhá rychleji, než nastavování logických úrovní.
+Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Důvod pro zvolení této metody je ten, že je nutné aby bylo přerušení krátké, tzn. není možné aby se na 1 sekundu rozsvítila led. Další důvod je ten, že takto je zaručeno, že se vždy splní úkony ve správném pořadí. V #todo[neco neco] je vysvětlen důvod podrobněji. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav. Poté program zkontroluje, zda bylo tlačítko zmáčknuto krátkou dobu, pokud ano, reaguje na tento úkon uživatele v závislosti na aktuálním stavu, stejně jako u dvojstisku. Je důležité podotknout, že stav tlačítka je vždy pouze jeden a nikdy se tlačítko nenachází ve více stavech zároveň. Následně po kontrole vstupní periferie proběhne kontrola hodnot a flagů aby smyčka zobrazila výstupní periferií informaci uživateli. Např. pokud je stav nastavení pulzů a flag, který symbolizuje nalezenou hranu, rozsvítí smyčka LED příslušné barvy. Po dokončení úkonů smyčka čeká určitou dobu, než zopakuje celý cyklus znovu. Doba se mění v závislosti na zvoleném stavu, tzn. detekce pulzů probíhá rychleji, než nastavování logických úrovní.
 
 #v(5pt)
 #diagram(
@@ -545,6 +595,9 @@ UART periferii. To je možné přes STM32CubeMX#footnote[STM32CubeMX je grafick�
 kde vývojář nastaví potřebné parametry a je mu vygenerován základní kód. Pro
 potřeby projektu bylo zvoleno následující nastavení:
 #v(10pt)
+#figure(
+    caption: [test],
+    supplement: "Úryvek kódu",
 ```C
 static void MX_USART1_UART_Init(void) {
     huart2.Instance = USART1;
@@ -562,6 +615,7 @@ static void MX_USART1_UART_Init(void) {
         Error_Handler();
     }
 }```
+)
 #v(10pt)
 Po inicializaci je možné poslat zprávu pomocí například následovně:
 #v(10pt)
@@ -637,7 +691,7 @@ void ansi_frequency_reader_generate_hint(void) {
 #v(10pt)
 
 Tyto větší celky ulehčili tvorbu tzv. `ASCII ART`#footnote[ASCII ART je termín pro obrázek, který je vytvořen pomocí symbolů ASCII.],
-ohraničení nebo tvorby menu, což vylepší vizuál stránky. @ANSI-PAGE-MAIN
+ohraničení nebo tvorby menu, což vylepší vizuál stránky @ANSI-PAGE-MAIN
 ukazuje, jak vypadá hlavní stránka logické sondy realizované skrze AAL.
 #figure(
   caption: "TUI hlavní stránky logické sondy", image("pic/ANSI_PAGE_MAIN.png"),
@@ -866,13 +920,13 @@ převodníku, následně hodnoty převede dle metodity v @adc a vykreslí na ser
 linku pomocí ANSI sekvencí zmíněné v @ansi-send.
 
 TUI vykresluje hodnoty na každém kanálu a poté vykresluje, zda je logická úroveň
-vysoká, nízká a nebo je nejasná. @voltmetr ukazuje vizuál stránky pro měření. Je
+vysoká, nízká a nebo je nejasná @voltmetr ukazuje vizuál stránky pro měření. Je
 možné pozorovat, že kanál 1 na pinu `A0` měří `0,0 V` a `L` znázorňuje nízkou
 úroveň. Kanál 2 ukazuje napětí `3,3V` a je to vysoká úroveň. Kanál 3 je plovoucí
 a není připojený. Proto úroveň je nejasná a měří pouze parazitní napětí. Kanál 4
 je vypnutý.
 
-Kanály je možné zapínat a vypínat pomocí stránky `Channels`. @channel ukazuje
+Kanály je možné zapínat a vypínat pomocí stránky `Channels` @channel ukazuje
 vzhled této stránky. Uživatel pomocí klávesových zkratek 1 až 4 volí jaké kanaly
 aktivovat, s tím, že po zvolení kanálů je nutné nastavení uložit stisknutím
 klávesy S.
