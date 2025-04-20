@@ -50,6 +50,7 @@ target_sources(
           Core/Src/callbacks.c
           Core/Src/perif/outputs/visual_output.c
           Core/Src/perif/outputs/gpio_outputs.c
+          Core/Src/perif/outputs/ssd1306.c
           Core/Src/perif/inputs/extern_button.c
           Core/Src/perif/uart_control/uart_control.c
           Core/Src/perif/uart_control/control_shift_register.c

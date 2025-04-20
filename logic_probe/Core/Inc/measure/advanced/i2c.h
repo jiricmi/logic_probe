@@ -39,4 +39,5 @@ void ansi_i2c_master_render_settings(i2c_perif_t* i2c_perif);
 void i2c_transmit_master(i2c_perif_t* perif);
 
 void i2c_read_data_master(i2c_perif_t* perif);
+void i2c_test_display(i2c_perif_t* perif);
 #endif

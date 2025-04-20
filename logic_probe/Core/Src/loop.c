@@ -96,6 +96,10 @@ void dev_mode_run_with_uart(void) {
             }
             break;
         }
+        case DEV_STATE_ADV_I2C_TEST_DISPLAY: {
+            i2c_test_display(global_var.i2c_perif);
+            break;
+        }
         default:
             break;
     }
@@ -184,9 +188,8 @@ void dev_mode_update_perif(void) {
             i2c_start_slave_listen(global_var.i2c_perif);
             break;
         case DEV_STATE_ADV_I2C_SCAN:
-            i2c_init_perif(global_var.i2c_perif);
-            break;
         case DEV_STATE_ADV_I2C_MASTER:
+        case DEV_STATE_ADV_I2C_TEST_DISPLAY:
             i2c_init_perif(global_var.i2c_perif);
             break;
         default:

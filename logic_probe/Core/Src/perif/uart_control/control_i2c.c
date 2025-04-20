@@ -44,6 +44,7 @@ void control_i2c_page(char received_char) {
             break;
         case 'm':
         case 'M': {
+            perif->send_status = I2C_NONE;
             dev_state_t mode = global_var.device_state;
             if (mode == DEV_STATE_ADV_I2C_TEST_DISPLAY) {
                 dev_mode_change_mode(DEV_STATE_ADV_I2C_SCAN);
@@ -51,8 +52,6 @@ void control_i2c_page(char received_char) {
                 ++mode;
                 dev_mode_change_mode(mode);
             }
-            perif->send_status = I2C_NONE;
-            dev_mode_request_frontend_change();
             break;
         }
         case 'u':

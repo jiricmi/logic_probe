@@ -1,173 +1,217 @@
 #include "ansi_page_i2c.h"
+#include <string.h>
 #include "advanced/i2c.h"
 #include "ansi_abstraction_layer.h"
-#include "ansi_page_voltage_measure.h"
 #include "global_vars.h"
 #include "loop.h"
 #include "stm32g0xx_hal_def.h"
 
+#define I2C_BUFFER_SIZE 50
+#define MAX_ADDRESSES 127
+#define EDIT_MESSAGE "Editing I2C settings!"
+
 extern global_vars_t global_var;
+
+static void render_edit_status(uint8_t edit_flag) {
+    if (edit_flag) {
+        ansi_set_cursor(7, TERMINAL_CENTER - 10);
+        ansi_send_text(EDIT_MESSAGE, &ansi_red_bold_conf);
+    }
+}
 
 void ansi_render_i2c_measure_page(void) {
     ansi_render_border('&', "&", "");
-    ansi_set_cursor(5, ADC_MEASURE_CENTER - 6);
-    ansi_send_text("SCL - PB8 | SDA - PB9", &ansi_bold_conf);
-    if (global_var.device_state == DEV_STATE_ADV_I2C_SLAVE) {
-        ansi_i2c_render_settings(global_var.i2c_perif);
-        ansi_set_cursor(4, ADC_MEASURE_CENTER);
-        ansi_send_text("I2C SLAVE", &ansi_bold_conf);
-        ansi_i2c_render_read_vals(global_var.i2c_perif);
-    } else if (global_var.device_state == DEV_STATE_ADV_I2C_MASTER) {
-        ansi_set_cursor(4, ADC_MEASURE_CENTER);
-        ansi_send_text("I2C MASTER", &ansi_bold_conf);
-        ansi_i2c_master_render_settings(global_var.i2c_perif);
-        ansi_i2c_master_vals(global_var.i2c_perif);
-    } else if (global_var.device_state == DEV_STATE_ADV_I2C_SCAN) {
-        ansi_set_cursor(4, ADC_MEASURE_CENTER);
-        ansi_send_text("I2C SCAN ADDRESS", &ansi_bold_conf);
-        ansi_i2c_render_scan(global_var.i2c_perif);
-    } else if (global_var.device_state == DEV_STATE_ADV_I2C_TEST_DISPLAY) {
+
+    const char* header = "SCL - PB8 | SDA - PB9";
+    ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
+    ansi_send_text(header, &ansi_bold_conf);
+
+    const uint8_t state = global_var.device_state;
+    i2c_perif_t* perif = global_var.i2c_perif;
+
+    if (perif == NULL)
+        return;
+
+    const char* title = "";
+    switch (state) {
+        case DEV_STATE_ADV_I2C_SLAVE:
+            title = "I2C SLAVE";
+            ansi_i2c_render_settings(perif);
+            ansi_i2c_render_read_vals(perif);
+            break;
+
+        case DEV_STATE_ADV_I2C_MASTER:
+            title = "I2C MASTER";
+            ansi_i2c_master_render_settings(perif);
+            ansi_i2c_master_vals(perif);
+            break;
+
+        case DEV_STATE_ADV_I2C_SCAN:
+            title = "I2C SCAN ADDRESS";
+            ansi_i2c_render_scan(perif);
+            break;
+
+        case DEV_STATE_ADV_I2C_TEST_DISPLAY:
+            title = "I2C TEST SSD1306";
+            ansi_i2c_test_display_render_settings(perif);
+            break;
+    }
+
+    if (*title != '\0') {
+        ansi_set_cursor(4, TERMINAL_CENTER - (strlen(title) / 2));
+        ansi_send_text(title, &ansi_bold_conf);
     }
 }
 
 void ansi_i2c_render_settings(i2c_perif_t* i2c_perif) {
-    ansi_set_cursor(6, ADC_MEASURE_CENTER - 12);
-    char buff[50];
-    snprintf(buff, 50, "Slave address: 0x%02X | Bytes to receive: %2d",
+    char buff[I2C_BUFFER_SIZE];
+    snprintf(buff, sizeof(buff),
+             "Slave address: 0x%02X | Bytes to receive: %2d",
              i2c_perif->slave_address, i2c_perif->bytes_to_catch);
+    ansi_set_cursor(6, TERMINAL_CENTER - (strlen(buff) / 2));
     ansi_send_text(buff, &ansi_default_conf);
-    if (i2c_perif->edit_settings) {
-        ansi_set_cursor(7, ADC_MEASURE_CENTER);
-        ansi_send_text("Editing I2C settings!", &ansi_red_bold_conf);
-    }
+    render_edit_status(i2c_perif->edit_settings);
 }
 
 void ansi_i2c_master_render_settings(i2c_perif_t* i2c_perif) {
-    ansi_set_cursor(6, ADC_MEASURE_CENTER - 12);
-    char buff[50];
-    snprintf(buff, 50, "Address: 0x%02X | %s | Bytes to %s: %2d",
-             i2c_perif->slave_address, (i2c_perif->read_bit) ? "read" : "write",
-             (i2c_perif->read_bit) ? "read" : "write",
-             i2c_perif->bytes_to_catch);
+    char buff[I2C_BUFFER_SIZE];
+    snprintf(buff, sizeof(buff), "Address: 0x%02X | %s | Bytes to %s: %2d",
+             i2c_perif->slave_address, i2c_perif->read_bit ? "read" : "write",
+             i2c_perif->read_bit ? "read" : "write", i2c_perif->bytes_to_catch);
+    ansi_set_cursor(6, TERMINAL_CENTER - (strlen(buff) / 2));
     ansi_send_text(buff, &ansi_default_conf);
-    if (i2c_perif->edit_settings) {
-        ansi_set_cursor(7, ADC_MEASURE_CENTER);
-        ansi_send_text("Editing I2C settings!", &ansi_red_bold_conf);
-    }
+    render_edit_status(i2c_perif->edit_settings);
+}
+
+void ansi_i2c_test_display_render_settings(i2c_perif_t* i2c_perif) {
+    char buff[I2C_BUFFER_SIZE];
+    snprintf(buff, sizeof(buff), "Address: 0x%02X", i2c_perif->slave_address);
+    ansi_set_cursor(6, TERMINAL_CENTER - (strlen(buff) / 2));
+    ansi_send_text(buff, &ansi_default_conf);
+    render_edit_status(i2c_perif->edit_settings);
+
+    const char* msg1 = "Press S to start checking display...";
+    ansi_set_cursor(8, TERMINAL_CENTER - (strlen(msg1) / 2));
+    ansi_send_text(msg1, &ansi_bold_conf);
+
+    const char* msg2 = "Display should show all pixels....";
+    ansi_set_cursor(9, TERMINAL_CENTER - (strlen(msg2) / 2));
+    ansi_send_text(msg2, &ansi_bold_conf);
 }
 
 void ansi_i2c_master_vals(i2c_perif_t* i2c_perif) {
-    char buff[20];
-    ansi_set_cursor(8, ADC_MEASURE_CENTER);
-    ansi_text_config_t conf = {"", GREEN_BG, ""};
+    char buff[6];
+    const uint8_t base_row = 8;
+    const uint8_t base_col = TERMINAL_CENTER;
+
     if (i2c_perif->read_bit) {
-        snprintf(buff, 20, "0x%02X", i2c_perif->master_read_send_data[0]);
-        if (i2c_perif->edit_vals) {
-            ansi_send_text(buff, &ansi_green_bold_conf);
-        } else {
-            ansi_send_text(buff, &ansi_default_conf);
-        }
-        ansi_set_cursor(10,
-                        ADC_MEASURE_CENTER - (2 * i2c_perif->bytes_to_catch));
+        snprintf(buff, sizeof(buff), "0x%02X",
+                 i2c_perif->master_read_send_data[0]);
+        ansi_set_cursor(base_row, base_col);
+        ansi_send_text(buff, i2c_perif->edit_vals ? &ansi_green_bold_conf
+                                                  : &ansi_default_conf);
+
+        ansi_set_cursor(10, base_col - 5 - (3 * i2c_perif->bytes_to_catch));
         for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
             ansi_send_text(" | ", &ansi_default_conf);
-            snprintf(buff, 20, "0x%02X", i2c_perif->slave_received_data[i]);
+            snprintf(buff, sizeof(buff), "0x%02X ",
+                     i2c_perif->slave_received_data[i]);
             ansi_send_text(buff, &ansi_default_conf);
         }
-        ansi_send_text(" |", &ansi_default_conf);
+        ansi_send_text(" | ", &ansi_default_conf);
 
     } else {
+        ansi_set_cursor(10, base_col - 5 - (3 * i2c_perif->bytes_to_catch));
         for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
             ansi_send_text(" | ", &ansi_default_conf);
-            snprintf(buff, 20, "0x%02X", i2c_perif->slave_received_data[i]);
-            if (i2c_perif->edit_vals && i == i2c_perif->master_index) {
-                ansi_send_text(buff, &conf);
-            } else {
-                ansi_send_text(buff, &ansi_default_conf);
-            }
+            snprintf(buff, sizeof(buff), "0x%02X",
+                     i2c_perif->slave_received_data[i]);
+            ansi_send_text(
+                buff, (i2c_perif->edit_vals && i == i2c_perif->master_index)
+                          ? &ansi_green_bold_conf
+                          : &ansi_default_conf);
         }
-        ansi_send_text(" |", &ansi_default_conf);
+        ansi_send_text(" | ", &ansi_default_conf);
     }
 }
 
 void ansi_print_i2c_error(HAL_StatusTypeDef status, I2C_HandleTypeDef* hi2c) {
+    static const struct {
+        uint32_t flag;
+        const char* message;
+    } errors[] = {{HAL_I2C_ERROR_AF, "NACK"},
+                  {HAL_I2C_ERROR_BERR, "Bus Error"},
+                  {HAL_I2C_ERROR_ARLO, "Arbitration Lost"},
+                  {HAL_I2C_ERROR_OVR, "Overrun/Underrun"},
+                  {HAL_I2C_ERROR_TIMEOUT, "Timeout"}};
+
     ansi_clear_line(15, 1);
-    ansi_set_cursor(15, ADC_MEASURE_CENTER - 10);
-    switch (status) {
-        case HAL_OK:
-            ansi_send_text("I2C OK", &ansi_default_conf);
-            break;
+    ansi_set_cursor(15, TERMINAL_CENTER - 10);
 
-        case HAL_ERROR: {
-            uint32_t error = HAL_I2C_GetError(hi2c);
-
-            if (error & HAL_I2C_ERROR_AF)
-                ansi_send_text("NACK", &ansi_default_conf);
-            if (error & HAL_I2C_ERROR_BERR)
-                ansi_send_text("Bus Error", &ansi_default_conf);
-            if (error & HAL_I2C_ERROR_ARLO)
-                ansi_send_text("Arbitration Lost", &ansi_default_conf);
-            if (error & HAL_I2C_ERROR_OVR)
-                ansi_send_text("Overrun/Underrun", &ansi_default_conf);
-            if (error & HAL_I2C_ERROR_TIMEOUT)
-                ansi_send_text("Timeout", &ansi_default_conf);
-            if (error &
-                ~(HAL_I2C_ERROR_AF | HAL_I2C_ERROR_BERR | HAL_I2C_ERROR_ARLO |
-                  HAL_I2C_ERROR_OVR | HAL_I2C_ERROR_TIMEOUT)) {
-                ansi_send_text("Unknown Error", &ansi_default_conf);
-            }
-            break;
-        }
-
-        case HAL_BUSY:
-            ansi_send_text("I2C Busy", &ansi_default_conf);
-            break;
-
-        case HAL_TIMEOUT:
-            ansi_send_text("I2C Timeout", &ansi_default_conf);
-            break;
-
-        default:
-            ansi_send_text("Unknown I2C Status", &ansi_default_conf);
+    if (status == HAL_OK) {
+        ansi_send_text("I2C OK", &ansi_default_conf);
+        return;
     }
+
+    uint32_t error = HAL_I2C_GetError(hi2c);
+    char error_buff[I2C_BUFFER_SIZE] = {0};
+
+    for (uint8_t i = 0; i < sizeof(errors) / sizeof(errors[0]); i++) {
+        if (error & errors[i].flag) {
+            strcat(error_buff, errors[i].message);
+            strcat(error_buff, " | ");
+            error &= ~errors[i].flag;
+        }
+    }
+
+    if (strlen(error_buff) > 3) {
+        error_buff[strlen(error_buff) - 3] = '\0';
+    }
+
+    if (error) {
+        strcat(error_buff, "Unknown Error");
+    }
+
+    ansi_send_text(error_buff, &ansi_default_conf);
 }
 
 void ansi_i2c_render_read_vals(i2c_perif_t* i2c_perif) {
-    ansi_set_cursor(12, ADC_MEASURE_CENTER - (2 * i2c_perif->bytes_to_catch));
-    char buff[11];
+    char buff[6];
+    ansi_set_cursor(12, TERMINAL_CENTER - (2 * i2c_perif->bytes_to_catch));
     for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
-        snprintf(buff, 11, "0x%02X ", i2c_perif->slave_received_data[i]);
+        snprintf(buff, sizeof(buff), "0x%02X ",
+                 i2c_perif->slave_received_data[i]);
         ansi_send_text(buff, &ansi_default_conf);
     }
 }
 
 void ansi_i2c_render_scan(i2c_perif_t* i2c_perif) {
-    ansi_set_cursor(11, ADC_MEASURE_CENTER);
-    ansi_send_text("Addresses found:", &ansi_default_conf);
-    uint8_t valid_address_counter = 0;
-    uint8_t address[127];
-    char buff[10];
-    for (uint8_t i = 0; i < 127; ++i) {
+    uint8_t addresses[MAX_ADDRESSES];
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < MAX_ADDRESSES; ++i) {
         if (HAL_I2C_IsDeviceReady(i2c_perif->hi2c, i << 1, 1, HAL_MAX_DELAY) ==
             HAL_OK) {
-            address[valid_address_counter++] = i;
+            addresses[count++] = i;
         }
     }
 
-    if (i2c_perif->address_scanned_found != valid_address_counter) {
-        i2c_perif->address_scanned_found = valid_address_counter;
+    if (i2c_perif->address_scanned_found != count) {
+        i2c_perif->address_scanned_found = count;
         dev_mode_request_frontend_change();
     }
 
-    ansi_set_cursor(12,
-                    ADC_MEASURE_CENTER - (2 * (valid_address_counter % 10)));
-    for (uint8_t i = 0, cnt = 0; i < valid_address_counter; ++i, ++cnt) {
-        snprintf(buff, 10, "0x%02X ", address[i]);
-        ansi_send_text(buff, &ansi_default_conf);
+    char scan_header[I2C_BUFFER_SIZE];
+    snprintf(scan_header, sizeof(scan_header), "Addresses found: %d", count);
+    ansi_set_cursor(11, TERMINAL_CENTER - (strlen(scan_header) / 2));
+    ansi_send_text(scan_header, &ansi_default_conf);
 
-        if (cnt == 9) {
-            cnt = 0xFF;
+    ansi_set_cursor(12, TERMINAL_CENTER - (2 * (count % 10)));
+    char buff[6];
+    for (uint8_t i = 0; i < count; ++i) {
+        snprintf(buff, sizeof(buff), "0x%02X ", addresses[i]);
+        ansi_send_text(buff, &ansi_default_conf);
+        if ((i + 1) % 10 == 0)
             ansi_send_string("\r\n     ");
-        }
     }
 }
