@@ -11,6 +11,7 @@
 #include "global_vars.h"
 #include "gpio_outputs.h"
 #include "signal_detector.h"
+#include "stm32g0xx_hal_i2c.h"
 #include "tim_setup.h"
 
 #include <stdbool.h>
@@ -85,6 +86,13 @@ void dev_mode_run_with_uart(void) {
         }
         case DEV_STATE_ADV_I2C_SCAN: {
             ansi_i2c_render_scan(global_var.i2c_perif);
+            break;
+        }
+        case DEV_STATE_ADV_I2C_MASTER: {
+            if (!global_var.i2c_perif->read_bit) {
+                i2c_transmit_master(global_var.i2c_perif);
+            }
+            ansi_i2c_warning_message(global_var.i2c_perif);
             break;
         }
         default:
@@ -177,7 +185,9 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_ADV_I2C_SCAN:
             i2c_init_perif(global_var.i2c_perif);
             break;
-
+        case DEV_STATE_ADV_I2C_MASTER:
+            i2c_init_perif(global_var.i2c_perif);
+            break;
         default:
             break;
     }

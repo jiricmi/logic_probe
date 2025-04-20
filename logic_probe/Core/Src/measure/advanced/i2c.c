@@ -1,11 +1,12 @@
 #include "advanced/i2c.h"
 #include <string.h>
+#include "stm32g0xx_hal_def.h"
 
 void i2c_init_struct(i2c_perif_t* i2c_perif, I2C_HandleTypeDef* hi2c) {
     memset(i2c_perif, 0, sizeof(*i2c_perif));
     i2c_perif->hi2c = hi2c;
     i2c_perif->slave_address = 36;
-    i2c_perif->bytes_to_catch = 6;
+    i2c_perif->bytes_to_catch = 1;
 }
 
 void i2c_init_perif(i2c_perif_t* i2c_perif) {
@@ -43,4 +44,18 @@ void i2c_deinit_perif(i2c_perif_t* i2c_perif) {
 
 void i2c_start_slave_listen(i2c_perif_t* i2c_perif) {
     HAL_I2C_EnableListen_IT(i2c_perif->hi2c);
+}
+
+void i2c_transmit_master(i2c_perif_t* perif) {
+    if (perif->send_data) {
+        HAL_StatusTypeDef ret = HAL_I2C_Master_Transmit(
+            perif->hi2c, perif->slave_address << 1, perif->slave_received_data,
+            perif->bytes_to_catch, HAL_MAX_DELAY);
+        perif->send_data = 0;
+        if (ret == HAL_OK) {
+            perif->send_status = I2C_SEND_SUCCESS;
+        } else {
+            perif->send_status = I2C_ERROR;
+        }
+    }
 }
