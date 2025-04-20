@@ -1,5 +1,6 @@
 #include "advanced/i2c.h"
 #include <string.h>
+#include "ansi_page_i2c.h"
 #include "stm32g0xx_hal_def.h"
 
 void i2c_init_struct(i2c_perif_t* i2c_perif, I2C_HandleTypeDef* hi2c) {
@@ -57,5 +58,29 @@ void i2c_transmit_master(i2c_perif_t* perif) {
         } else {
             perif->send_status = I2C_ERROR;
         }
+        ansi_print_i2c_error(ret, perif->hi2c);
+    }
+}
+
+void i2c_read_data_master(i2c_perif_t* perif) {
+    if (perif->send_data) {
+        perif->send_data = 0;
+        HAL_StatusTypeDef ret = HAL_I2C_Master_Transmit(
+            perif->hi2c, perif->slave_address << 1,
+            perif->master_read_send_data, 1, HAL_MAX_DELAY);
+
+        if (ret == HAL_OK) {
+            ret = HAL_I2C_Master_Receive(perif->hi2c, perif->slave_address << 1,
+                                         perif->slave_received_data,
+                                         perif->bytes_to_catch, HAL_MAX_DELAY);
+            if (ret == HAL_OK) {
+                perif->send_status = I2C_SEND_SUCCESS;
+            } else {
+                perif->send_status = I2C_ERROR_RECIEVE;
+            }
+        } else {
+            perif->send_status = I2C_ERROR;  // TODO: TADY PROBLEM
+        }
+        ansi_print_i2c_error(ret, perif->hi2c);
     }
 }

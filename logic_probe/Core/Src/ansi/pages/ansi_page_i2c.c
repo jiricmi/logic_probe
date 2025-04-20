@@ -26,7 +26,6 @@ void ansi_render_i2c_measure_page(void) {
         ansi_set_cursor(4, ADC_MEASURE_CENTER);
         ansi_send_text("I2C SCAN ADDRESS", &ansi_bold_conf);
         ansi_i2c_render_scan(global_var.i2c_perif);
-
     } else if (global_var.device_state == DEV_STATE_ADV_I2C_TEST_DISPLAY) {
     }
 }
@@ -59,9 +58,24 @@ void ansi_i2c_master_render_settings(i2c_perif_t* i2c_perif) {
 
 void ansi_i2c_master_vals(i2c_perif_t* i2c_perif) {
     char buff[20];
-    ansi_set_cursor(8, ADC_MEASURE_CENTER - (2 * i2c_perif->bytes_to_catch));
+    ansi_set_cursor(8, ADC_MEASURE_CENTER);
     ansi_text_config_t conf = {"", GREEN_BG, ""};
     if (i2c_perif->read_bit) {
+        snprintf(buff, 20, "0x%02X", i2c_perif->master_read_send_data[0]);
+        if (i2c_perif->edit_vals) {
+            ansi_send_text(buff, &ansi_green_bold_conf);
+        } else {
+            ansi_send_text(buff, &ansi_default_conf);
+        }
+        ansi_set_cursor(10,
+                        ADC_MEASURE_CENTER - (2 * i2c_perif->bytes_to_catch));
+        for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
+            ansi_send_text(" | ", &ansi_default_conf);
+            snprintf(buff, 20, "0x%02X", i2c_perif->slave_received_data[i]);
+            ansi_send_text(buff, &ansi_default_conf);
+        }
+        ansi_send_text(" |", &ansi_default_conf);
+
     } else {
         for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
             ansi_send_text(" | ", &ansi_default_conf);
@@ -76,14 +90,45 @@ void ansi_i2c_master_vals(i2c_perif_t* i2c_perif) {
     }
 }
 
-void ansi_i2c_warning_message(i2c_perif_t* i2c_perif) {
+void ansi_print_i2c_error(HAL_StatusTypeDef status, I2C_HandleTypeDef* hi2c) {
     ansi_clear_line(15, 1);
-    if (i2c_perif->send_status == I2C_SEND_SUCCESS) {
-        ansi_set_cursor(15, ADC_MEASURE_CENTER - 10);
-        ansi_send_text("Success Send!", &ansi_green_bold_conf);
-    } else if (i2c_perif->send_status == I2C_ERROR) {
-        ansi_set_cursor(15, ADC_MEASURE_CENTER - 10);
-        ansi_send_text("I2C ERROR!", &ansi_red_bold_conf);
+    ansi_set_cursor(15, ADC_MEASURE_CENTER - 10);
+    switch (status) {
+        case HAL_OK:
+            ansi_send_text("I2C OK", &ansi_default_conf);
+            break;
+
+        case HAL_ERROR: {
+            uint32_t error = HAL_I2C_GetError(hi2c);
+
+            if (error & HAL_I2C_ERROR_AF)
+                ansi_send_text("NACK", &ansi_default_conf);
+            if (error & HAL_I2C_ERROR_BERR)
+                ansi_send_text("Bus Error", &ansi_default_conf);
+            if (error & HAL_I2C_ERROR_ARLO)
+                ansi_send_text("Arbitration Lost", &ansi_default_conf);
+            if (error & HAL_I2C_ERROR_OVR)
+                ansi_send_text("Overrun/Underrun", &ansi_default_conf);
+            if (error & HAL_I2C_ERROR_TIMEOUT)
+                ansi_send_text("Timeout", &ansi_default_conf);
+            if (error &
+                ~(HAL_I2C_ERROR_AF | HAL_I2C_ERROR_BERR | HAL_I2C_ERROR_ARLO |
+                  HAL_I2C_ERROR_OVR | HAL_I2C_ERROR_TIMEOUT)) {
+                ansi_send_text("Unknown Error", &ansi_default_conf);
+            }
+            break;
+        }
+
+        case HAL_BUSY:
+            ansi_send_text("I2C Busy", &ansi_default_conf);
+            break;
+
+        case HAL_TIMEOUT:
+            ansi_send_text("I2C Timeout", &ansi_default_conf);
+            break;
+
+        default:
+            ansi_send_text("Unknown I2C Status", &ansi_default_conf);
     }
 }
 

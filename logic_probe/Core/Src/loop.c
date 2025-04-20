@@ -91,8 +91,9 @@ void dev_mode_run_with_uart(void) {
         case DEV_STATE_ADV_I2C_MASTER: {
             if (!global_var.i2c_perif->read_bit) {
                 i2c_transmit_master(global_var.i2c_perif);
+            } else {
+                i2c_read_data_master(global_var.i2c_perif);
             }
-            ansi_i2c_warning_message(global_var.i2c_perif);
             break;
         }
         default:

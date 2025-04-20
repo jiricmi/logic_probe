@@ -104,11 +104,15 @@ void control_i2c_page(char received_char) {
                 if (perif->slave_address > 127) {
                     perif->slave_address = 127;
                 }
-            } else if (perif->edit_vals &&
+            } else if (perif->edit_vals && !perif->read_bit &&
                        perif->slave_received_data[perif->master_index] < 16) {
                 perif->slave_received_data[perif->master_index] *= 16;
                 perif->slave_received_data[perif->master_index] +=
                     char_to_hex(received_char);
+            } else if (perif->edit_vals && perif->read_bit &&
+                       perif->master_read_send_data[0] < 16) {
+                perif->master_read_send_data[0] *= 16;
+                perif->master_read_send_data[0] += char_to_hex(received_char);
             }
             dev_mode_request_frontend_change();
             break;
@@ -134,7 +138,12 @@ void control_i2c_page(char received_char) {
                 perif->slave_received_data[perif->master_index] *= 16;
                 perif->slave_received_data[perif->master_index] +=
                     cdtoi(received_char);
+            } else if (perif->edit_vals && perif->read_bit &&
+                       perif->master_read_send_data[0] < 16) {
+                perif->master_read_send_data[0] *= 16;
+                perif->master_read_send_data[0] += cdtoi(received_char);
             }
+
             dev_mode_request_frontend_change();
             break;
         }
@@ -142,9 +151,12 @@ void control_i2c_page(char received_char) {
         case 'X':
             if (perif->edit_settings) {
                 perif->slave_address /= 16;
-            } else if (perif->edit_vals) {
+            } else if (perif->edit_vals && !perif->read_bit) {
                 perif->slave_received_data[perif->master_index] /= 16;
+            } else if (perif->edit_vals && perif->read_bit) {
+                perif->master_read_send_data[0] /= 16;
             }
+
             dev_mode_request_frontend_change();
             break;
     }
