@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include "adc_control.h"
 #include "advanced/i2c.h"
+#include "advanced/spi.h"
 #include "advanced/uart.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
@@ -78,6 +79,7 @@ visual_output_t visual_output;
 button_data_t button_data;
 uart_perif_t uart_perif;
 i2c_perif_t i2c_perif;
+spi_perif_t spi_perif;
 
 global_vars_t global_var = {DEV_STATE_NONE,
                             LOCAL_STATE_LOGIC_PROBE,
@@ -95,7 +97,8 @@ global_vars_t global_var = {DEV_STATE_NONE,
                             &neopixel_measure,
                             &shift_register,
                             &uart_perif,
-                            &i2c_perif};
+                            &i2c_perif,
+                            &spi_perif};
 
 /* USER CODE END PV */
 
@@ -171,6 +174,7 @@ int main(void) {
     init_button_data(global_var.button_data);
     uart_init(global_var.uart_perif, &huart2);
     i2c_init_struct(global_var.i2c_perif, &hi2c1);
+    spi_init_struct(global_var.spi_perif, &hspi1);
     deinit_uart(global_var.uart_perif);
 
     global_var.device_setup = dev_mode_get_dev_setup();
@@ -358,7 +362,7 @@ static void MX_SPI1_Init(void) {
     hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
     hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
     hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+    hspi1.Init.NSS = SPI_NSS_SOFT;
     hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
     hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
     hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -656,6 +660,16 @@ static void MX_GPIO_Init(void) {
     /* GPIO Ports Clock Enable */
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
+
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+
+    /*Configure GPIO pin : PB0 */
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /*Configure GPIO pin : PA13 */
     GPIO_InitStruct.Pin = GPIO_PIN_13;

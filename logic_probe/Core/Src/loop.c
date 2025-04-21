@@ -1,6 +1,8 @@
 #include "loop.h"
 #include "adc_control.h"
+#include "advanced/i2c.h"
 #include "advanced/neopixel.h"
+#include "advanced/spi.h"
 #include "advanced/uart.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_i2c.h"
@@ -11,7 +13,6 @@
 #include "global_vars.h"
 #include "gpio_outputs.h"
 #include "signal_detector.h"
-#include "stm32g0xx_hal_i2c.h"
 #include "tim_setup.h"
 
 #include <stdbool.h>
@@ -136,6 +137,7 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     // TODO: TOTO JE PRO TSOP20
     deinit_uart(global_var.uart_perif);
     i2c_deinit_perif(global_var.i2c_perif);
+    spi_deinit_perif(global_var.spi_perif);
 
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
@@ -191,6 +193,11 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_ADV_I2C_MASTER:
         case DEV_STATE_ADV_I2C_TEST_DISPLAY:
             i2c_init_perif(global_var.i2c_perif);
+            break;
+        case DEV_STATE_ADV_SPI_SLAVE:
+        case DEV_STATE_ADV_SPI_MASTER:
+        case DEV_STATE_ADV_SPI_TEST_DISPLAY:
+            spi_init_perif(global_var.spi_perif);
             break;
         default:
             break;

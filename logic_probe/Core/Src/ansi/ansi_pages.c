@@ -6,6 +6,7 @@
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_main.h"
 #include "ansi_page_shift_register.h"
+#include "ansi_page_spi.h"
 #include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
 #include "ansi_pages_neopixel_measure.h"
@@ -39,6 +40,9 @@ void ansi_render_current_page(void) {
             break;
         case ANSI_PAGE_I2C:
             ansi_render_i2c_measure_page();
+            break;
+        case ANSI_PAGE_SPI:
+            ansi_render_spi_measure_page();
             break;
         default:
             ansi_render_main_page();

@@ -4,6 +4,7 @@
 #include "advanced/i2c.h"
 #include "advanced/neopixel.h"
 #include "advanced/shift_register.h"
+#include "advanced/spi.h"
 #include "advanced/uart.h"
 #include "ansi_pages.h"
 #include "extern_button.h"
@@ -39,6 +40,7 @@ typedef struct {
     shift_register_t* adv_shift_register;
     uart_perif_t* uart_perif;
     i2c_perif_t* i2c_perif;
+    spi_perif_t* spi_perif;
 
 } global_vars_t;
 

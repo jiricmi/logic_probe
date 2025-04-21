@@ -6,6 +6,7 @@
 #include "control_impulse_generator.h"
 #include "control_neopixel_measure.h"
 #include "control_shift_register.h"
+#include "control_spi.h"
 #include "control_uart_measure.h"
 #include "control_voltage_measure.h"
 #include "global_vars.h"
@@ -43,6 +44,9 @@ void get_current_control(void) {
             break;
         case ANSI_PAGE_I2C:
             control_i2c_page(received_char);
+            break;
+        case ANSI_PAGE_SPI:
+            control_spi_page(received_char);
             break;
         default:
             control_main_page();
@@ -101,5 +105,9 @@ void control_advanced_main_page(void) {
             ansi_set_current_page(ANSI_PAGE_I2C);
             dev_mode_change_mode(DEV_STATE_ADV_I2C_SCAN);
             break;
+        case 'p':
+        case 'P':
+            ansi_set_current_page(ANSI_PAGE_SPI);
+            dev_mode_change_mode(DEV_STATE_ADV_SPI_MASTER);
     }
 }

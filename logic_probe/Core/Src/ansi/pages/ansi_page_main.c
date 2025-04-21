@@ -10,6 +10,7 @@ void ansi_page_main_render_menu(void) {
     const unsigned int center = TERMINAL_WIDTH / 2 - 10;
     unsigned int row = 13;
     if (global_var.current_page == ANSI_PAGE_MAIN_ADVANCED) {
+        --row;
         ansi_render_button("r - reload page", row++, center,
                            &ansi_default_conf);
         ansi_render_button("b - Basic mode", row++, center, &ansi_default_conf);
@@ -19,6 +20,7 @@ void ansi_page_main_render_menu(void) {
                            &ansi_default_conf);
         ansi_render_button("u - UART perif", row++, center, &ansi_default_conf);
         ansi_render_button("i - I2C perif", row++, center, &ansi_default_conf);
+        ansi_render_button("p - SPI perif", row++, center, &ansi_default_conf);
 
     } else {
         ansi_render_button("r - reload page", row++, center,
