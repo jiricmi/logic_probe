@@ -446,14 +446,14 @@ Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu př�
 Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního módu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
 
 == SOP8
-@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim které zmiňuje @komp, zůstávají piny 2. Některé funkce jako například buzení I2C displejů není možné na menším pouzdře realizovat z důvodu malého počtu pinů.
+@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v malém pouzdře. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu na pouzdro SOP8 jsou implementovány pouze lokální režim, základní funkce terminálového režimu a vybrané pokročilé funkce tj. shift register a Neopixel testování.
 #figure(
     placement: auto,
     caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
-    image("pic/sop8_pinout.png"),
+    image("pic/sop8_pinout.png", width: 80%),
 )<sop8-pinout>
 
-Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít PA0. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a PA0 bylo použitelné. 
+Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. NReset požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít `PA0`. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a `PA0` bylo použitelné. 
 #v(10pt)
 #figure(
     placement: none,
@@ -466,14 +466,28 @@ Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu M
 #figure(
     placement: auto,
     caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
-    image("pic/sop8_hw.png"),
+    image("pic/sop8_hw.png", width: 80%),
 )<sop8-hw>
-`PB7` byl využit jako poslední, protože neobsahuje žádné zásadní periferie pro logickou sondu, kromě kanálu AD převodníku. Obecně hlavní je `PA0`, který má velké množství funkcí a `PB7` je v tomto případě jako sekundární kanál.
+První z pinů k užívání je pin `PB7`. Tento pin slouží jako kanál AD převodníku pro měření napětí a pro měření odporu, pin je také využit pro hodinový signál pro posuvný registr.
+Na pinu `PA0` se nachází AD převodníkový kanál. Pin také disponuje kanály TIM2 časovače. Pin je použit jako druhý kanál AD převodníku pro měření napětí, pro posuvný registr je pin využíván pro posouvání dat do posuvného registru, měření frekvence, odchytávání Neopixel dat, detekce pulsů a generování frekvence. Pin `PB6` je použit pro odesílání dat do testované RGB LED.
 == TSSOP20<tssop20>
+#figure(
+    caption: [STM32G030Jx TSSOP20 Pinout @STM32G030x6-tsop],
+    image("pic/tssop20_pinout.png", width: 80%)
+)<tssop20-pinout>
+
+#figure(
+    caption: [Schéma zapojení STM32G030 v pouzdře TSSOP20],
+    image("pic/tssop20_hw.png", width: 80%)
+)<tssop20-hw>
+
+
+
+
 = SW návrh logické sondy STM32
 Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
 == Logika nastavení módů
-Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv @sop8-hw a #todo[Doplnit obrazek tssop20] má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň.
+Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv @sop8-hw a @tssop20-hw má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň.
 #v(5pt)
 #diagram(
 	node-stroke: 1pt,
