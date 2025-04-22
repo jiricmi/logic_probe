@@ -5,8 +5,10 @@
 #include <string.h>
 #include "my_error_handle.h"
 
-adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc) {
+adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
+                                      TIM_HandleTypeDef* timer) {
     adc_vars_t* adc_ch = (adc_vars_t*)malloc(sizeof(adc_vars_t));
+    adc_ch->timer = timer;
 
     if (adc_ch == NULL) {
         exception("Failed to allocate adc_vars_t struct");
@@ -21,9 +23,7 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc) {
     memcpy(adc_ch->channel_state_unapplied, adc_ch->channel_state,
            sizeof(adc_ch->channel_state));
 
-    memset(adc_ch->avg_voltage_current, 0, sizeof(adc_ch->avg_voltage_current));
-    memset(adc_ch->avg_voltage_previous, 0,
-           sizeof(adc_ch->avg_voltage_previous));
+    memset(adc_ch->avg_voltage, 0, sizeof(adc_ch->avg_voltage));
 
     adc_ch->applied = true;
     adc_ch->resistance_mode = false;
@@ -42,7 +42,19 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc) {
     if (adc_ch->voltage_measures == NULL) {
         exception("cannot malloc voltage measures");
     }
+    adc_ch->measures_index = 0;
     return adc_ch;
+}
+
+void adc_start_measure(adc_vars_t* adc_ch) {
+    __HAL_TIM_SET_AUTORELOAD(adc_ch->timer, 9);
+    adc_ch->measures_index = 0;
+    HAL_TIM_Base_Start_IT(adc_ch->timer);
+}
+
+void adc_stop_measure(adc_vars_t* adc_ch) {
+    HAL_TIM_Base_Stop_IT(adc_ch->timer);
+    // stop timer
 }
 
 void adc_flip_unapplied_channel(adc_vars_t* adc_ch, size_t channel) {
@@ -73,13 +85,14 @@ uint8_t adc_count_active_channels(adc_vars_t* adc_ch) {
 }
 
 void adc_apply_channels(adc_vars_t* adc_ch) {
-    HAL_ADC_Stop_DMA(adc_ch->hadc);
+    adc_stop_measure(adc_ch);
     for (size_t i = ADC_REF_INDEX; i < ADC_NUM_CHANNELS; ++i) {
         adc_ch->channel_state[i] = adc_ch->channel_state_unapplied[i];
     }
     adc_ch->n_active_channels = adc_count_active_channels(adc_ch);
     adc_realloc_v_measures(adc_ch);
     adc_ch->applied = true;
+    adc_ch->measures_index = 0;
 }
 
 void adc_set_rank(ADC_ChannelConfTypeDef* sConfig, uint8_t rank) {
@@ -176,20 +189,7 @@ void adc_get_avg_voltages(adc_vars_t* adc_ch) {
         }
     }
 
-    memcpy(adc_ch->avg_voltage_previous, adc_ch->avg_voltage_current,
-           sizeof(adc_ch->avg_voltage_previous));
-
-    memcpy(adc_ch->avg_voltage_current, ordered_buff,
-           sizeof(adc_ch->avg_voltage_current));
-}
-
-void adc_calculate_floating_voltage_avg(uint32_t* floating_avg_measures,
-                                        const adc_vars_t* adc_ch) {
-    for (uint8_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
-        floating_avg_measures[i] =
-            (adc_ch->avg_voltage_previous[i] + adc_ch->avg_voltage_current[i]) /
-            2;
-    }
+    memcpy(adc_ch->avg_voltage, ordered_buff, sizeof(adc_ch->avg_voltage));
 }
 
 uint32_t adc_raw_measure(ADC_HandleTypeDef* hadc) {
@@ -213,15 +213,12 @@ uint32_t adc_get_v_ref(uint32_t raw_voltage_value) {
 
 probe_state_t adc_local_logic_probe(adc_vars_t* adc_ch,
                                     local_substate_t state) {
-    uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
-
-    adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
-    uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
+    uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
 
     uint8_t index = (state == LOCAL_SUBSTATE_CHANNEL_1) ? 1 : 2;
 
     uint32_t measured_voltage =
-        adc_get_voltage(ref_voltage, floating_avg_measures[index]);
+        adc_get_voltage(ref_voltage, adc_ch->avg_voltage[index]);
 
     if (measured_voltage > HIGH_MIN_V) {
         return PROBE_STATE_HIGH;

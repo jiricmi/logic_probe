@@ -5,8 +5,8 @@
 #include "global_structs.h"
 #include "main.h"
 
-#define CHANNEL_NUM_SAMPLES 100  // Number of samples per channel for averaging
-#define V_REF_DEFAULT 3300      // Default reference voltage in millivolts
+#define CHANNEL_NUM_SAMPLES 50  // Number of samples per channel for averaging
+#define V_REF_DEFAULT 3300       // Default reference voltage in millivolts
 #define ADC_TIMEOUT 100
 
 #define LOW_MAX_V 800
@@ -46,17 +46,18 @@ typedef enum {
 } probe_state_t;
 
 typedef struct {
+    TIM_HandleTypeDef* timer;
     _Bool channel_state[ADC_NUM_CHANNELS];
     _Bool channel_state_unapplied[ADC_NUM_CHANNELS];
     _Bool applied;
     _Bool resistance_mode;
     uint32_t base_resistor;
-    uint32_t avg_voltage_current[ADC_NUM_CHANNELS];
-    uint32_t avg_voltage_previous[ADC_NUM_CHANNELS];
+    uint32_t avg_voltage[ADC_NUM_CHANNELS];
     uint32_t pin[ADC_NUM_CHANNELS];
     uint8_t n_active_channels;
     ADC_HandleTypeDef* hadc;
     uint32_t* voltage_measures;
+    uint8_t measures_index;
 } adc_vars_t;
 
 /**
@@ -65,8 +66,11 @@ typedef struct {
  * @param hadc Pointer to the ADC handle.
  * @return Pointer to the created adc_vars_t structure.
  */
-adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc);
+adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
+                                      TIM_HandleTypeDef* timer);
 
+void adc_start_measure(adc_vars_t* adc_ch);
+void adc_stop_measure(adc_vars_t* adc_ch);
 /**
  * @brief Toggles the state of an unapplied ADC channel.
  *
@@ -142,15 +146,6 @@ void adc_setup_channel_struct(adc_vars_t* adc_ch);
  * @param adc_ch Pointer to the ADC variables structure.
  */
 void adc_get_avg_voltages(adc_vars_t* adc_ch);
-
-/**
- * @brief Calculates the floating average voltage for all channels.
- *
- * @param floating_avg_measures Array to store the floating average voltages.
- * @param adc_ch Pointer to the ADC variables structure.
- */
-void adc_calculate_floating_voltage_avg(uint32_t* floating_avg_measures,
-                                        const adc_vars_t* adc_ch);
 
 /**
  * @brief Performs a raw ADC measurement.

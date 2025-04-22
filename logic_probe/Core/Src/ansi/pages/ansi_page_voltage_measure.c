@@ -28,13 +28,9 @@ void ansi_render_voltage_page(void) {
 }
 
 void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
-    uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
-
-    adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
-
-    uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
+    uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
     uint32_t measured_voltage =
-        adc_get_voltage(ref_voltage, floating_avg_measures[1]);
+        adc_get_voltage(ref_voltage, adc_ch->avg_voltage[1]);
 
     uint32_t resistance = (adc_ch->base_resistor * measured_voltage) /
                           (ref_voltage - measured_voltage);
@@ -101,15 +97,11 @@ void ansi_render_resistance_values(const uint8_t row,
 void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
     const uint8_t col_center = ADC_MEASURE_CENTER;
     uint8_t row = ADC_MEASURE_ROW;
-    uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
-
-    adc_calculate_floating_voltage_avg(floating_avg_measures, adc_ch);
-
-    uint32_t ref_voltage = adc_get_v_ref(floating_avg_measures[0]);
+    uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
 
     for (uint8_t channel = 1; channel < ADC_NUM_CHANNELS; ++channel) {
         uint32_t channel_voltage =
-            adc_get_voltage(ref_voltage, floating_avg_measures[channel]);
+            adc_get_voltage(ref_voltage, adc_ch->avg_voltage[channel]);
 
         ansi_set_cursor(row, col_center + 28);
         ansi_render_logic_probe_ch(channel_voltage,

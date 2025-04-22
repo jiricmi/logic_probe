@@ -55,7 +55,6 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_adc1;
 extern I2C_HandleTypeDef hi2c1;
 extern SPI_HandleTypeDef hspi1;
 extern DMA_HandleTypeDef hdma_tim1_ch3;
@@ -154,19 +153,6 @@ void EXTI4_15_IRQHandler(void) {
     /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
     /* USER CODE END EXTI4_15_IRQn 1 */
-}
-
-/**
- * @brief This function handles DMA1 channel 1 interrupt.
- */
-void DMA1_Channel1_IRQHandler(void) {
-    /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
-
-    /* USER CODE END DMA1_Channel1_IRQn 0 */
-    HAL_DMA_IRQHandler(&hdma_adc1);
-    /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
-
-    /* USER CODE END DMA1_Channel1_IRQn 1 */
 }
 
 /**

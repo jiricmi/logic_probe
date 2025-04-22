@@ -52,7 +52,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -274,7 +273,7 @@ static void MX_ADC1_Init(void) {
     hadc1.Init.NbrOfConversion = 1;
     hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
     hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc1.Init.DMAContinuousRequests = ENABLE;
+    hadc1.Init.DMAContinuousRequests = DISABLE;
     hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
     hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
     hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
@@ -293,7 +292,7 @@ static void MX_ADC1_Init(void) {
         Error_Handler();
     }
     /* USER CODE BEGIN ADC1_Init 2 */
-    global_var.adc_vars = adc_create_channel_struct(&hadc1);
+    global_var.adc_vars = adc_create_channel_struct(&hadc1, &htim3);
     adc_realloc_v_measures(global_var.adc_vars);
     adc_setup_channel_struct(global_var.adc_vars);
     /* USER CODE END ADC1_Init 2 */
@@ -636,9 +635,6 @@ static void MX_DMA_Init(void) {
     __HAL_RCC_DMA1_CLK_ENABLE();
 
     /* DMA interrupt init */
-    /* DMA1_Channel1_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
     /* DMA1_Channel2_3_IRQn interrupt configuration */
     HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);

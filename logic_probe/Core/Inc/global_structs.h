@@ -22,11 +22,10 @@ typedef enum {
 } dev_state_t;
 
 typedef enum {
-    LOCAL_STATE_LOGIC_PROBE,      // aqua
-    LOCAL_STATE_VOLTMETER_PROBE,  // orange
-    LOCAL_STATE_OUTPUT,           // blue
-    LOCAL_STATE_PULSEUP,          // white
-    LOCAL_STATE_PULSEDOWN,        // purple
+    LOCAL_STATE_LOGIC_PROBE,  // aqua
+    LOCAL_STATE_OUTPUT,       // blue
+    LOCAL_STATE_PULSEUP,      // white
+    LOCAL_STATE_PULSEDOWN,    // purple
 } local_state_t;
 
 typedef enum {

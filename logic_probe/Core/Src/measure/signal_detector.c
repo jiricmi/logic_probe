@@ -37,6 +37,7 @@ void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers) {
         HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_2);
         __HAL_TIM_SET_COUNTER(detector->master_tim, 0);
         __HAL_TIM_SET_COUNTER(detector->slave_tim, 0);
+        __HAL_TIM_SET_AUTORELOAD(detector->master_tim, 999);
     }
     switch (detector->mode) {
         case (DETECTOR_MODE_FREQUENCY):

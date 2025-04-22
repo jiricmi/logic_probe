@@ -53,7 +53,7 @@ void dev_mode_run_with_uart(void) {
         case DEV_STATE_VOLTMETER:
             adc_get_avg_voltages(global_var.adc_vars);
             ansi_render_voltage_measures(global_var.adc_vars);
-            delay = 300;
+            delay = 250;
             break;
         case DEV_STATE_OHMMETER:
             ansi_render_resistance_measure(global_var.adc_vars);
@@ -126,7 +126,7 @@ void dev_mode_request_update(void) {
 }
 
 void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
-    HAL_ADC_Stop_DMA(adc_vars->hadc);
+    adc_stop_measure(adc_vars);
     HAL_TIM_Base_Stop_IT(sig_det->master_tim);
     HAL_TIM_Base_Stop(sig_det->slave_tim);
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_1);
@@ -158,10 +158,7 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_VOLTMETER:
         case DEV_STATE_OHMMETER:
             adc_remove_unapplied_channels(global_var.adc_vars);
-            HAL_ADC_Start_DMA(
-                global_var.adc_vars->hadc,
-                global_var.adc_vars->voltage_measures,
-                global_var.adc_vars->n_active_channels * CHANNEL_NUM_SAMPLES);
+            adc_start_measure(global_var.adc_vars);
             break;
         case DEV_STATE_FREQUENCY_READ:
             detector_setup_timers(sig_det, false);
@@ -213,7 +210,6 @@ void local_mode_update_perif(void) {
 
     switch (global_var.local_state) {
         case LOCAL_STATE_LOGIC_PROBE:
-        case LOCAL_STATE_VOLTMETER_PROBE:
             global_var.device_state = DEV_STATE_VOLTMETER;
             for (uint8_t i = 1; i < ADC_NUM_CHANNELS; ++i) {
                 adc_vars->channel_state_unapplied[i] = true;
@@ -269,18 +265,6 @@ void dev_mode_run(void) {
             probe_state_t probe_state =
                 adc_local_logic_probe(adc_vars, global_var.local_substate);
             neopixel_show_probe_state(global_var.visual_output, probe_state);
-            break;
-        }
-        case LOCAL_STATE_VOLTMETER_PROBE: {
-            uint32_t floating_avg_measures[ADC_NUM_CHANNELS];
-            adc_get_avg_voltages(global_var.adc_vars);
-            adc_calculate_floating_voltage_avg(floating_avg_measures, adc_vars);
-
-            uint8_t index =
-                (global_var.local_substate == LOCAL_SUBSTATE_CHANNEL_1) ? 1 : 2;
-            neopixel_show_voltmeter_state(global_var.visual_output,
-                                          global_var.local_substate,
-                                          floating_avg_measures[index]);
             break;
         }
         case LOCAL_STATE_OUTPUT: {

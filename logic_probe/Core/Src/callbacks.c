@@ -58,6 +58,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
         __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
         HAL_TIM_Base_Start_IT(sig_det->master_tim);
+    } else if (htim->Instance == global_var.adc_vars->timer->Instance &&
+               (global_var.device_state == DEV_STATE_VOLTMETER ||
+                global_var.device_state == DEV_STATE_OHMMETER)) {
+        adc_vars_t* adc_perif = global_var.adc_vars;
+        HAL_TIM_Base_Stop_IT(adc_perif->timer);
+
+        HAL_ADC_Start(adc_perif->hadc);
+        for (uint8_t i = 0; i < adc_perif->n_active_channels; ++i) {
+            HAL_ADC_PollForConversion(adc_perif->hadc, 100);
+            adc_perif->voltage_measures[adc_perif->measures_index++] =
+                HAL_ADC_GetValue(adc_perif->hadc);
+
+            if (adc_perif->measures_index >=
+                adc_perif->n_active_channels * CHANNEL_NUM_SAMPLES) {
+                adc_perif->measures_index = 0;
+            }
+        }
+        HAL_ADC_Stop(adc_perif->hadc);
+        __HAL_TIM_SET_COUNTER(adc_perif->timer, 0);
+        HAL_TIM_Base_Start_IT(adc_perif->timer);
     }
 }
 
@@ -116,8 +136,8 @@ extern void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c,
                                  uint16_t AddrMatchCode) {
     if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
         HAL_I2C_Slave_Sequential_Receive_IT(
-            hi2c, global_var.i2c_perif->slave_received_data, global_var.i2c_perif->bytes_to_catch,
-            I2C_FIRST_AND_LAST_FRAME);
+            hi2c, global_var.i2c_perif->slave_received_data,
+            global_var.i2c_perif->bytes_to_catch, I2C_FIRST_AND_LAST_FRAME);
     } else {
         Error_Handler();
     }
