@@ -32,11 +32,15 @@
         "PWM": "Pulse Width Modulation",
         "HAL": "Hardware Abstraction Library",
         "GPIO": "General Purpose Input/Output",
+        "I2C": "Inter-Integrated Circuit",
+        "SPI": "Serial Peripheral Interface",
+        "UART": "Universal Asynchronous Reciever Transmiter",
         "CMSIS": "Cortex Microcontroller Software Interface Standard",
         "NVIC": "Nested Vectored Interrupt Controller",
         "IOT": "Internet Of Things",
         "EEPROM": "Electrically Erasable Programmable Read-Only Memory",
         "MSB": "Most Significant Bit",
+        "LSB": "Least Significant Bit",
         "ASCII": "American Standard Code for Information Interchange",
         "TUI": "Terminal User Interface",
         "GUI": "Graphical User Interface",
@@ -219,21 +223,50 @@ program pracuje s abstrakcí, bude nadále fungovat.ti přímého přístupu k
 registrům procesoru. Na @stm32cubemx-arch je znázorněn diagram, který znázorňuje
 architekturu HAL @STM-HAL-ARCH.
 
-Součástí HALu je tzv. CMSIS#footnote[Cortex Microcontroller Software Interface Standard],
+Součástí HALu je tzv. CMSIS,
 což je sada standardizovanách rozhraní, které umožňují konfiguraci periferií,
 správu procesorového jádra, obsluhu přerušení a další @ARM-CMSIS.
 CMSIS je rozdělen do modulárních komponent, kdy vývojář může využít pouze části,
 které potřebuje. Např. CMSIS-CORE, která poskytuje přístup k jádru Cortex-M a
-periferiím procesoru, obsahuje definice registrů, přístup k NVIC#footnote[Nested Vectored Interrupt Controller] apod.
+periferiím procesoru, obsahuje definice registrů, přístup k NVIC apod.
 @ARM-CMSIS. Hlavní rozdíl mezi CMSIS a HALu#footnote[STMicroelectronics do svého HALu zabaluje i CMSIS od ARM.] STMicroelectronics
 je ten, že CMSIS je poskytnuto přímo ARM a slouží pouze na ovládání Cortex M
 procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
 #figure(
+    placement: top,
   caption: "STM32CubeMX HAL architektura", image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
 
 == Měření veličin digitálního obvodu
+Pro měření veličin základní verze 
+=== Měření napětí a logických úrovní
+Pro měření napětí jak již zmiňuje @adc je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 40 vzorků měření do tří bloků tj. 120 vzorků celkem. Každých 300 ms se provede nové měření 40 vzorků (vzorkovací frekvence $~$133 Hz). Nejstarší blok 40 vzorků je odstraněn a nahrazen novými daty. Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
+#todo[zkontrolovat hodnoty] Po aktualizaci okna se vypočítá aritmetický průměr z celého okna (120 vzorků), který reprezentuje výsledné napětí.
+#v(10pt)
+#diagram(
+	edge-stroke: 1pt,
+    node-stroke: 1pt,
+	node((0,0), [smazání\ nejstaršího\ bloku]),
+	edge("r", "->", label-pos: 0.1),
+	node((1,0), [naměření\ 40 vzorků]),
+	edge("r", "->", label-pos: 0.1),
+	node((2,0), [Aritmetický \průměr\ všech vzorků]),
+	edge("r,d,l,l,l,l,u,r", "->", label-pos: 0.1),
+)
+#v(10pt)
+
+Pro zjistění stavu logické úrovně, je nutné vědět nejvyšší možné napětí nízké logické úrovně a nejnižší možné napětí vysoké logické úrovně. Pro CMOS logiku, @cmosil popisuje definici nejvyššího napětí nízké logické úrovně a @cmosih definuje nejnižší napětí logické vysoké úrovně @CMOS. Po změření napětí na kanále pomocí sliding window bude zkontrolováno zda napětí odpovídá logické úrovni nebo je napětí v nedefinované oblasti neboli v oblasti: $V_"ILmax" < V < V_"IHmin"$. Napětí v této oblasti v realném obvodu může vést k nepredikovatelnému chování, proto logická sonda toto napětí detekuje.
+
+#v(10pt)
+$ V_"ILmax" = 0.3 times V_"dd" $<cmosil>
+$ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
+
+
+
+=== Měření odporu
+=== Měření frekvence a střídy PWM
+=== Měření šířky pulzů
 == Analýza komunikačních rozhraní
 @rozbor-vyuka zmiňuje testování hardwarových částí obvodu. 
 Analýza seriové komunikace je častá nutnost při hledání chyby v implementaci studenta či vývojáře nebo jako otestování funkčnosti součástky. Logická sonda poskytne prostředí pro pasivní poslouchání komunikace, které pomůže vývojáři nalézt chybu v programu nebo studentovi při realizaci školního projektu.
