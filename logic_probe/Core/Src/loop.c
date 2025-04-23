@@ -101,6 +101,13 @@ void dev_mode_run_with_uart(void) {
             i2c_test_display(global_var.i2c_perif);
             break;
         }
+        case DEV_STATE_ADV_SPI_SLAVE: {
+            break;
+        }
+        case DEV_STATE_ADV_SPI_MASTER: {
+            spi_transmit(global_var.spi_perif);
+            break;
+        }
         default:
             break;
     }

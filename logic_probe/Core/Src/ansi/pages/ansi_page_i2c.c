@@ -107,7 +107,7 @@ void ansi_i2c_master_vals(i2c_perif_t* i2c_perif) {
     if (i2c_perif->read_bit) {
         snprintf(buff, sizeof(buff), "0x%02X",
                  i2c_perif->master_read_send_data[0]);
-        ansi_set_cursor(base_row, base_col);
+        ansi_set_cursor(base_row, base_col - (strlen(buff) / 2));
         ansi_send_text(buff, i2c_perif->edit_vals ? &ansi_green_bold_conf
                                                   : &ansi_default_conf);
 
@@ -172,7 +172,7 @@ void ansi_print_i2c_error(HAL_StatusTypeDef status, I2C_HandleTypeDef* hi2c) {
         strcat(error_buff, "Unknown Error");
     }
 
-    ansi_send_text(error_buff, &ansi_default_conf);
+    ansi_send_text(error_buff, &ansi_red_bold_conf);
 }
 
 void ansi_i2c_render_read_vals(i2c_perif_t* i2c_perif) {

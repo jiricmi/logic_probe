@@ -21,15 +21,38 @@ void spi_init_perif(spi_perif_t* perif) {
     perif->hspi->Init.CLKPhase =
         (perif->CLK_phase) ? SPI_PHASE_2EDGE : SPI_PHASE_1EDGE;
     perif->hspi->Init.NSS = SPI_NSS_SOFT;
-    perif->hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+    perif->hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
     perif->hspi->Init.FirstBit =
-        (perif->msb) ? SPI_FIRSTBIT_MSB : SPI_FIRSTBIT_LSB;
+        (perif->msb) ? SPI_FIRSTBIT_LSB : SPI_FIRSTBIT_MSB;
     perif->hspi->Init.TIMode = SPI_TIMODE_DISABLE;
     perif->hspi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     perif->hspi->Init.CRCPolynomial = 7;
     perif->hspi->Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-    perif->hspi->Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+    perif->hspi->Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
     if (HAL_SPI_Init(perif->hspi) != HAL_OK) {
         Error_Handler();
+    }
+}
+
+void spi_transmit(spi_perif_t* perif) {
+    perif->error = SPI_ERROR_NONE;
+    if (!perif->read_bit) {
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+        if (HAL_SPI_Transmit(perif->hspi, perif->data, perif->bytes_count,
+                             HAL_MAX_DELAY) != HAL_OK) {
+            perif->error = SPI_ERROR_SEND;
+        }
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+    } else {
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+        if (HAL_SPI_Transmit(perif->hspi, perif->master_send_data, 1,
+                             HAL_MAX_DELAY) != HAL_OK) {
+            perif->error = SPI_ERROR_SEND;
+        }
+        if (HAL_SPI_Receive(perif->hspi, perif->data, perif->bytes_count,
+                            100) != HAL_OK) {
+            perif->error = SPI_ERROR_RECEIVE;
+        }
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
     }
 }

@@ -26,7 +26,7 @@ void control_i2c_page(char received_char) {
                     i2c_deinit_perif(perif);
                 } else {
                     i2c_init_perif(perif);
-                    i2c_start_slave_listen(perif);
+                    dev_mode_update_perif();
                 }
                 perif->send_status = I2C_NONE;
             }
@@ -44,13 +44,15 @@ void control_i2c_page(char received_char) {
             break;
         case 'm':
         case 'M': {
-            perif->send_status = I2C_NONE;
-            dev_state_t mode = global_var.device_state;
-            if (mode == DEV_STATE_ADV_I2C_TEST_DISPLAY) {
-                dev_mode_change_mode(DEV_STATE_ADV_I2C_SCAN);
-            } else {
-                ++mode;
-                dev_mode_change_mode(mode);
+            if (!perif->edit_vals && !perif->edit_settings) {
+                perif->send_status = I2C_NONE;
+                dev_state_t mode = global_var.device_state;
+                if (mode == DEV_STATE_ADV_I2C_TEST_DISPLAY) {
+                    dev_mode_change_mode(DEV_STATE_ADV_I2C_SCAN);
+                } else {
+                    ++mode;
+                    dev_mode_change_mode(mode);
+                }
             }
             break;
         }
@@ -78,6 +80,7 @@ void control_i2c_page(char received_char) {
                     perif->master_index = 0;
                 }
             }
+            dev_mode_request_frontend_change();
             break;
         case 's':
         case 'S':
@@ -132,7 +135,7 @@ void control_i2c_page(char received_char) {
                 if (perif->slave_address > 127) {
                     perif->slave_address = 127;
                 }
-            } else if (perif->edit_vals &&
+            } else if (perif->edit_vals && !perif->read_bit &&
                        perif->slave_received_data[perif->master_index] < 16) {
                 perif->slave_received_data[perif->master_index] *= 16;
                 perif->slave_received_data[perif->master_index] +=
