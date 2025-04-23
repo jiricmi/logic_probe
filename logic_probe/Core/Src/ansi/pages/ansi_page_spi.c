@@ -126,7 +126,7 @@ void ansi_spi_print_error(spi_perif_t* perif) {
     ansi_clear_line(15, 1);
     ansi_set_cursor(15, TERMINAL_CENTER - 10);
     switch (perif->error) {
-        case SPI_ERROR_NONE:
+        case SPI_ERROR_SUCCESS:
             ansi_send_text("SPI OK", &ansi_default_conf);
             break;
         case SPI_ERROR_RECEIVE:
@@ -134,6 +134,8 @@ void ansi_spi_print_error(spi_perif_t* perif) {
             break;
         case SPI_ERROR_SEND:
             ansi_send_text("SPI SEND ERROR", &ansi_red_bold_conf);
+            break;
+        default:
             break;
     }
 }

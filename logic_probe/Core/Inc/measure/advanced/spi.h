@@ -6,6 +6,7 @@
 #define SPI_ARRAY_SIZE 10
 typedef enum {
     SPI_ERROR_NONE,
+    SPI_ERROR_SUCCESS,
     SPI_ERROR_RECEIVE,
     SPI_ERROR_SEND,
 } spi_error_t;
