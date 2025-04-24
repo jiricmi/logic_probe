@@ -129,7 +129,7 @@ Pořizování běžných analyzátorů může být velice nákladné, protože j
 
 == Volba mikrokontrolerů
 === STM32G030
-#todo["doc. Fischer hovořil, že není vhodné leaknout problem s G031 a G030 mám tu psát o G030 nebo G031"]
+//#todo["doc. Fischer hovořil, že není vhodné leaknout problem s G031 a G030 mám tu psát o G030 nebo G031"]
 Pro návrh v této bakalářské práci byl zvolen mikrořadič STM32G030 od firmy
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
@@ -150,7 +150,7 @@ oversampling#footnote[Proběhne více měření a následně jsou výsledky nap�
   zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*,
 který akumuluje měření a~poté pomocí data shifteru vydělí počtem cyklu @STM32G0-ADC.
 #figure(
-  caption: "Blokový diagram AD převodníku", image("pic/adc-block-diagram.png"),
+  caption: [Blokový diagram AD převodníku @STM32G0-ADC], image("pic/adc-block-diagram.png"),
 )
 $ "měření" = 1/M × sum_(n=0)^(n=N-1) "Konverze"(t_n) $
 
@@ -235,11 +235,12 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
 #figure(
     placement: top,
-  caption: "STM32CubeMX HAL architektura", image("pic/hal-architecture.png"),
+  caption: [STM32CubeMX HAL architektura @HAL-DIAGRAM],
+    image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
 
 == Měření veličin digitálního obvodu
-Pro měření veličin základní verze 
+Pro měření veličin je nutné využít vztahů pro analýzu obvodů a schopnost sondy na vypočítat veličiny na základě měření AD převodníku nebo hodnot čítače. 
 === Měření napětí a logických úrovní
 Pro měření napětí jak již zmiňuje @adc je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 25 vzorků měření do dvou bloků tj. 50 vzorků celkem. Každých 250 ms se provede průběžné měření 25 vzorků (vzorkovací frekvence $~$100 Hz). Nejstarší blok 25 vzorků je odstraněn a nahrazen novými daty. Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
 Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (50 vzorků), který reprezentuje výsledné napětí.
@@ -249,9 +250,9 @@ Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetic
     node-stroke: 1pt,
 	node((0,0), [smazání\ nejstaršího\ bloku]),
 	edge("r", "->", label-pos: 0.1),
-	node((1,0), [naměření\ 40 vzorků]),
+	node((1,0), [naměření\ 25 vzorků]),
 	edge("r", "->", label-pos: 0.1),
-	node((2,0), [Aritmetický \průměr\ všech vzorků]),
+	node((2,0), [Aritmetický \průměr\ z 50 vzorků]),
 	edge("r,d,l,l,l,l,u,r", "->", label-pos: 0.1),
 )
 #v(10pt)
@@ -265,6 +266,19 @@ $ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
 
 
 === Měření odporu
+Měření odporu je využíván AD převodník, o kterém mluví @adc a dělič napětí. @divider-img ukazuje schéma děliče napětí. Rezistory jsou zapojeny do serie v uzavřené smyčce. Součet úbytků napětí na rezistorech je dle KVL#footnote[Kirchhoffův napěťový zákon] roven napětí $U$. Úbytek napětí se na odporech rozdělí podle poměru velikostí odporů $R_1$ a $R_2$. Za předpokladu, že $R_2$ není známo, a je známá velikost rezistoru $R_1$, napětí $U$ a napětí $U_2$ je možné pomocí @divider-1-rov vyjádřit $R_2$ @WIKI-DIVIDER-TEXT.
+
+$ U_2 = U times (R_2)/(R_1 + R_2) $<divider-1-rov>
+$ R_2 = R_1 times (U_2)/(U - U_2) $<divider-2-rov>
+
+Pro změření odporu rezistoru logickou sondou uživatel vytvoří dělič napětí s fixní velikostí rezistoru (ve schématu $R_1$) připojený mezi kanálem 0 a $V_"cc"$, a připojením rezistoru s neznámou velikostí (ve schématu $R_2$) připojený mezi kanál 0 a zemí. Logická sonda na základě měření napětí na kanálu 0 vypočítá pomocí @divider-2-rov velikost odporu rezistoru.
+
+
+#figure(
+    placement: none,
+    caption: [Schéma děliče napětí],
+    image("pic/divider.png", width: 40%)
+)<divider-img>
 === Měření frekvence a střídy PWM
 === Měření šířky pulzů
 == Analýza komunikačních rozhraní
