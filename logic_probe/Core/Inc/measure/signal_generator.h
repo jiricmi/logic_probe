@@ -20,7 +20,10 @@ typedef struct {
     uint32_t period_us;
     uint32_t period_us_temp;
     _Bool edit_period;
+    _Bool edit_repeat;
     _Bool channel_state[N_OF_OUTPUTS];
+    uint8_t repeat;
+    _Bool send;
 } sig_generator_t;
 
 void init_generator(sig_generator_t* generator, TIM_HandleTypeDef* htim);

@@ -1,10 +1,12 @@
 #include "signal_generator.h"
 #include <stdbool.h>
 #include <string.h>
+#include "global_structs.h"
+#include "global_vars.h"
 #include "stm32g0xx_hal_gpio.h"
 #include "tim_setup.h"
 
-extern TIM_HandleTypeDef htim16;
+extern global_vars_t global_var;
 
 void init_generator(sig_generator_t* generator, TIM_HandleTypeDef* htim) {
     memset(generator, 0, sizeof(*generator));
@@ -14,6 +16,7 @@ void init_generator(sig_generator_t* generator, TIM_HandleTypeDef* htim) {
     generator->period_us_temp = generator->period_us;
     generator->htim = htim;
     generator->edit_period = false;
+    generator->repeat = 10;
 }
 
 void generator_change_mode(sig_generator_t* generator) {
@@ -71,10 +74,17 @@ void generator_setup_timers(sig_generator_t* generator) {
             sig_gen_init_timer(generator, false);
             break;
     }
-    HAL_TIM_PWM_Start(generator->htim, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start_IT(generator->htim, TIM_CHANNEL_1);
 }
 
 void generator_send_pulse(sig_generator_t* generator) {
-    HAL_TIM_PWM_Stop(generator->htim, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(generator->htim, TIM_CHANNEL_1);
+    generator->send = 0;
+    uint32_t period = (generator->period_us / 1000) * 2;
+    for (uint8_t i = 0; i < generator->repeat; ++i) {
+        HAL_TIM_PWM_Stop(generator->htim, TIM_CHANNEL_1);
+        if (global_var.device_state == DEV_STATE_PULSE_GEN) {
+            HAL_TIM_PWM_Start(generator->htim, TIM_CHANNEL_1);
+            HAL_Delay((period > 0) ? period : 2);
+        }
+    }
 }

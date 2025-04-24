@@ -62,6 +62,9 @@ void dev_mode_run_with_uart(void) {
             ansi_generate_frequency_reader(global_var.signal_detector);
             break;
         case DEV_STATE_PULSE_GEN:
+            if (global_var.signal_generator->send) {
+                generator_send_pulse(global_var.signal_generator);
+            }
             ansi_render_impulse_generator(global_var.signal_generator);
             break;
         case DEV_STATE_ADV_NEOPIXEL_READ:

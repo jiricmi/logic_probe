@@ -91,7 +91,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
         if (sig_det->mode == DETECTOR_MODE_FREQUENCY) {
             detector_parse_catched_signal(sig_det);
         } else {
-            // TODO: UDELAT MERENI JAK DLOUHY JE PULS
             detector_parse_pulse_catcher(sig_det);
         }
     } else if (htim->Instance == sig_gen->htim->Instance &&

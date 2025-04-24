@@ -17,7 +17,7 @@ void ansi_render_impulse_generator_page(void) {
 }
 
 void ansi_render_impulse_generator(const sig_generator_t* generator) {
-    char buff[100];
+    char buff[50];
     ansi_set_cursor(9, 10);
     if (generator->mode == SIG_GEN_MODE_PULSE_UP) {
         ansi_send_text("UP  ", &ansi_default_conf);
@@ -25,20 +25,25 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
         ansi_send_text("DOWN", &ansi_default_conf);
     }
     ansi_set_cursor(10, 10);
-    snprintf(buff, 100, "Pulse width (A0): %7lu us", generator->period_us_temp);
+    snprintf(buff, 50, "Pulse width (A0): %7lu us", generator->period_us_temp);
     ansi_send_text(buff, &ansi_default_conf);
     GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
     ansi_set_cursor(11, 10);
     if (state == GPIO_PIN_SET) {
-        snprintf(buff, 100, "INPUT: HIGH");
+        snprintf(buff, 50, "INPUT: HIGH");
     } else {
-        snprintf(buff, 100, "INPUT: LOW ");
+        snprintf(buff, 50, "INPUT: LOW ");
     }
     ansi_send_text(buff, &ansi_default_conf);
+    ansi_set_cursor(12, 10);
+    snprintf(buff, 50, "Repeats: %2ux", generator->repeat);
+    ansi_send_text(buff, &ansi_default_conf);
+
+    ansi_set_cursor(TERMINAL_HEIGHT - 3, 10);
     if (generator->edit_period) {
-        const ansi_text_config_t warn_config = {RED_TEXT, "", true};
-        ansi_set_cursor(TERMINAL_HEIGHT - 3, 10);
-        ansi_send_text("Editing period!", &warn_config);
+        ansi_send_text("Editing period!", &ansi_red_bold_conf);
+    } else if (generator->edit_repeat) {
+        ansi_send_text("Editing repeat!", &ansi_red_bold_conf);
     }
 }
 
