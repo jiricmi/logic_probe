@@ -101,7 +101,12 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
 
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim) {
     if (htim->Instance == global_var.visual_output->neopixel_tim->Instance) {
-        HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_3);
+        global_var.adv_neopixel_measure->count++;
+        if (global_var.adv_neopixel_measure->rgb_send[3] ==
+            global_var.adv_neopixel_measure->count) {
+            HAL_TIM_PWM_Stop_DMA(htim, TIM_CHANNEL_3);
+            global_var.adv_neopixel_measure->count = 0;
+        }
     }
 }
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {

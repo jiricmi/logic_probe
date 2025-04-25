@@ -120,8 +120,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc) {
         GPIO_InitStruct.Pin = GPIO_PIN_7;
         GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
-        //HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+        // HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
         /* USER CODE BEGIN ADC1_MspInit 1 */
 
@@ -348,7 +347,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
         hdma_tim1_ch3.Init.MemInc = DMA_MINC_ENABLE;
         hdma_tim1_ch3.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
         hdma_tim1_ch3.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-        hdma_tim1_ch3.Init.Mode = DMA_NORMAL;
+        hdma_tim1_ch3.Init.Mode = DMA_CIRCULAR;
         hdma_tim1_ch3.Init.Priority = DMA_PRIORITY_MEDIUM;
         if (HAL_DMA_Init(&hdma_tim1_ch3) != HAL_OK) {
             Error_Handler();

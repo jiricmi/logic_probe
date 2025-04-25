@@ -5,6 +5,7 @@
 void init_neopixel_measure(neopixel_measure_t* data, TIM_HandleTypeDef* htim) {
     memset(data, 0, sizeof(*data));
     data->htim = htim;
+    data->rgb_send[3] = 1;
 }
 
 void neopixel_read_parse(neopixel_measure_t* data) {

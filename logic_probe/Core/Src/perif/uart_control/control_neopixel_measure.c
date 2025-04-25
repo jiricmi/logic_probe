@@ -7,10 +7,10 @@
 extern global_vars_t global_var;
 
 void control_neopixel_measure_page(char received_char) {
+    neopixel_measure_t* neopixel = global_var.adv_neopixel_measure;
     switch (received_char) {
         case 'q':
         case 'Q':
-
             ansi_clear_terminal();
             ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
             dev_mode_change_mode(DEV_STATE_NONE);
@@ -23,62 +23,35 @@ void control_neopixel_measure_page(char received_char) {
                 dev_mode_change_mode(DEV_STATE_ADV_NEOPIXEL_READ);
             }
             break;
-        case 'e':
-        case 'E': {
-            if (!global_var.adv_neopixel_measure->edit_rgb[1] &&
-                !global_var.adv_neopixel_measure->edit_rgb[2]) {
-                global_var.adv_neopixel_measure->edit_rgb[0] =
-                    !global_var.adv_neopixel_measure->edit_rgb[0];
-            }
-            dev_mode_request_frontend_change();
-            break;
-        }
         case 't':
         case 'T': {
-            if (!global_var.adv_neopixel_measure->edit_rgb[0] &&
-                !global_var.adv_neopixel_measure->edit_rgb[2]) {
-                global_var.adv_neopixel_measure->edit_rgb[1] =
-                    !global_var.adv_neopixel_measure->edit_rgb[1];
+            neopixel->edit = !neopixel->edit;
+            if (neopixel->rgb_index == 3 && neopixel->rgb_send[3] == 0) {
+                neopixel->rgb_send[3] = 1;
             }
+            neopixel->rgb_index = 0;
             dev_mode_request_frontend_change();
-            break;
-        }
-
-        case 's':
-        case 'S': {
-            if (!global_var.adv_neopixel_measure->edit_rgb[0] &&
-                !global_var.adv_neopixel_measure->edit_rgb[1] &&
-                !global_var.adv_neopixel_measure->edit_rgb[2]) {
-                neopixel_color_t colors = {
-                    global_var.adv_neopixel_measure->rgb_send[0],
-                    global_var.adv_neopixel_measure->rgb_send[1],
-                    global_var.adv_neopixel_measure->rgb_send[2]};
-                neopixel_set_color(global_var.visual_output, &colors);
-            }
             break;
         }
         case 'y':
-        case 'Y': {
-            if (!global_var.adv_neopixel_measure->edit_rgb[0] &&
-                !global_var.adv_neopixel_measure->edit_rgb[1]) {
-                global_var.adv_neopixel_measure->edit_rgb[2] =
-                    !global_var.adv_neopixel_measure->edit_rgb[2];
+        case 'Y':
+            neopixel->rgb_index++;
+            if (neopixel->rgb_index == 4) {
+                neopixel->rgb_index = 0;
+            }
+            dev_mode_request_frontend_change();
+            break;
+        case 's':
+        case 'S': {
+            if (!neopixel->edit) {
+                neopixel_color_t colors = {neopixel->rgb_send[0],
+                                           neopixel->rgb_send[1],
+                                           neopixel->rgb_send[2]};
+                neopixel_set_color(global_var.visual_output, &colors);
             }
             dev_mode_request_frontend_change();
             break;
         }
-        case 'n':
-        case 'N':
-            neopixel_send_color(global_var.visual_output, NEOPIXEL_BLUE);
-
-            break;
-        case 'b':
-        case 'B': {
-            neopixel_color_t p = {192, 255, 45};
-            neopixel_set_color(global_var.visual_output, &p);
-            break;
-        }
-
         case '1':
         case '2':
         case '3':
@@ -89,49 +62,32 @@ void control_neopixel_measure_page(char received_char) {
         case '8':
         case '9':
         case '0': {
-            uint8_t index;
-            if (global_var.adv_neopixel_measure->edit_rgb[0]) {
-                index = 0;
-            } else if (global_var.adv_neopixel_measure->edit_rgb[1]) {
-                index = 1;
-            } else if (global_var.adv_neopixel_measure->edit_rgb[2]) {
-                index = 2;
-            } else {
-                break;
-            }
-            uint32_t number = global_var.adv_neopixel_measure->rgb_send[index];
+            if (neopixel->edit &&
+                global_var.device_state == DEV_STATE_ADV_NEOPIXEL_WRITE) {
+                uint16_t number = neopixel->rgb_send[neopixel->rgb_index];
+                number *= 10;
+                number += (uint16_t)cdtoi(received_char);
 
-            number *= 10;
-            number += (uint32_t)cdtoi((char)received_char);
-
-            if (number > 255) {
-                number = 255;
+                if (number > 255) {
+                    number = 255;
+                }
+                neopixel->rgb_send[neopixel->rgb_index] = number;
+                dev_mode_request_frontend_change();
             }
-            global_var.adv_neopixel_measure->rgb_send[index] = number;
-            dev_mode_request_frontend_change();
             break;
         }
         case 'x':
         case 'X': {
-            uint8_t index;
-            if (global_var.adv_neopixel_measure->edit_rgb[0]) {
-                index = 0;
-            } else if (global_var.adv_neopixel_measure->edit_rgb[1]) {
-                index = 1;
-            } else if (global_var.adv_neopixel_measure->edit_rgb[2]) {
-                index = 2;
-            } else {
-                break;
+            if (neopixel->edit &&
+                global_var.device_state == DEV_STATE_ADV_NEOPIXEL_WRITE) {
+                uint32_t number = neopixel->rgb_send[neopixel->rgb_index];
+                number /= 10;
+                neopixel->rgb_send[neopixel->rgb_index] = number;
+
+                dev_mode_request_frontend_change();
             }
-            uint32_t number = global_var.adv_neopixel_measure->rgb_send[index];
-
-            number /= 10;
-            global_var.adv_neopixel_measure->rgb_send[index] = number;
-
-            dev_mode_request_frontend_change();
             break;
         }
-
         default:
             break;
     }
