@@ -21,5 +21,8 @@ void shift_register_send_signal(shift_register_t* shift_register) {
         HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
         HAL_Delay(SHIFT_REGISTER_LATCH);
     }
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+    HAL_Delay(SHIFT_REGISTER_LATCH);
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
     shift_register->ready_to_send = false;
 }

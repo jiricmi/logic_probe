@@ -137,6 +137,7 @@ void dev_mode_request_update(void) {
 
 void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     adc_stop_measure(adc_vars);
+    gpio_deinit_pins();
     HAL_TIM_Base_Stop_IT(sig_det->master_tim);
     HAL_TIM_Base_Stop(sig_det->slave_tim);
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_1);
