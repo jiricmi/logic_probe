@@ -11,16 +11,20 @@ void control_neopixel_measure_page(char received_char) {
     switch (received_char) {
         case 'q':
         case 'Q':
-            ansi_clear_terminal();
-            ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
-            dev_mode_change_mode(DEV_STATE_NONE);
+            if (!neopixel->edit) {
+                ansi_clear_terminal();
+                ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
+                dev_mode_change_mode(DEV_STATE_NONE);
+            }
             break;
         case 'm':
         case 'M':
-            if (global_var.device_state == DEV_STATE_ADV_NEOPIXEL_READ) {
-                dev_mode_change_mode(DEV_STATE_ADV_NEOPIXEL_WRITE);
-            } else {
-                dev_mode_change_mode(DEV_STATE_ADV_NEOPIXEL_READ);
+            if (!neopixel->edit) {
+                if (global_var.device_state == DEV_STATE_ADV_NEOPIXEL_READ) {
+                    dev_mode_change_mode(DEV_STATE_ADV_NEOPIXEL_WRITE);
+                } else {
+                    dev_mode_change_mode(DEV_STATE_ADV_NEOPIXEL_READ);
+                }
             }
             break;
         case 't':

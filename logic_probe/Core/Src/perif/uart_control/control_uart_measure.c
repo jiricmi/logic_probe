@@ -8,33 +8,36 @@
 extern global_vars_t global_var;
 
 void control_uart_page(char received_char) {
+    uart_perif_t* perif = global_var.uart_perif;
     switch (received_char) {
         case 'q':
         case 'Q':
-            ansi_clear_terminal();
-            ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
-            dev_mode_change_mode(DEV_STATE_NONE);
+            if (!perif->edit_send && !perif->edit_index) {
+                ansi_clear_terminal();
+                ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
+                dev_mode_change_mode(DEV_STATE_NONE);
+            }
             break;
         case 'e':
         case 'E':
-            if (!global_var.uart_perif->edit_send) {
-                global_var.uart_perif->edit = !global_var.uart_perif->edit;
-                if (global_var.uart_perif->edit) {
-                    deinit_uart(global_var.uart_perif);
+            if (!perif->edit_send) {
+                perif->edit = !global_var.uart_perif->edit;
+                if (perif->edit) {
+                    deinit_uart(perif);
                 } else {
-                    uart_start(global_var.uart_perif);
-                    uart_start_receive(global_var.uart_perif);
+                    uart_start(perif);
+                    uart_start_receive(perif);
                 }
                 dev_mode_request_frontend_change();
             }
             break;
         case 'w':
         case 'W':
-            if (global_var.uart_perif->edit) {
-                if (global_var.uart_perif->word_len < UART_WORD_LEN_LEN) {
-                    ++global_var.uart_perif->word_len;
+            if (perif->edit) {
+                if (perif->word_len < UART_WORD_LEN_LEN) {
+                    ++perif->word_len;
                 } else {
-                    global_var.uart_perif->word_len = UART_WORD_7B;
+                    perif->word_len = UART_WORD_7B;
                 }
             }
             dev_mode_request_frontend_change();
@@ -42,11 +45,11 @@ void control_uart_page(char received_char) {
             break;
         case 'p':
         case 'P':
-            if (global_var.uart_perif->edit) {
-                if (global_var.uart_perif->parity < UART_PARITY_LEN) {
-                    ++global_var.uart_perif->parity;
+            if (perif->edit) {
+                if (perif->parity < UART_PARITY_LEN) {
+                    ++perif->parity;
                 } else {
-                    global_var.uart_perif->parity = UART_P_NONE;
+                    perif->parity = UART_P_NONE;
                 }
             }
             dev_mode_request_frontend_change();
@@ -54,11 +57,11 @@ void control_uart_page(char received_char) {
             break;
         case 'd':
         case 'D':
-            if (global_var.uart_perif->edit) {
-                if (global_var.uart_perif->stop_bits < UART_STOP_BIT_LEN) {
-                    ++global_var.uart_perif->stop_bits;
+            if (perif->edit) {
+                if (perif->stop_bits < UART_STOP_BIT_LEN) {
+                    ++perif->stop_bits;
                 } else {
-                    global_var.uart_perif->stop_bits = UART_STOP_1;
+                    perif->stop_bits = UART_STOP_1;
                 }
             }
             dev_mode_request_frontend_change();
@@ -66,7 +69,7 @@ void control_uart_page(char received_char) {
             break;
         case 'm':
         case 'M':
-            if (!global_var.uart_perif->edit) {
+            if (!perif->edit) {
                 ansi_clear_terminal();
                 if (global_var.device_state == DEV_STATE_ADV_UART_READ) {
                     dev_mode_change_mode(DEV_STATE_ADV_UART_WRITE);
@@ -77,40 +80,38 @@ void control_uart_page(char received_char) {
             break;
         case 'a':
         case 'A':
-            if (!global_var.uart_perif->edit &&
+            if (!perif->edit &&
                 global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
-                global_var.uart_perif->edit_send =
-                    !global_var.uart_perif->edit_send;
-                global_var.uart_perif->edit_index = 0;
+                perif->edit_send = !perif->edit_send;
+                perif->edit_index = 0;
             }
             dev_mode_request_frontend_change();
             break;
         case 'f':
         case 'F':
-            if (global_var.uart_perif->edit_send &&
+            if (perif->edit_send &&
                 global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
-                global_var.uart_perif->edit_index++;
-                if (global_var.uart_perif->edit_index >= UART_SEND_SIZE) {
-                    global_var.uart_perif->edit_index = 0;
+                perif->edit_index++;
+                if (perif->edit_index >= UART_SEND_SIZE) {
+                    perif->edit_index = 0;
                 }
             }
             dev_mode_request_frontend_change();
             break;
         case 's':
         case 'S':
-            if (!global_var.uart_perif->edit_send &&
-                !global_var.uart_perif->edit &&
+            if (!perif->edit_send && !perif->edit &&
                 global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
-                uart_send_bytes(global_var.uart_perif);
+                uart_send_bytes(perif);
             }
             dev_mode_request_frontend_change();
             break;
         case 'i':
         case 'I':
             if (global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
-                global_var.uart_perif->symbols_to_send++;
-                if (global_var.uart_perif->symbols_to_send > UART_SEND_SIZE) {
-                    global_var.uart_perif->symbols_to_send = 1;
+                perif->symbols_to_send++;
+                if (perif->symbols_to_send > UART_SEND_SIZE) {
+                    perif->symbols_to_send = 1;
                 }
             }
             dev_mode_request_frontend_change();
@@ -125,23 +126,17 @@ void control_uart_page(char received_char) {
         case '8':
         case '9':
         case '0': {
-            if (global_var.uart_perif->edit &&
-                digits_count(global_var.uart_perif->baudrate) <= 7) {
-                global_var.uart_perif->baudrate *= 10;
-                global_var.uart_perif->baudrate +=
-                    (uint32_t)cdtoi((char)received_char);
-            } else if (global_var.uart_perif->edit_send) {
-                uint16_t number =
-                    global_var.uart_perif
-                        ->received_char[global_var.uart_perif->edit_index];
+            if (perif->edit && digits_count(perif->baudrate) <= 7) {
+                perif->baudrate *= 10;
+                perif->baudrate += (uint32_t)cdtoi((char)received_char);
+            } else if (perif->edit_send) {
+                uint16_t number = perif->received_char[perif->edit_index];
                 number *= 10;
                 number += (uint16_t)cdtoi((char)received_char);
                 if (number >= 255) {
                     number = 255;
                 }
-                global_var.uart_perif
-                    ->received_char[global_var.uart_perif->edit_index] =
-                    (unsigned char)number;
+                perif->received_char[perif->edit_index] = (unsigned char)number;
             }
             dev_mode_request_frontend_change();
 
@@ -149,11 +144,10 @@ void control_uart_page(char received_char) {
         }
         case 'x':
         case 'X':
-            if (global_var.uart_perif->edit) {
-                global_var.uart_perif->baudrate /= 10;
-            } else if (global_var.uart_perif->edit_send) {
-                global_var.uart_perif
-                    ->received_char[global_var.uart_perif->edit_index] /= 10;
+            if (perif->edit) {
+                perif->baudrate /= 10;
+            } else if (perif->edit_send) {
+                perif->received_char[perif->edit_index] /= 10;
             }
             dev_mode_request_frontend_change();
 
