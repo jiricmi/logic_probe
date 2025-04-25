@@ -6,8 +6,6 @@
 #include "tim_setup.h"
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
-extern TIM_HandleTypeDef htim14;
-extern TIM_HandleTypeDef htim16;
 
 void init_detector(sig_detector_t* detector,
                    TIM_HandleTypeDef* slave_tim,
@@ -27,6 +25,18 @@ void detector_change_sample_time(sig_detector_t* detector) {
         --detector->gate_time_index;
     }
     __HAL_TIM_SET_AUTORELOAD(&htim3, GATE_TIMES[detector->gate_time_index] - 1);
+}
+
+void detector_frequency_normalize_widths(sig_detector_t* detector) {
+    if (detector->frequency == 0) {
+        detector->widths[DET_HIGH_WIDTH] = 0;
+        detector->widths[DET_LOW_WIDTH] = 0;
+        detector->rec_frequency = 0;
+    } else if (detector->frequency == 1) {
+        detector->widths[DET_HIGH_WIDTH] = 500000;
+        detector->widths[DET_LOW_WIDTH] = 500000;
+        detector->rec_frequency = 1;
+    }
 }
 
 void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers) {
@@ -84,15 +94,20 @@ void detector_compute_freq_measures(sig_detector_t* detector) {
     uint32_t low_delta =
         edge_times[DET_EDGE3_RISE] - edge_times[DET_EDGE2_FALL];
 
-    detector->pwm_duty = (high_delta * 1000) / (edge_times[DET_EDGE3_RISE] -
-                                                edge_times[DET_EDGE1_RISE]);
-
     detector->widths[DET_LOW_WIDTH] = (low_delta) / PROCESSOR_FREQ_IN_MHZ;
     detector->widths[DET_HIGH_WIDTH] = (high_delta) / PROCESSOR_FREQ_IN_MHZ;
 
-    if (detector->frequency == 0) {
-        detector->widths[DET_HIGH_WIDTH] = 0;
-        detector->widths[DET_LOW_WIDTH] = 0;
+    uint64_t period =
+        (detector->widths[DET_LOW_WIDTH] + detector->widths[DET_HIGH_WIDTH]);
+
+    if (period > 0) {
+        detector->rec_frequency = 1000000 / period;
+        detector->pwm_duty =
+            ((uint64_t)detector->widths[DET_HIGH_WIDTH] * 100) / period;
+
+    } else {
+        detector->rec_frequency = 0;
+        detector->pwm_duty = 0;
     }
 }
 

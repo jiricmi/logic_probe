@@ -31,6 +31,7 @@ typedef struct {
     TIM_HandleTypeDef* master_tim;
     detector_slave_mode_t slave_tim_mode;
     uint32_t frequency;
+    uint32_t rec_frequency;
     detector_mode_t mode;
     uint8_t gate_time_index;
     uint32_t edge_times[DETECTOR_N_OF_EDGES];
@@ -43,6 +44,7 @@ typedef struct {
 void init_detector(sig_detector_t* detector,
                    TIM_HandleTypeDef* slave_tim,
                    TIM_HandleTypeDef* master_tim);
+void detector_frequency_normalize_widths(sig_detector_t* detector);
 void detector_change_sample_time(sig_detector_t* detector);
 void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers);
 void detector_change_mode(sig_detector_t* detector);

@@ -20,6 +20,7 @@ void ansi_render_frequency_reader_page(void) {
 
 void ansi_generate_frequency_reader(sig_detector_t* detector) {
     char buffer[DETECTOR_MODE_BUFF_SIZE];
+    uint8_t row = 10;
     ansi_text_config_t conf = {"", "", 1};
     ansi_get_detector_mode(buffer, &conf, detector->mode);
     ansi_set_cursor(8, 35);
@@ -28,30 +29,36 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
     if (detector->mode == DETECTOR_MODE_FREQUENCY) {
         char number_buff[15];
         format_number_with_spaces(detector->frequency, number_buff);
-        ansi_set_cursor(10, 10);
+        ansi_set_cursor(row++, 10);
         snprintf(buff, 100, "Frequency (A0): %9.9s Hz", number_buff);
         ansi_send_text(buff, &ansi_default_conf);
-        format_number_with_spaces(detector->frequency, number_buff);
-        ansi_set_cursor(11, 10);
+
+        format_number_with_spaces(detector->rec_frequency, number_buff);
+        ansi_set_cursor(row++, 10);
         snprintf(buff, 100, "Reciprocial frequency: %9.9s Hz", number_buff);
         ansi_send_text(buff, &ansi_default_conf);
-        ansi_set_cursor(12, 10);
+
+        ansi_set_cursor(row++, 10);
         format_number_with_spaces(detector->widths[DET_HIGH_WIDTH],
                                   number_buff);
         snprintf(buff, 100, "High pulse width: %9.9s us ", number_buff);
         ansi_send_text(buff, &ansi_default_conf);
-        ansi_set_cursor(13, 10);
+
+        ansi_set_cursor(row++, 10);
         format_number_with_spaces(detector->widths[DET_LOW_WIDTH], number_buff);
         snprintf(buff, 100, "Low pulse width: %9.9s us ", number_buff);
         ansi_send_text(buff, &ansi_default_conf);
-        ansi_set_cursor(14, 10);
+
+        ansi_set_cursor(row++, 10);
         snprintf(buff, 100, "Duty: %3u %%",
-                 (uint16_t)utils_round(detector->pwm_duty));
+                 (uint16_t)detector->pwm_duty);
         ansi_send_text(buff, &ansi_default_conf);
-        ansi_set_cursor(15, 10);
+
+        ansi_set_cursor(row++, 10);
         snprintf(buff, 100, "Gate time: %5u ms",
                  GATE_TIMES[detector->gate_time_index]);
         ansi_send_text(buff, &ansi_default_conf);
+
     } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
         ansi_set_cursor(10, 10);
         snprintf(buff, 100, "Pulse found: ");
