@@ -5,6 +5,7 @@
 
 #include "global_vars.h"
 #include "main.h"
+#include "utils.h"
 
 extern global_vars_t global_var;
 
@@ -18,6 +19,7 @@ void ansi_render_impulse_generator_page(void) {
 
 void ansi_render_impulse_generator(const sig_generator_t* generator) {
     char buff[50];
+    char number_buff[15];
     ansi_set_cursor(9, 10);
     if (generator->mode == SIG_GEN_MODE_PULSE_UP) {
         ansi_send_text("UP  ", &ansi_default_conf);
@@ -25,7 +27,8 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
         ansi_send_text("DOWN", &ansi_default_conf);
     }
     ansi_set_cursor(10, 10);
-    snprintf(buff, 50, "Pulse width (A0): %7lu us", generator->period_us_temp);
+    format_number_with_spaces(generator->period_us_temp, number_buff);
+    snprintf(buff, 50, "Pulse width (A0): %9.9s us", number_buff);
     ansi_send_text(buff, &ansi_default_conf);
     GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
     ansi_set_cursor(11, 10);
