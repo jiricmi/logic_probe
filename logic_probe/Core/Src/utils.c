@@ -111,3 +111,36 @@ int32_t digits_count(int32_t n) {
 
     return count;
 }
+
+void format_number_with_spaces(uint32_t num, char* buffer) {
+    char temp[30];
+    snprintf(temp, 30, "%lu", num);
+    uint8_t len = strlen(temp);
+    uint8_t space_index = 0;
+    uint8_t i = 0;
+    uint8_t j = 0;
+    int8_t k = len - 1;
+
+    while (i < len) {
+        buffer[j++] = temp[k--];
+        ++space_index;
+        if (space_index % 3 == 0 && i != 0 && i != len - 1) {
+            buffer[j++] = ' ';
+        }
+        i++;
+    }
+
+    uint8_t start = 0;
+    uint8_t end = j - 1;
+    while (start < end) {
+        char c = buffer[start];
+        buffer[start] = buffer[end];
+        buffer[end] = c;
+        start++;
+        end--;
+    }
+
+
+
+    buffer[j] = '\0';
+}

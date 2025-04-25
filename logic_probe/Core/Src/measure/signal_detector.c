@@ -87,9 +87,8 @@ void detector_compute_freq_measures(sig_detector_t* detector) {
     detector->pwm_duty = (high_delta * 1000) / (edge_times[DET_EDGE3_RISE] -
                                                 edge_times[DET_EDGE1_RISE]);
 
-    detector->widths[DET_LOW_WIDTH] = (low_delta * 10) / PROCESSOR_FREQ_IN_MHZ;
-    detector->widths[DET_HIGH_WIDTH] =
-        (high_delta * 10) / PROCESSOR_FREQ_IN_MHZ;
+    detector->widths[DET_LOW_WIDTH] = (low_delta) / PROCESSOR_FREQ_IN_MHZ;
+    detector->widths[DET_HIGH_WIDTH] = (high_delta) / PROCESSOR_FREQ_IN_MHZ;
 
     if (detector->frequency == 0) {
         detector->widths[DET_HIGH_WIDTH] = 0;

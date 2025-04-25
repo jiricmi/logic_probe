@@ -25,4 +25,6 @@ void to_lowercase(char* str);
 uint8_t char_to_hex(char c);
 
 void byte_to_hex(uint8_t val, char* out);
+
+void format_number_with_spaces(uint32_t num, char* buffer);
 #endif
