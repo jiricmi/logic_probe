@@ -23,6 +23,7 @@ typedef struct {
     _Bool edit_repeat;
     _Bool channel_state[N_OF_OUTPUTS];
     uint8_t repeat;
+    _Bool local_pulsing;
     _Bool send;
 } sig_generator_t;
 

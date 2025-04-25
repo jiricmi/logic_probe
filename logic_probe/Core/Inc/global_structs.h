@@ -23,8 +23,9 @@ typedef enum {
 
 typedef enum {
     LOCAL_STATE_LOGIC_PROBE,  // aqua
-    LOCAL_STATE_OUTPUT,       // blue
-    LOCAL_STATE_PULSEUP,      // white
+    LOCAL_STATE_OUTPUT,       // orange
+    LOCAL_STATE_PULSING,      // white
+    LOCAL_STATE_PULSEUP,      // blue
     LOCAL_STATE_PULSEDOWN,    // purple
 } local_state_t;
 

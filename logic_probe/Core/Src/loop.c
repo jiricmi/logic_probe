@@ -227,12 +227,12 @@ void local_mode_update_perif(void) {
             }
             adc_apply_channels(global_var.adc_vars);
             adc_setup_channel_struct(global_var.adc_vars);
-            HAL_ADC_Start_DMA(
-                global_var.adc_vars->hadc,
-                global_var.adc_vars->voltage_measures,
-                global_var.adc_vars->n_active_channels * CHANNEL_NUM_SAMPLES);
+            adc_start_measure(global_var.adc_vars);
             break;
         case LOCAL_STATE_OUTPUT:
+            gpio_init_push_pull();
+            break;
+        case LOCAL_STATE_PULSING:
             gpio_init_push_pull();
             break;
         case LOCAL_STATE_PULSEUP:
@@ -283,6 +283,14 @@ void dev_mode_run(void) {
                                        global_var.local_substate);
             break;
         }
+        case LOCAL_STATE_PULSING:
+            if (global_var.signal_generator->local_pulsing) {
+                HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
+            } else {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+                neopixel_send_color(global_var.visual_output, NEOPIXEL_NONE);
+            }
+            break;
         case LOCAL_STATE_PULSEUP:
         case LOCAL_STATE_PULSEDOWN:
             if (sig_det->one_pulse_found) {
