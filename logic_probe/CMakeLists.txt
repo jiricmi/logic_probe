@@ -95,7 +95,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
   # Size optimization for Release mode
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os)
+        target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os)
 
     add_custom_command(
       TARGET ${CMAKE_PROJECT_NAME}

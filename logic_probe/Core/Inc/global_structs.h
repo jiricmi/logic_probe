@@ -3,6 +3,12 @@
 
 #define PERIF_DELAY 200
 
+#if defined(SOP8)
+#define NOT_SOP 0
+#else
+#define NOT_SOP 1
+#endif
+
 typedef enum {
     DEV_STATE_NONE,
     DEV_STATE_VOLTMETER,

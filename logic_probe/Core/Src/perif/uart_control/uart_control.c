@@ -72,8 +72,10 @@ void control_main_page(void) {
             break;
         case 'a':
         case 'A':
-            ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
-            dev_mode_change_mode(DEV_STATE_NONE);
+            if (NOT_SOP) {
+                ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
+                dev_mode_change_mode(DEV_STATE_NONE);
+            }
             break;
     }
 }
