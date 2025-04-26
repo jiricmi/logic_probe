@@ -7,6 +7,7 @@
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
+#include "ansi_page_spi.h"
 #include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
 #include "ansi_pages_neopixel_measure.h"
@@ -105,12 +106,17 @@ void dev_mode_run_with_uart(void) {
             break;
         }
         case DEV_STATE_ADV_SPI_SLAVE: {
+            ansi_spi_render_read_vals(global_var.spi_perif);
             break;
         }
         case DEV_STATE_ADV_SPI_MASTER: {
             spi_transmit(global_var.spi_perif);
             break;
         }
+        case DEV_STATE_ADV_SPI_TEST_DISPLAY:
+            ansi_spi_test_display_render_settings();
+            spi_test_display(global_var.spi_perif);
+            break;
         default:
             break;
     }

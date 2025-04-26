@@ -9,4 +9,6 @@ void ansi_spi_render_master_settings(spi_perif_t* perif);
 void ansi_spi_render_read_vals(spi_perif_t* perif);
 
 void ansi_spi_print_error(spi_perif_t* perif);
+
+void ansi_spi_test_display_render_settings(void);
 #endif

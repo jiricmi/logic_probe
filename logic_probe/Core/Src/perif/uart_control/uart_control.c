@@ -108,6 +108,6 @@ void control_advanced_main_page(void) {
         case 'p':
         case 'P':
             ansi_set_current_page(ANSI_PAGE_SPI);
-            dev_mode_change_mode(DEV_STATE_ADV_SPI_MASTER);
+            dev_mode_change_mode(DEV_STATE_ADV_SPI_SLAVE);
     }
 }

@@ -40,4 +40,6 @@ void ansi_spi_master_vals(spi_perif_t* perif);
 void ansi_spi_render_slave_settings(spi_perif_t* perif);
 
 void spi_transmit(spi_perif_t* perif);
+
+void spi_test_display(spi_perif_t* perif);
 #endif

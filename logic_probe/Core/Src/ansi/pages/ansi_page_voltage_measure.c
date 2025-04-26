@@ -57,7 +57,7 @@ void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col) {
         "     |",
         " [R1 BASE]",
         "     |",
-        "     +--- CHANNEL 1",
+        "     +--- PB7",
         "     |",
         "    [R2]",
         "     |",
@@ -111,13 +111,13 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
 
         ansi_set_cursor(row++, col_center);
         if (adc_ch->channel_state[channel]) {
-            ansi_render_channel_voltage(channel_voltage, channel,
-                                        adc_ch->pin[channel],
-                                        ADC_FLOATING_POINT);
+            ansi_render_channel_voltage(
+                channel_voltage, channel, adc_ch->pin[channel],
+                adc_ch->gpio_pin[channel], ADC_FLOATING_POINT);
         } else {
             char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
-            snprintf(text_buffer, sizeof(text_buffer),
-                     "Channel %hu (Pin %lu): x", channel, adc_ch->pin[channel]);
+            snprintf(text_buffer, sizeof(text_buffer), "Channel %hu (P%c%d): x",
+                     channel, adc_ch->gpio_pin[channel], adc_ch->pin[channel]);
             ansi_send_text(text_buffer, &ansi_bold_conf);
         }
     }
@@ -176,14 +176,15 @@ void ansi_render_adc_change_message(const uint8_t row,
 
 void ansi_render_channel_voltage(uint32_t voltage,
                                  uint8_t channel,
-                                 uint32_t pin,
+                                 uint8_t pin,
+                                 char gpio,
                                  uint32_t floating_point) {
     char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
     uint32_t split_float_format[2];
 
     uint_32_to_split_int(split_float_format, voltage, floating_point);
     snprintf(text_buffer, sizeof(text_buffer),
-             "Channel %hu (Pin %lu): %lu.%0*lu V", channel, pin,
+             "Channel %hu (P%c%d): %lu.%0*lu V", channel, gpio, pin,
              split_float_format[0], (int)floating_point, split_float_format[1]);
     ansi_send_text(text_buffer, &ansi_bold_conf);
 }

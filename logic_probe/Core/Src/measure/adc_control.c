@@ -29,8 +29,10 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
     adc_ch->resistance_mode = false;
     adc_ch->base_resistor = ADC_BASE_RESISTOR;
 
-    unsigned int pin_values[] = PIN_VALS;
+    uint8_t pin_values[] = PIN_VALS;
     memcpy(adc_ch->pin, pin_values, sizeof(pin_values));
+    char gpio_pins[] = PIN_GPIO;
+    memcpy(adc_ch->gpio_pin, gpio_pins, sizeof(gpio_pins));
 
     adc_ch->n_active_channels = adc_count_active_channels(adc_ch);
 

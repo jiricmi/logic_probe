@@ -33,7 +33,7 @@ void ansi_render_spi_measure_page(void) {
     switch (state) {
         case DEV_STATE_ADV_SPI_SLAVE:
             title = "SPI SLAVE";
-            ansi_spi_render_master_settings(perif);
+            ansi_spi_render_slave_settings(perif);
             ansi_spi_render_read_vals(perif);
             break;
 
@@ -45,7 +45,8 @@ void ansi_render_spi_measure_page(void) {
 
         case DEV_STATE_ADV_SPI_TEST_DISPLAY:
             title = "SPI TEST SSD1306";
-            // ansi_i2c_test_display_render_settings(perif);
+            ansi_spi_render_master_settings(perif);
+            ansi_spi_test_display_render_settings();
             break;
     }
 
@@ -54,6 +55,14 @@ void ansi_render_spi_measure_page(void) {
         ansi_send_text(title, &ansi_bold_conf);
     }
     ansi_spi_print_error(perif);
+}
+
+void ansi_spi_test_display_render_settings(void) {
+    const char* msg1 = "Press S to start checking display...";
+    ansi_set_cursor(8, TERMINAL_CENTER - (strlen(msg1) / 2));
+    ansi_send_text(msg1, &ansi_bold_conf);
+
+    ansi_spi_print_error(global_var.spi_perif);
 }
 
 void ansi_spi_render_master_settings(spi_perif_t* perif) {

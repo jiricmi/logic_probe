@@ -3,6 +3,7 @@
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
 #include "gpio_outputs.h"
+#include "ssd1306.h"
 #include "stm32g0xx_hal_spi.h"
 
 extern global_vars_t global_var;
@@ -79,4 +80,11 @@ void spi_transmit(spi_perif_t* perif) {
         }
     }
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+}
+
+void spi_test_display(spi_perif_t* perif) {
+    if (perif->send_data) {
+        perif->send_data = 0;
+        SSD1306_spi_test_display(perif);
+    }
 }

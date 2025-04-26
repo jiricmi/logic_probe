@@ -1,6 +1,5 @@
 #include "advanced/i2c.h"
 #include <string.h>
-#include "ansi_abstraction_layer.h"
 #include "ansi_page_i2c.h"
 #include "ssd1306.h"
 #include "stm32g0xx_hal_def.h"
@@ -90,7 +89,7 @@ void i2c_read_data_master(i2c_perif_t* perif) {
 void i2c_test_display(i2c_perif_t* perif) {
     if (perif->send_data) {
         perif->send_data = 0;
-        HAL_StatusTypeDef ret = SSD_test_display(perif);
+        HAL_StatusTypeDef ret = SSD_i2c_test_display(perif);
         ansi_print_i2c_error(ret, perif->hi2c);
     }
 }

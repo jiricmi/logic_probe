@@ -52,7 +52,8 @@ void control_spi_page(char received_char) {
             break;
         case 'l':
         case 'L':
-            if (!perif->edit_settings) {
+            if (!perif->edit_settings &&
+                global_var.device_state == DEV_STATE_ADV_SPI_MASTER) {
                 perif->edit_vals = !perif->edit_vals;
             }
             dev_mode_request_frontend_change();

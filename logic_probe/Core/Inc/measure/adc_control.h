@@ -6,7 +6,7 @@
 #include "main.h"
 
 #define CHANNEL_NUM_SAMPLES 50  // Number of samples per channel for averaging
-#define V_REF_DEFAULT 3300       // Default reference voltage in millivolts
+#define V_REF_DEFAULT 3300      // Default reference voltage in millivolts
 #define ADC_TIMEOUT 100
 
 #define LOW_MAX_V 800
@@ -24,7 +24,8 @@
      ADC_REGULAR_RANK_4}
 #define CHANNEL_MAP {ADC_CHANNEL_VREFINT, ADC_CHANNEL_11, ADC_CHANNEL_0}
 
-#define PIN_VALS {0, 1, 4}
+#define PIN_VALS {0, 7, 0}
+#define PIN_GPIO {'A', 'B', 'A'}
 
 #else
 
@@ -32,10 +33,11 @@
 #define RANK_MAP                                                 \
     {ADC_REGULAR_RANK_1, ADC_REGULAR_RANK_2, ADC_REGULAR_RANK_3, \
      ADC_REGULAR_RANK_4, ADC_REGULAR_RANK_5}
-#define CHANNEL_MAP                                                    \
-    {ADC_CHANNEL_VREFINT, ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_4, \
-     ADC_CHANNEL_5}
-#define PIN_VALS {0, 0, 1, 2, 3};
+#define CHANNEL_MAP                                                     \
+    {ADC_CHANNEL_VREFINT, ADC_CHANNEL_11, ADC_CHANNEL_0, ADC_CHANNEL_1, \
+     ADC_CHANNEL_2}
+#define PIN_VALS {0, 7, 0, 1, 2};
+#define PIN_GPIO {'A', 'B', 'A', 'A'}
 
 #endif
 
@@ -53,7 +55,8 @@ typedef struct {
     _Bool resistance_mode;
     uint32_t base_resistor;
     uint32_t avg_voltage[ADC_NUM_CHANNELS];
-    uint32_t pin[ADC_NUM_CHANNELS];
+    uint8_t pin[ADC_NUM_CHANNELS];
+    char gpio_pin[ADC_NUM_CHANNELS];
     uint8_t n_active_channels;
     ADC_HandleTypeDef* hadc;
     uint32_t* voltage_measures;

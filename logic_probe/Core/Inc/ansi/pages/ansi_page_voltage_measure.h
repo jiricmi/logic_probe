@@ -30,7 +30,8 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch);
 
 void ansi_render_channel_voltage(uint32_t voltage,
                                  uint8_t channel,
-                                 uint32_t pin,
+                                 uint8_t pin,
+                                 char gpio,
                                  uint32_t floating_point);
 
 void ansi_render_state_channel(const uint8_t row,
