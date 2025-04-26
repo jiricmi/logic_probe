@@ -66,12 +66,12 @@ void spi_transmit(spi_perif_t* perif) {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
     if (!perif->read_bit) {
         if (HAL_SPI_Transmit(perif->hspi, perif->data, perif->bytes_count,
-                             HAL_MAX_DELAY) != HAL_OK) {
+                             PERIF_DELAY) != HAL_OK) {
             perif->error = SPI_ERROR_SEND;
         }
     } else {
         if (HAL_SPI_Transmit(perif->hspi, perif->master_send_data, 1,
-                             HAL_MAX_DELAY) != HAL_OK) {
+                             PERIF_DELAY) != HAL_OK) {
             perif->error = SPI_ERROR_SEND;
         }
         if (HAL_SPI_Receive(perif->hspi, perif->data, perif->bytes_count,

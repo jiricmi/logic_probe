@@ -13,9 +13,11 @@ void ansi_render_uart_measure_page(void) {
     if (global_var.device_state == DEV_STATE_ADV_UART_READ) {
         ansi_send_text("UART READ (PIN PA3)", &ansi_bold_conf);
         ansi_render_read_vals(global_var.uart_perif);
+        help_read_uart();
     } else if (global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
         ansi_send_text("UART WRITE (PIN PA2)", &ansi_bold_conf);
         ansi_render_write_vals(global_var.uart_perif);
+        help_write_uart();
     }
 }
 
@@ -44,7 +46,7 @@ void ansi_render_settings(uart_perif_t* uart) {
     ansi_set_cursor(7, ADC_MEASURE_CENTER);
     snprintf(buffer, 41, "BAUDRATE %lu", uart->baudrate);
     ansi_send_text(buffer, &ansi_bold_conf);
-    ansi_set_cursor(8, ADC_MEASURE_CENTER);
+    ansi_set_cursor(8, ADC_MEASURE_CENTER - 8);
     if (uart->edit) {
         ansi_send_text("CANNOT START UNTIL EDIT MODE!", &ansi_red_bold_conf);
     } else if (uart->edit_send) {
@@ -98,4 +100,30 @@ void ansi_render_write_vals(uart_perif_t* uart) {
         }
     }
     ansi_send_text(" |", &ansi_default_conf);
+}
+
+void help_read_uart(void) {
+    if (global_var.uart_perif->edit) {
+        ansi_print_help_msg("T: stop edit | 0-9: edit baudrate", 1);
+        ansi_print_help_msg(
+            "X: delete baudrate | Y: word len | U: parity | I: stop bit", 0);
+    } else {
+        ansi_print_help_msg("T: edit settings | M: change mode", 0);
+    }
+}
+
+void help_write_uart(void) {
+    if (global_var.uart_perif->edit) {
+        ansi_print_help_msg(
+            "T: stop edit | 0-9: edit baudrate | O: bytes count", 1);
+        ansi_print_help_msg(
+            "X: delete baudrate | Y: word len | U: parity | I: stop bit", 0);
+    } else if (global_var.uart_perif->edit_send) {
+        ansi_print_help_msg(
+            "0-9: edit val | X: delete val | K: stop edit | L: move cursor", 0);
+
+    } else {
+        ansi_print_help_msg(
+            "T: edit settings | K: edit vals | S: send | M: change mode", 0);
+    }
 }

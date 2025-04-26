@@ -11,4 +11,10 @@ void ansi_spi_render_read_vals(spi_perif_t* perif);
 void ansi_spi_print_error(spi_perif_t* perif);
 
 void ansi_spi_test_display_render_settings(void);
+
+void help_slave_spi(void);
+
+void help_master_spi(void);
+
+void help_spi_display(void);
 #endif

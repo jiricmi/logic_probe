@@ -75,5 +75,5 @@ uint32_t uart_get_parity(uart_perif_t* uart) {
 
 void deinit_uart(uart_perif_t* uart) {
     HAL_UART_DMAStop(uart->huart);
-    HAL_UART_DeInit(uart->huart);  // TODO: HANDLE ERROR
+    HAL_UART_DeInit(uart->huart);
 }

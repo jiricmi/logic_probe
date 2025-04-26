@@ -17,11 +17,11 @@ static void render_edit_spi_status(_Bool edit) {
 }
 
 void ansi_render_spi_measure_page(void) {
+    ansi_clear_terminal();
     ansi_render_border('%', "%", "");
     const char* header = "SCK - PA5 | MISO - PA6 | MOSI - PA7 | NSS - PB0";
     ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
     ansi_send_text(header, &ansi_bold_conf);
-    ansi_spi_render_master_settings(global_var.spi_perif);
 
     const uint8_t state = global_var.device_state;
     spi_perif_t* perif = global_var.spi_perif;
@@ -35,18 +35,21 @@ void ansi_render_spi_measure_page(void) {
             title = "SPI SLAVE";
             ansi_spi_render_slave_settings(perif);
             ansi_spi_render_read_vals(perif);
+            help_slave_spi();
             break;
 
         case DEV_STATE_ADV_SPI_MASTER:
             title = "SPI MASTER";
             ansi_spi_render_master_settings(perif);
             ansi_spi_master_vals(perif);
+            help_master_spi();
             break;
 
         case DEV_STATE_ADV_SPI_TEST_DISPLAY:
             title = "SPI TEST SSD1306";
             ansi_spi_render_master_settings(perif);
             ansi_spi_test_display_render_settings();
+            help_spi_display();
             break;
     }
 
@@ -146,5 +149,37 @@ void ansi_spi_print_error(spi_perif_t* perif) {
             break;
         default:
             break;
+    }
+}
+
+void help_slave_spi(void) {
+    if (global_var.spi_perif->edit_settings) {
+        ansi_print_help_msg("T: stop edit | U: Polarity | Y: Phase ", 1);
+        ansi_print_help_msg("I: byte count | O: MSB/LSB", 0);
+    } else {
+        ansi_print_help_msg("T: edit settings | M: change mode", 0);
+    }
+}
+
+void help_master_spi(void) {
+    if (global_var.spi_perif->edit_settings) {
+        ansi_print_help_msg("T: stop edit | U: Polarity | Y: Phase ", 1);
+        ansi_print_help_msg("I: byte count | O: MSB/LSB | P: read/write", 0);
+    } else if (global_var.spi_perif->edit_vals) {
+        ansi_print_help_msg(
+            "K: stop edit | L: move cursor | 0-F: edit val | X: delete val", 0);
+
+    } else {
+        ansi_print_help_msg(
+            "S: send | T: edit settings | K: edit vals | M: change mode", 0);
+    }
+}
+
+void help_spi_display(void) {
+    if (global_var.spi_perif->edit_settings) {
+        ansi_print_help_msg("T: stop edit | U: Polarity | Y: Phase ", 1);
+        ansi_print_help_msg("I: byte count | O: MSB/LSB | P: read/write", 0);
+    } else {
+        ansi_print_help_msg("S: send | T: edit settings | M: change mode", 0);
     }
 }

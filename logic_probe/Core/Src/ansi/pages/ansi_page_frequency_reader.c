@@ -1,4 +1,5 @@
 #include "ansi_page_frequency_reader.h"
+#include <string.h>
 
 #include "ansi_abstraction_layer.h"
 #include "ansi_ascii_text.h"
@@ -15,100 +16,96 @@ void ansi_render_frequency_reader_page(void) {
     ansi_render_border('x', "x", "");
     ansi_render_title(ASCII_LOGO_SIGNAL_DETECT, YELLOW_TEXT);
     ansi_generate_frequency_reader(global_var.signal_detector);
-    ansi_frequency_reader_generate_hint();
+    ansi_help_reader();
 }
 
 void ansi_generate_frequency_reader(sig_detector_t* detector) {
-    char buffer[DETECTOR_MODE_BUFF_SIZE];
-    uint8_t row = 10;
-    ansi_text_config_t conf = {"", "", 1};
-    ansi_get_detector_mode(buffer, &conf, detector->mode);
-    ansi_set_cursor(8, 35);
-    ansi_send_text(buffer, &conf);
-    char buff[100];
+    uint8_t row = FREQ_READER_ROW_TEXT;
+    ansi_get_detector_mode(detector->mode);
+    char buff[BASE_TEXT_BUFF_LEN];
     if (detector->mode == DETECTOR_MODE_FREQUENCY) {
-        char number_buff[15];
+        char number_buff[NUM_BUFF_LEN];
         format_number_with_spaces(detector->frequency, number_buff);
-        ansi_set_cursor(row++, 10);
-        snprintf(buff, 100, "Frequency (A0): %9.9s Hz", number_buff);
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Frequency (A0): %9.9s Hz",
+                 number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         format_number_with_spaces(detector->rec_frequency, number_buff);
-        ansi_set_cursor(row++, 10);
-        snprintf(buff, 100, "Reciprocial frequency: %9.9s Hz", number_buff);
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Reciprocial frequency: %9.9s Hz",
+                 number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
-        ansi_set_cursor(row++, 10);
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
         format_number_with_spaces(detector->widths[DET_HIGH_WIDTH],
                                   number_buff);
-        snprintf(buff, 100, "High pulse width: %9.9s us ", number_buff);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "High pulse width: %9.9s us ",
+                 number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
-        ansi_set_cursor(row++, 10);
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
         format_number_with_spaces(detector->widths[DET_LOW_WIDTH], number_buff);
-        snprintf(buff, 100, "Low pulse width: %9.9s us ", number_buff);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Low pulse width: %9.9s us ",
+                 number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
-        ansi_set_cursor(row++, 10);
-        snprintf(buff, 100, "Duty: %3u %%",
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Duty: %3u %%",
                  (uint16_t)detector->pwm_duty);
         ansi_send_text(buff, &ansi_default_conf);
 
-        ansi_set_cursor(row++, 10);
-        snprintf(buff, 100, "Gate time: %5u ms",
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Gate time: %5u ms",
                  GATE_TIMES[detector->gate_time_index]);
         ansi_send_text(buff, &ansi_default_conf);
 
     } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
-        ansi_set_cursor(10, 10);
-        snprintf(buff, 100, "Pulse found: ");
-        ansi_send_text(buff, &ansi_default_conf);
+        char pulse_text[] = "Pulse found: ";
+        ansi_set_cursor(FREQ_READER_ROW_TEXT,
+                        TERMINAL_CENTER - strlen(pulse_text) / 2);
+        ansi_send_text(pulse_text, &ansi_default_conf);
         ansi_text_config_t text_conf = {"", RED_BG, 1};
 
+        ansi_set_cursor(FREQ_READER_ROW_TEXT,
+                        TERMINAL_CENTER + strlen(pulse_text) / 2);
         if (detector->one_pulse_found) {
-            ansi_set_cursor(10, 24);
-            snprintf(buff, 100, " TRUE  ");
             text_conf.color = WHITE_TEXT;
             text_conf.bg_color = GREEN_BG;
-            ansi_send_text(buff, &text_conf);
+            ansi_send_text(" TRUE  ", &text_conf);
         } else {
-            ansi_set_cursor(10, 24);
-            snprintf(buff, 100, " FALSE ");
-            ansi_send_text(buff, &text_conf);
+            ansi_send_text(" FALSE ", &text_conf);
         }
     }
 }
 
-void ansi_get_detector_mode(char* text,
-                            ansi_text_config_t* text_conf,
-                            detector_mode_t mode) {
-    size_t buff_size = DETECTOR_MODE_BUFF_SIZE;
+void ansi_get_detector_mode(detector_mode_t mode) {
+    ansi_set_cursor(FREQ_READER_ROW_MODE, TERMINAL_CENTER);
+    ansi_text_config_t text_conf = {WHITE_TEXT, "", 1};
+
     switch (mode) {
         case DETECTOR_MODE_FREQUENCY:
-            snprintf(text, buff_size, "%s", "Frequency/PWM");
-            snprintf(text_conf->color, COLOR_STR_SIZE, "%s", GREEN_TEXT);
+            ansi_send_text("Frequency/PWM", &text_conf);
             break;
         case DETECTOR_MODE_PULSE_UP:
-            snprintf(text, buff_size, "%s", "Rise Edge Pulse");
-            snprintf(text_conf->color, COLOR_STR_SIZE, "%s", BLUE_TEXT);
+            text_conf.color = BLUE_TEXT;
+            ansi_send_text("Rise Edge Pulse", &text_conf);
             break;
         case DETECTOR_MODE_PULSE_DOWN:
-            snprintf(text, buff_size, "%s", "Fall Edge Pulse");
-            snprintf(text_conf->color, COLOR_STR_SIZE, "%s", MAGENTA_TEXT);
+            text_conf.color = MAGENTA_TEXT;
+            ansi_send_text("Fall Edge Pulse", &text_conf);
             break;
 
         default:
-            snprintf(text, buff_size, "%s", "Undefined");
-            snprintf(text_conf->color, COLOR_STR_SIZE, "%s", RED_TEXT);
+            text_conf.color = RED_TEXT;
+            ansi_send_text("Undefined", &text_conf);
     }
 }
 
-void ansi_frequency_reader_generate_hint(void) {
-    ansi_text_config_t conf = {"", "", 0};
-    ansi_set_cursor(TERMINAL_HEIGHT - 2, 4);
-    ansi_send_text("m - change mode ", &conf);
-    ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
-    ansi_send_text("t - change sample time ", &conf);
-    ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
-    ansi_send_text("d - delete flag ", &conf);
+void ansi_help_reader(void) {
+    if (global_var.signal_detector->mode == DETECTOR_MODE_FREQUENCY) {
+        ansi_print_help_msg("T: change period | M: one pulse mode", 0);
+    } else {
+        ansi_print_help_msg("D: delete catch flag | M: change mode", 0);
+    }
 }

@@ -1,6 +1,8 @@
 #include "ansi_pages.h"
 
 #include <stdbool.h>
+#include <string.h>
+#include "ansi_abstraction_layer.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
@@ -51,4 +53,10 @@ void ansi_render_current_page(void) {
 
 void ansi_set_current_page(ansi_page_type_t page) {
     global_var.current_page = page;
+}
+
+void ansi_print_help_msg(const char* msg, const uint8_t row_offset) {
+    ansi_set_cursor(TERMINAL_HEIGHT - 2 - row_offset,
+                    TERMINAL_CENTER - (strlen(msg) / 2));
+    ansi_send_text(msg, &ansi_default_conf);
 }

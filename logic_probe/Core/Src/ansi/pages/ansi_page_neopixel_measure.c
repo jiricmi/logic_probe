@@ -21,6 +21,7 @@ void ansi_render_neopixel_measure_page(void) {
         ansi_send_text("NEOPIXEL SEND (PIN PA13)", &ansi_bold_conf);
         ansi_render_neopixel_send_vals(global_var.adv_neopixel_measure);
     }
+    help_neopixel();
 }
 
 void ansi_render_neopixel_measure_vals(neopixel_measure_t* data) {
@@ -59,5 +60,22 @@ void ansi_render_neopixel_send_vals(neopixel_measure_t* data) {
     ansi_set_cursor(12, ADC_MEASURE_CENTER);
     if (data->edit) {
         ansi_send_text("Editing!", &ansi_red_bold_conf);
+    }
+}
+
+void help_neopixel(void) {
+    if (global_var.device_state == DEV_STATE_ADV_NEOPIXEL_READ) {
+        ansi_print_help_msg("M: write mode", 0);
+
+    } else {
+        if (global_var.adv_neopixel_measure->edit) {
+            ansi_print_help_msg(
+                "0-9: change value | X: delete value | L: move cursor | K: "
+                "stop edit",
+                0);
+        } else {
+            ansi_print_help_msg("S: send data | K: edit data | M: read mode",
+                                0);
+        }
     }
 }

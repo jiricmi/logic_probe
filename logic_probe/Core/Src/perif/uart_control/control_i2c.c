@@ -66,16 +66,17 @@ void control_i2c_page(char received_char) {
             }
             dev_mode_request_frontend_change();
             break;
-        case 'i':
-        case 'I':
-            if (!perif->edit_settings) {
+        case 'k':
+        case 'K':
+            if (!perif->edit_settings &&
+                global_var.device_state == DEV_STATE_ADV_I2C_MASTER) {
                 perif->edit_vals = !perif->edit_vals;
             }
             perif->send_status = I2C_NONE;
             dev_mode_request_frontend_change();
             break;
-        case 'o':
-        case 'O':
+        case 'l':
+        case 'L':
             if (perif->edit_vals) {
                 perif->master_index++;
                 if (perif->master_index == I2C_ARRAY_SIZE) {

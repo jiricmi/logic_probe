@@ -1,6 +1,8 @@
 #ifndef GLOBAL_STRUCTS_H
 #define GLOBAL_STRUCTS_H
 
+#define PERIF_DELAY 200
+
 typedef enum {
     DEV_STATE_NONE,
     DEV_STATE_VOLTMETER,

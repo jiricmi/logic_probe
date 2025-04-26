@@ -21,9 +21,11 @@ void ansi_render_voltage_page(void) {
     if (global_var.adc_vars->resistance_mode) {
         ansi_render_resistance_circuit(8, ADC_MEASURE_CENTER);
         ansi_render_resistance_measure(global_var.adc_vars);
+        help_resistance();
     } else {
         ansi_render_title(ASCII_LOGO_VOLTAGE, MAGENTA_TEXT);
         ansi_render_voltage_measures(global_var.adc_vars);
+        help_voltage();
     }
 }
 
@@ -38,7 +40,7 @@ void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
     uint8_t row = 8;
 
     ansi_set_cursor(row - 3, ADC_MEASURE_CENTER + 3);
-    ansi_send_text("RESISTANCE", &ansi_bold_conf);
+    ansi_send_text("RESISTANCE (PB7)", &ansi_bold_conf);
 
     ansi_render_resistance_values(row, ADC_MEASURE_CENTER, ref_voltage,
                                   adc_ch->base_resistor, resistance);
@@ -213,5 +215,19 @@ void ansi_render_logic_probe_ch(uint32_t voltage, _Bool channel) {
         ansi_send_text(" H ", &v_text_conf);
     } else {
         ansi_send_text(" ? ", &conf_unknown_state);
+    }
+}
+
+void help_voltage(void) {
+    char msg[] = "1-4: On/Off channel | S: Save | M: resistance mode";
+    ansi_print_help_msg(msg, 0);
+}
+
+void help_resistance(void) {
+    if (ansi_page_voltage_edit_resistance) {
+        ansi_print_help_msg(
+            "0-9: enter number | x: delete number | e: exit edit mode", 0);
+    } else {
+        ansi_print_help_msg("e: edit base resistor | M: voltage mode", 0);
     }
 }

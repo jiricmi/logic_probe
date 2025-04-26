@@ -13,4 +13,8 @@ void ansi_render_read_vals(uart_perif_t* uart);
 
 void ansi_render_write_vals(uart_perif_t* uart);
 
+void help_read_uart(void);
+
+void help_write_uart(void);
+
 #endif

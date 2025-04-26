@@ -2,6 +2,8 @@
 #include <string.h>
 #include "advanced/i2c.h"
 #include "ansi_abstraction_layer.h"
+#include "ansi_pages.h"
+#include "global_structs.h"
 #include "global_vars.h"
 #include "loop.h"
 #include "stm32g0xx_hal_def.h"
@@ -38,22 +40,26 @@ void ansi_render_i2c_measure_page(void) {
             title = "I2C SLAVE";
             ansi_i2c_render_settings(perif);
             ansi_i2c_render_read_vals(perif);
+            help_slave_i2c();
             break;
 
         case DEV_STATE_ADV_I2C_MASTER:
             title = "I2C MASTER";
             ansi_i2c_master_render_settings(perif);
             ansi_i2c_master_vals(perif);
+            help_master_i2c();
             break;
 
         case DEV_STATE_ADV_I2C_SCAN:
             title = "I2C SCAN ADDRESS";
             ansi_i2c_render_scan(perif);
+            help_scan_i2c();
             break;
 
         case DEV_STATE_ADV_I2C_TEST_DISPLAY:
             title = "I2C TEST SSD1306";
             ansi_i2c_test_display_render_settings(perif);
+            help_display_i2c();
             break;
     }
 
@@ -190,7 +196,7 @@ void ansi_i2c_render_scan(i2c_perif_t* i2c_perif) {
     uint8_t count = 0;
 
     for (uint8_t i = 0; i < MAX_ADDRESSES; ++i) {
-        if (HAL_I2C_IsDeviceReady(i2c_perif->hi2c, i << 1, 1, HAL_MAX_DELAY) ==
+        if (HAL_I2C_IsDeviceReady(i2c_perif->hi2c, i << 1, 1, PERIF_DELAY) ==
             HAL_OK) {
             addresses[count++] = i;
         }
@@ -214,4 +220,43 @@ void ansi_i2c_render_scan(i2c_perif_t* i2c_perif) {
         if ((i + 1) % 10 == 0)
             ansi_send_string("\r\n     ");
     }
+}
+
+void help_slave_i2c(void) {
+    if (global_var.i2c_perif->edit_settings) {
+        ansi_print_help_msg("T: stop edit | 0-F: edit slave address", 1);
+        ansi_print_help_msg("X: delete adress | Y: change bit count", 0);
+    } else {
+        ansi_print_help_msg("T: edit settings | M: change mode", 0);
+    }
+}
+
+void help_master_i2c(void) {
+    if (global_var.i2c_perif->edit_settings) {
+        ansi_print_help_msg("T: stop edit | 0-F: edit slave address", 1);
+        ansi_print_help_msg(
+            "X: delete address | Y: change bit count | U: read/write bit", 0);
+
+    } else if (global_var.i2c_perif->edit_vals) {
+        ansi_print_help_msg(
+            "0-F: change val | X: delete val | L: move cursor | K: stop edit",
+            0);
+    } else {
+        ansi_print_help_msg(
+            "S: send | T: edit settings | K: edit vals  | M: change mode", 0);
+    }
+}
+
+void help_display_i2c(void) {
+    if (global_var.i2c_perif->edit_settings) {
+        ansi_print_help_msg(
+            "T: stop edit | 0-F: edit slave address | X: delete address", 0);
+
+    } else {
+        ansi_print_help_msg("S: send | T: edit settings | M: change mode", 0);
+    }
+}
+
+void help_scan_i2c(void) {
+    ansi_print_help_msg("M: change mode", 0);
 }

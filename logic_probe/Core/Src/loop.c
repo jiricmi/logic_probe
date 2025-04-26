@@ -4,6 +4,7 @@
 #include "advanced/neopixel.h"
 #include "advanced/spi.h"
 #include "advanced/uart.h"
+#include "ansi_abstraction_layer.h"
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"

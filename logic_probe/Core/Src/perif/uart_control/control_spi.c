@@ -33,8 +33,8 @@ void control_spi_page(char received_char) {
                 dev_mode_request_frontend_change();
             }
             break;
-        case 'y':
-        case 'Y':
+        case 'i':
+        case 'I':
             if (perif->edit_settings) {
                 perif->bytes_count++;
                 if (perif->bytes_count > SPI_ARRAY_SIZE) {
@@ -43,23 +43,23 @@ void control_spi_page(char received_char) {
                 dev_mode_request_frontend_change();
             }
             break;
-        case 'i':
-        case 'I':
+        case 'y':
+        case 'Y':
             if (perif->edit_settings) {
                 perif->CLK_phase = !perif->CLK_phase;
                 dev_mode_request_frontend_change();
             }
             break;
-        case 'l':
-        case 'L':
+        case 'k':
+        case 'K':
             if (!perif->edit_settings &&
                 global_var.device_state == DEV_STATE_ADV_SPI_MASTER) {
                 perif->edit_vals = !perif->edit_vals;
             }
             dev_mode_request_frontend_change();
             break;
-        case 'k':
-        case 'K':
+        case 'l':
+        case 'L':
             if (perif->edit_vals) {
                 perif->master_index++;
                 if (perif->master_index == I2C_ARRAY_SIZE) {

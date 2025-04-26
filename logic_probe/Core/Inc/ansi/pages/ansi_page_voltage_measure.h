@@ -47,4 +47,7 @@ void ansi_render_reference_voltage(uint32_t v_ref, uint32_t floating_point);
 
 void ansi_render_logic_probe_ch(uint32_t voltage, _Bool channel);
 
+void help_voltage(void);
+void help_resistance(void);
+
 #endif

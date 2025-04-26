@@ -3,11 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 #include "ansi_ascii_text.h"
+#include "global_vars.h"
 #include "main.h"
 #include "uart_control.h"
 
 #define TEXT_SEND_BUFF_SIZE 500
 #define CURSOR_BUFF_SIZE 40
+
+extern global_vars_t global_var;
 
 extern UART_HandleTypeDef UART;
 
@@ -124,6 +127,15 @@ void ansi_render_border(const char horizontal,
         ansi_set_cursor(i, TERMINAL_WIDTH - 1);
         ansi_send_text(vertical, &border_conf);
     }
+    if (global_var.current_page != ANSI_PAGE_MAIN &&
+        global_var.current_page != ANSI_PAGE_MAIN_ADVANCED) {
+        ansi_set_cursor(2, TERMINAL_WIDTH - 10);
+        ansi_send_text("q - quit", &ansi_default_conf);
+        ansi_set_cursor(3, TERMINAL_WIDTH - 12);
+        ansi_send_text("r - reload", &ansi_default_conf);
+    }
+    ansi_set_cursor(3, TERMINAL_WIDTH - 12);
+    ansi_send_text("r - reload", &ansi_default_conf);
 
     ansi_clear_format();
 }

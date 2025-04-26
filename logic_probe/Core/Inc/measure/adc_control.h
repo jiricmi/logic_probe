@@ -37,7 +37,7 @@
     {ADC_CHANNEL_VREFINT, ADC_CHANNEL_11, ADC_CHANNEL_0, ADC_CHANNEL_1, \
      ADC_CHANNEL_2}
 #define PIN_VALS {0, 7, 0, 1, 2};
-#define PIN_GPIO {'A', 'B', 'A', 'A'}
+#define PIN_GPIO {'A', 'B', 'A', 'A', 'A'}
 
 #endif
 

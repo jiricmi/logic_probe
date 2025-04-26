@@ -27,8 +27,8 @@ void control_neopixel_measure_page(char received_char) {
                 }
             }
             break;
-        case 't':
-        case 'T': {
+        case 'k':
+        case 'K': {
             neopixel->edit = !neopixel->edit;
             if (neopixel->rgb_index == 3 && neopixel->rgb_send[3] == 0) {
                 neopixel->rgb_send[3] = 1;
@@ -37,8 +37,8 @@ void control_neopixel_measure_page(char received_char) {
             dev_mode_request_frontend_change();
             break;
         }
-        case 'y':
-        case 'Y':
+        case 'l':
+        case 'L':
             neopixel->rgb_index++;
             if (neopixel->rgb_index == 4) {
                 neopixel->rgb_index = 0;

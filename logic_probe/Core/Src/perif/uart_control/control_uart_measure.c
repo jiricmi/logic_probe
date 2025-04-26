@@ -18,8 +18,8 @@ void control_uart_page(char received_char) {
                 dev_mode_change_mode(DEV_STATE_NONE);
             }
             break;
-        case 'e':
-        case 'E':
+        case 't':
+        case 'T':
             if (!perif->edit_send) {
                 perif->edit = !global_var.uart_perif->edit;
                 if (perif->edit) {
@@ -31,8 +31,8 @@ void control_uart_page(char received_char) {
                 dev_mode_request_frontend_change();
             }
             break;
-        case 'w':
-        case 'W':
+        case 'y':
+        case 'Y':
             if (perif->edit) {
                 if (perif->word_len < UART_WORD_LEN_LEN) {
                     ++perif->word_len;
@@ -43,8 +43,8 @@ void control_uart_page(char received_char) {
             dev_mode_request_frontend_change();
 
             break;
-        case 'p':
-        case 'P':
+        case 'u':
+        case 'U':
             if (perif->edit) {
                 if (perif->parity < UART_PARITY_LEN) {
                     ++perif->parity;
@@ -55,8 +55,8 @@ void control_uart_page(char received_char) {
             dev_mode_request_frontend_change();
 
             break;
-        case 'd':
-        case 'D':
+        case 'i':
+        case 'I':
             if (perif->edit) {
                 if (perif->stop_bits < UART_STOP_BIT_LEN) {
                     ++perif->stop_bits;
@@ -78,8 +78,8 @@ void control_uart_page(char received_char) {
                 }
             }
             break;
-        case 'a':
-        case 'A':
+        case 'k':
+        case 'K':
             if (!perif->edit &&
                 global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
                 perif->edit_send = !perif->edit_send;
@@ -87,8 +87,8 @@ void control_uart_page(char received_char) {
             }
             dev_mode_request_frontend_change();
             break;
-        case 'f':
-        case 'F':
+        case 'l':
+        case 'L':
             if (perif->edit_send &&
                 global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
                 perif->edit_index++;
@@ -106,8 +106,8 @@ void control_uart_page(char received_char) {
             }
             dev_mode_request_frontend_change();
             break;
-        case 'i':
-        case 'I':
+        case 'o':
+        case 'O':
             if (global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
                 perif->symbols_to_send++;
                 if (perif->symbols_to_send > UART_SEND_SIZE) {
