@@ -54,7 +54,7 @@ void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
 void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col) {
     // clang-format off
     const char* circuit[] = {
-        "    Vcc",
+        "    Vdd",
         "     |",
         "     |",
         " [R1 BASE]",

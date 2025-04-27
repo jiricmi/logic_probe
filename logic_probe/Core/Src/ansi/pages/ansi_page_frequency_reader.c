@@ -80,7 +80,7 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
 }
 
 void ansi_get_detector_mode(detector_mode_t mode) {
-    ansi_set_cursor(FREQ_READER_ROW_MODE, TERMINAL_CENTER);
+    ansi_set_cursor(FREQ_READER_ROW_MODE, TERMINAL_CENTER - 8);
     ansi_text_config_t text_conf = {WHITE_TEXT, "", 1};
 
     switch (mode) {
@@ -104,7 +104,7 @@ void ansi_get_detector_mode(detector_mode_t mode) {
 
 void ansi_help_reader(void) {
     if (global_var.signal_detector->mode == DETECTOR_MODE_FREQUENCY) {
-        ansi_print_help_msg("T: change period | M: one pulse mode", 0);
+        ansi_print_help_msg("T: change gate time | M: one pulse mode", 0);
     } else {
         ansi_print_help_msg("D: delete catch flag | M: change mode", 0);
     }

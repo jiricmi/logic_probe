@@ -15,7 +15,6 @@ void ansi_render_impulse_generator_page(void) {
     ansi_render_border('%', "%", "");
     ansi_render_title(ASCII_LOGO_SIGNAL_GENERATOR, CYAN_TEXT);
     ansi_render_impulse_generator(global_var.signal_generator);
-    help_signal_generator();
 }
 
 void ansi_render_impulse_generator(const sig_generator_t* generator) {
@@ -43,24 +42,25 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
     snprintf(buff, 50, "Repeats: %2ux", generator->repeat);
     ansi_send_text(buff, &ansi_default_conf);
 
-    ansi_set_cursor(TERMINAL_HEIGHT - 3, 10);
+    ansi_set_cursor(TERMINAL_HEIGHT - 5, 10);
     if (generator->edit_period) {
         ansi_send_text("Editing period!", &ansi_red_bold_conf);
     } else if (generator->edit_repeat) {
         ansi_send_text("Editing repeat!", &ansi_red_bold_conf);
     }
+    help_signal_generator();
 }
 
 void help_signal_generator(void) {
     if (global_var.signal_generator->edit_period) {
         ansi_print_help_msg(
-            "0-9: change period | X: delete period | Y: stop edit", 0);
+            "0-9: change period | X: delete period | E: stop edit", 0);
     } else if (global_var.signal_generator->edit_repeat) {
         ansi_print_help_msg(
-            "0-9: change repeat | X: delete repeat | E: stop edit", 0);
+            "0-9: change repeat | X: delete repeat | Y: stop edit", 0);
     } else {
         ansi_print_help_msg(
-            "T: toggle output(High/Low)| S: send pulse| E: edit repeat| Y: "
+            "T: toggle output(High/Low)| S: send pulse| Y: edit repeat| E: "
             "edit period ",
             0);
     }

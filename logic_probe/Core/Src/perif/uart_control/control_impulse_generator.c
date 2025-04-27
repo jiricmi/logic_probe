@@ -34,11 +34,16 @@ void control_impulse_generator_page(unsigned char received_char) {
                     generator->edit_period = true;
                 }
             }
+            dev_mode_request_frontend_change();
+
             break;
         case 'y':
         case 'Y':
             if (!generator->edit_period) {
                 generator->edit_repeat = !generator->edit_repeat;
+                if (!generator->edit_repeat && generator->repeat == 0) {
+                    generator->repeat = 1;
+                }
                 dev_mode_request_frontend_change();
             }
             break;

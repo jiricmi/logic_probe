@@ -16,7 +16,7 @@ void init_generator(sig_generator_t* generator, TIM_HandleTypeDef* htim) {
     generator->period_us_temp = generator->period_us;
     generator->htim = htim;
     generator->edit_period = false;
-    generator->repeat = 10;
+    generator->repeat = 1;
 }
 
 void generator_change_mode(sig_generator_t* generator) {
