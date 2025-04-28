@@ -26,10 +26,13 @@
           clang-tools
           glibc_multi
           stm32flash
+          python3
+          picotool
         ];
 
         shellHook = ''
           export OPENOCD_PATH="${pkgs.openocd}"
+          export PICO_SDK_PATH="/home/jiricmi/repos/pico-sdk/"
         '';
       };
     };
