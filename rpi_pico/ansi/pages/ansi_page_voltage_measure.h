@@ -22,7 +22,6 @@ void ansi_render_resistance_circuit(const uint8_t row, const uint8_t col);
 
 void ansi_render_resistance_values(const uint8_t row,
                                    const uint8_t col,
-                                   const uint32_t volt_ref,
                                    const uint32_t base_resistor,
                                    const uint32_t resistance);
 

@@ -19,6 +19,7 @@ typedef struct {
     uint8_t pinout[ADC_NUM_CHANNELS];
     uint32_t voltage_measures[ADC_NUM_CHANNELS][ADC_CHANNEL_SAMPLES];
     uint8_t measures_index;
+    bool edit_resistance;
 } adc_vars_t;
 
 void adc_init_struct(adc_vars_t* perif);

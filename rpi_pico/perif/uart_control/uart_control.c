@@ -1,6 +1,7 @@
 #include "uart_control.h"
 #include <stdbool.h>
 #include "ansi_pages.h"
+#include "control_voltage_measure.h"
 #include "global_vars.h"
 #include "loop.h"
 
@@ -16,7 +17,8 @@ void get_current_control(const char received_char) {
             control_main_page(received_char);
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
-            // control_voltage_page(received_char);
+        case ANSI_PAGE_OHMMETER_MEASURE:
+            control_voltage_page(received_char);
             break;
         case ANSI_PAGE_FREQUENCY_READER:
             //  control_frequency_reader_page(received_char,

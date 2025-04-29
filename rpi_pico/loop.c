@@ -82,7 +82,9 @@ void dev_mode_run(void) {
             delay = 250;
             break;
         case DEV_STATE_OHMMETER:
-            // ansi_render_resistance_measure(global_var.adc_vars);
+            adc_get_avg_voltages(adc_perif);
+            ansi_render_resistance_measure(adc_perif);
+            delay = 250;
             break;
         case DEV_STATE_FREQUENCY_READ:
             //  ansi_generate_frequency_reader(global_var.signal_detector);

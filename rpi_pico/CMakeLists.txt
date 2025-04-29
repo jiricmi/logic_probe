@@ -16,6 +16,7 @@ add_executable(
   ansi/pages/ansi_page_voltage_measure.c
   ansi/ansi_pages.c
   perif/uart_control/uart_control.c
+  perif/uart_control/control_voltage_measure.c
   measure/adc_control.c
   probe_usb.c
   probe_error.c

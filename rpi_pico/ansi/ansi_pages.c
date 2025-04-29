@@ -16,6 +16,7 @@ void ansi_render_current_page(void) {
             ansi_render_main_page();
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
+        case ANSI_PAGE_OHMMETER_MEASURE:
             ansi_render_voltage_page();
             break;
         case ANSI_PAGE_FREQUENCY_READER:
