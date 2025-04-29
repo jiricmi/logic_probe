@@ -28,24 +28,12 @@ void ansi_render_resistance_values(const uint8_t row,
 
 void ansi_render_voltage_measures(const adc_vars_t* adc_ch);
 
-void ansi_render_channel_voltage(uint32_t voltage,
-                                 uint8_t channel,
-                                 uint8_t pin,
-                                 char gpio,
-                                 uint32_t floating_point);
+void ansi_render_channel_voltage(const uint32_t voltage,
+                                 const uint8_t channel,
+                                 const uint8_t pin_num,
+                                 const uint32_t floating_point);
 
-void ansi_render_state_channel(const uint8_t row,
-                               const uint8_t col,
-                               const uint8_t channel,
-                               const adc_vars_t* adc_ch);
-
-void ansi_render_adc_change_message(const uint8_t row,
-                                    const uint8_t col,
-                                    const adc_vars_t* adc_ch);
-
-void ansi_render_reference_voltage(uint32_t v_ref, uint32_t floating_point);
-
-void ansi_render_logic_probe_ch(uint32_t voltage, _Bool channel);
+void ansi_render_logic_probe_ch(const uint32_t voltage);
 
 void help_voltage(void);
 void help_resistance(void);

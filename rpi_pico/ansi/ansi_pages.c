@@ -5,6 +5,7 @@
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
 #include "pages/ansi_page_main.h"
+#include "pages/ansi_page_voltage_measure.h"
 
 extern global_vars_t global_var;
 
@@ -15,7 +16,7 @@ void ansi_render_current_page(void) {
             ansi_render_main_page();
             break;
         case ANSI_PAGE_VOLTAGE_MEASURE:
-            //   ansi_render_voltage_page();
+            ansi_render_voltage_page();
             break;
         case ANSI_PAGE_FREQUENCY_READER:
             //    ansi_render_frequency_reader_page();

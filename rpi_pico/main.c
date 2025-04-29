@@ -1,32 +1,26 @@
-#include "pico/multicore.h"
+#include <stdio.h>
+#include "global_vars.h"
+#include "hardware/adc.h"
+#include "loop.h"
+#include "measure/adc_control.h"
 #include "pico/stdlib.h"
-#include "pico/util/queue.h"
-#include "tusb.h"
+#include "probe_usb.h"
 
-queue_t fronta_znaku;  // Fronta pro komunikaci
+extern global_vars_t global_var;
 
-void core1_entry() {
-    while (true) {
-        tud_task();  // Zpracování USB (na Core0)
-        if (tud_cdc_available()) {
-            char znak;
-            tud_cdc_read(&znak, 1);
-            queue_try_add(&fronta_znaku, &znak);  // Odeslat do Core1
-        }
-    }
+void setup() {
+    stdio_init_all();
+    adc_init();
+    adc_set_temp_sensor_enabled(false);
+    usb_init(&global_var.usb_perif);
+    adc_init_struct(&global_var.adc_perif);
 }
 
 int main() {
-    stdio_init_all();
-    queue_init(&fronta_znaku, sizeof(char), 32);  // Fronta pro 32 znaků
-    multicore_launch_core1(core1_entry);
+    setup();
+    adc_start_measure(&global_var.adc_perif);
 
     while (true) {
-        tud_task();  // Zpracování USB (na Core0)
-        if (tud_cdc_available()) {
-            char znak;
-            tud_cdc_read(&znak, 1);
-            queue_try_add(&fronta_znaku, &znak);  // Odeslat do Core1
-        }
+        dev_mode_run();
     }
 }

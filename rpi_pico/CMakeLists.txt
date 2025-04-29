@@ -13,16 +13,23 @@ add_executable(
   ansi/ansi_abstraction_layer.c
   ansi/ansi_ascii_text.c
   ansi/pages/ansi_page_main.c
+  ansi/pages/ansi_page_voltage_measure.c
   ansi/ansi_pages.c
+  perif/uart_control/uart_control.c
+  measure/adc_control.c
+  probe_usb.c
   probe_error.c
-  global_vars.c)
+  global_vars.c
+  loop.c)
 
 target_include_directories(
   ${CMAKE_PROJECT_NAME}
   PRIVATE ${CMAKE_SOURCE_DIR}/ansi
+  PRIVATE ${CMAKE_SOURCE_DIR}/measure
+  PRIVATE ${CMAKE_SOURCE_DIR}/perif/uart_control
   PRIVATE ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(logic_probe pico_stdlib pico_multicore)
+target_link_libraries(logic_probe pico_stdlib pico_multicore hardware_adc)
 
 pico_enable_stdio_usb(logic_probe 1)
 pico_enable_stdio_uart(logic_probe 0)
