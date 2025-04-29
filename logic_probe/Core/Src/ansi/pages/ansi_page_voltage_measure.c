@@ -81,18 +81,22 @@ void ansi_render_resistance_values(const uint8_t row,
                                    const uint32_t base_resistor,
                                    const uint32_t resistance) {
     char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
+    char number_buffer[20];
 
     ansi_set_cursor(row, col + VOLTAGE_TEXT_OFFSET);
     snprintf(text_buffer, sizeof(text_buffer), " (%4lu mV)", volt_ref);
     ansi_send_text(text_buffer, &ansi_bold_conf);
 
     ansi_set_cursor(row + 3, col + BASE_RESISTOR_OFFSET);
-    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %7lu", base_resistor);
+    format_number_with_spaces(base_resistor, number_buffer);
+    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %10.10s", number_buffer);
     ansi_send_text(text_buffer, &ansi_bold_conf);
 
     ansi_text_config_t result_text_conf = {"", GREEN_BG, true};
     ansi_set_cursor(row + 7, col + RESISTANCE_OFFSET);
-    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %7lu ", resistance);
+    format_number_with_spaces(resistance, number_buffer);
+    snprintf(text_buffer, sizeof(text_buffer), "\u03A9 %13.13s ",
+             number_buffer);
     ansi_send_text(text_buffer, &result_text_conf);
 }
 
