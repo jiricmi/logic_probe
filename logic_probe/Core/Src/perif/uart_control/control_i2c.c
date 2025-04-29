@@ -34,6 +34,17 @@ void control_i2c_page(char received_char) {
             }
             dev_mode_request_frontend_change();
             break;
+        case 'g':
+        case 'G':
+            if (!perif->edit_vals && !perif->edit_settings) {
+                memset(perif->slave_received_data, 0,
+                       sizeof(perif->slave_received_data));
+                memset(perif->master_read_send_data, 0,
+                       sizeof(perif->master_read_send_data));
+                dev_mode_update_perif();
+                dev_mode_request_frontend_change();
+            }
+            break;
         case 'y':
         case 'Y':
             if (perif->edit_settings) {
@@ -79,7 +90,7 @@ void control_i2c_page(char received_char) {
         case 'L':
             if (perif->edit_vals) {
                 perif->master_index++;
-                if (perif->master_index == I2C_ARRAY_SIZE) {
+                if (perif->master_index >= perif->bytes_to_catch) {
                     perif->master_index = 0;
                 }
             }

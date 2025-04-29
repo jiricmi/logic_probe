@@ -1,4 +1,5 @@
 #include "control_spi.h"
+#include <string.h>
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
@@ -24,7 +25,18 @@ void control_spi_page(char received_char) {
                 perif->edit_settings = !perif->edit_settings;
             }
             perif->error = SPI_ERROR_NONE;
-            dev_mode_request_frontend_change();
+            if (perif->edit_settings) {
+                dev_mode_update_perif();
+                dev_mode_request_frontend_change();
+            }
+            break;
+        case 'g':
+        case 'G':
+            if (!perif->edit_settings && !perif->edit_vals) {
+                memset(perif->data, 0, sizeof(perif->data));
+                dev_mode_update_perif();
+                dev_mode_request_frontend_change();
+            }
             break;
         case 'u':
         case 'U':
@@ -62,7 +74,7 @@ void control_spi_page(char received_char) {
         case 'L':
             if (perif->edit_vals) {
                 perif->master_index++;
-                if (perif->master_index == I2C_ARRAY_SIZE) {
+                if (perif->master_index >= perif->bytes_count) {
                     perif->master_index = 0;
                 }
             }

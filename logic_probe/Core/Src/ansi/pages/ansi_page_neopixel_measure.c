@@ -14,11 +14,12 @@ void ansi_render_neopixel_measure_page(void) {
     ansi_render_border('^', "^", "");
     if (global_var.device_state == DEV_STATE_ADV_NEOPIXEL_READ) {
         ansi_set_cursor(4, ADC_MEASURE_CENTER);
-        ansi_send_text("NEOPIXEL READ (PIN PA0)", &ansi_bold_conf);
+        ansi_send_text("NEOPIXEL READ (PIN PA0/" FREQUENCY_PIN ")",
+                       &ansi_bold_conf);
         ansi_render_neopixel_measure_vals(global_var.adv_neopixel_measure);
     } else if (global_var.device_state == DEV_STATE_ADV_NEOPIXEL_WRITE) {
         ansi_set_cursor(4, ADC_MEASURE_CENTER);
-        ansi_send_text("NEOPIXEL SEND (PIN PA13)", &ansi_bold_conf);
+        ansi_send_text("NEOPIXEL SEND (PIN PA13/18)", &ansi_bold_conf);
         ansi_render_neopixel_send_vals(global_var.adv_neopixel_measure);
     }
     help_neopixel();

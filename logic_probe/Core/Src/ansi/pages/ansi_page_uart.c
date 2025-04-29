@@ -11,11 +11,11 @@ void ansi_render_uart_measure_page(void) {
     ansi_render_settings(global_var.uart_perif);
     ansi_set_cursor(4, ADC_MEASURE_CENTER);
     if (global_var.device_state == DEV_STATE_ADV_UART_READ) {
-        ansi_send_text("UART READ (PIN PA3)", &ansi_bold_conf);
+        ansi_send_text("UART READ (PIN PA3/10)", &ansi_bold_conf);
         ansi_render_read_vals(global_var.uart_perif);
         help_read_uart();
     } else if (global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
-        ansi_send_text("UART WRITE (PIN PA2)", &ansi_bold_conf);
+        ansi_send_text("UART WRITE (PIN PA2/9)", &ansi_bold_conf);
         ansi_render_write_vals(global_var.uart_perif);
         help_write_uart();
     }

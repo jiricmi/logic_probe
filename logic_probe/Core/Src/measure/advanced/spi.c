@@ -40,7 +40,7 @@ void spi_init_perif(spi_perif_t* perif) {
     perif->hspi->Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
     perif->hspi->Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
     if (global_var.device_state != DEV_STATE_ADV_SPI_SLAVE) {
-        perif->hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+        perif->hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
     }
     if (HAL_SPI_Init(perif->hspi) != HAL_OK) {
         Error_Handler();

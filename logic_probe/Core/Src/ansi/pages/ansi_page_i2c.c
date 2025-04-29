@@ -24,7 +24,7 @@ static void render_edit_status(uint8_t edit_flag) {
 void ansi_render_i2c_measure_page(void) {
     ansi_render_border('&', "&", "");
 
-    const char* header = "SCL - PB8 | SDA - PB9";
+    const char* header = "SCL - PB8/1 | SDA - PB9/2";
     ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
     ansi_send_text(header, &ansi_bold_conf);
 
@@ -227,7 +227,8 @@ void help_slave_i2c(void) {
         ansi_print_help_msg("T: stop edit | 0-F: edit slave address", 1);
         ansi_print_help_msg("X: delete adress | Y: change bit count", 0);
     } else {
-        ansi_print_help_msg("T: edit settings | M: change mode", 0);
+        ansi_print_help_msg(
+            "T: edit settings | M: change mode | G: reset perif", 0);
     }
 }
 
@@ -243,7 +244,9 @@ void help_master_i2c(void) {
             0);
     } else {
         ansi_print_help_msg(
-            "S: send | T: edit settings | K: edit vals  | M: change mode", 0);
+            "S: send | T: edit settings | K: edit vals  | M: change mode | G: "
+            "reset perif",
+            0);
     }
 }
 
@@ -253,7 +256,8 @@ void help_display_i2c(void) {
             "T: stop edit | 0-F: edit slave address | X: delete address", 0);
 
     } else {
-        ansi_print_help_msg("S: send | T: edit settings | M: change mode", 0);
+        ansi_print_help_msg(
+            "S: send | T: edit settings | M: change mode | G: reset perif", 0);
     }
 }
 

@@ -27,8 +27,8 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
         char number_buff[NUM_BUFF_LEN];
         format_number_with_spaces(detector->frequency, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        snprintf(buff, BASE_TEXT_BUFF_LEN, "Frequency (A0): %9.9s Hz",
-                 number_buff);
+        snprintf(buff, BASE_TEXT_BUFF_LEN,
+                 "Frequency (PA0/" FREQUENCY_PIN "): %9.9s Hz ", number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         format_number_with_spaces(detector->rec_frequency, number_buff);

@@ -33,6 +33,8 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
     memcpy(adc_ch->pin, pin_values, sizeof(pin_values));
     char gpio_pins[] = PIN_GPIO;
     memcpy(adc_ch->gpio_pin, gpio_pins, sizeof(gpio_pins));
+    uint8_t pin_real[] = PIN_REAL;
+    memcpy(adc_ch->pin_real, pin_real, sizeof(pin_real));
 
     adc_ch->n_active_channels = adc_count_active_channels(adc_ch);
 

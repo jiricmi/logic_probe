@@ -19,7 +19,7 @@ static void render_edit_spi_status(_Bool edit) {
 void ansi_render_spi_measure_page(void) {
     ansi_clear_terminal();
     ansi_render_border('%', "%", "");
-    const char* header = "SCK - PA5 | MISO - PA6 | MOSI - PA7 | NSS - PB0";
+    const char* header = "SCK-PA5/12 | MISO-PA6/13 | MOSI-PA7/14 | NSS-PB0/15";
     ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
     ansi_send_text(header, &ansi_bold_conf);
 
@@ -157,7 +157,8 @@ void help_slave_spi(void) {
         ansi_print_help_msg("T: stop edit | U: Polarity | Y: Phase ", 1);
         ansi_print_help_msg("I: byte count | O: MSB/LSB", 0);
     } else {
-        ansi_print_help_msg("T: edit settings | M: change mode", 0);
+        ansi_print_help_msg(
+            "T: edit settings | M: change mode | G: reset perif", 0);
     }
 }
 
@@ -171,7 +172,9 @@ void help_master_spi(void) {
 
     } else {
         ansi_print_help_msg(
-            "S: send | T: edit settings | K: edit vals | M: change mode", 0);
+            "S: send | T: edit settings | K: edit vals | M: change mode | G: "
+            "reset perif",
+            0);
     }
 }
 
@@ -180,6 +183,6 @@ void help_spi_display(void) {
         ansi_print_help_msg("T: stop edit | U: Polarity | Y: Phase ", 1);
         ansi_print_help_msg("I: byte count | O: MSB/LSB | P: read/write", 0);
     } else {
-        ansi_print_help_msg("S: send | T: edit settings | M: change mode", 0);
+        ansi_print_help_msg("S: send | T: edit settings | M: change mode | G: reset perif", 0);
     }
 }

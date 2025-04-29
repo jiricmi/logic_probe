@@ -28,7 +28,8 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
     }
     ansi_set_cursor(10, 10);
     format_number_with_spaces(generator->period_us_temp, number_buff);
-    snprintf(buff, 50, "Pulse width (A0): %9.9s us", number_buff);
+    snprintf(buff, 50, "Pulse width (PA0/" FREQUENCY_PIN "): %9.9s us",
+             number_buff);
     ansi_send_text(buff, &ansi_default_conf);
     GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
     ansi_set_cursor(11, 10);

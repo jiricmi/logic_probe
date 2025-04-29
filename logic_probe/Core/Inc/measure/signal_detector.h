@@ -9,6 +9,12 @@
 #define DETECTOR_N_OF_EDGES 3
 #define DETECTOR_N_OF_WIDTHS 2
 
+#if defined(SOP8)
+#define FREQUENCY_PIN "4"
+#else
+#define FREQUENCY_PIN "7"
+#endif
+
 typedef enum { DET_EDGE1_RISE, DET_EDGE2_FALL, DET_EDGE3_RISE } det_n_edge_t;
 
 typedef enum { DET_LOW_WIDTH, DET_HIGH_WIDTH } det_n_width_t;

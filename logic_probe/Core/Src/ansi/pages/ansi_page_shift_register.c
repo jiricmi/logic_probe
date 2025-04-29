@@ -12,7 +12,7 @@ void ansi_render_shift_register_page(void) {
     ansi_set_cursor(4, ADC_MEASURE_CENTER);
     ansi_send_text("SHIFT REGISTER", &ansi_bold_conf);
     ansi_set_cursor(5, ADC_MEASURE_CENTER - 4);
-    ansi_send_text("PB7-CLOCK | PA0-DATA | PA1-OE", &ansi_bold_conf);
+    ansi_send_text("PB7/1-CLOCK | PA0/7-DATA | PA1/8-OE", &ansi_bold_conf);
     ansi_set_cursor(7, ADC_MEASURE_CENTER - 10);
     char buff[REGISTER_BUFF_TEXT];
     for (uint8_t i = 0; i < SHIFT_REGISTER_BIT_COUNT; ++i) {
