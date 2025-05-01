@@ -104,60 +104,50 @@ kteří se s elektronikou setkávají poprvé.
 V této práci budou představeny požadavky na zařízení a realizace této logické
 sondy.
 = Rozbor problematiky
-== Technické požadavky<cil>
-V rámci bakalářské práce bude navržena a realizována multifunkční diagnostická logická sonda na platformě STM32. V návrhu sondy je potřeba zohlednit následující klíčové oblasti: jednoduchost ovládání i uživateli, které nemají zkušenosti s používáním pokročilých diagnostických nástrojů, rychlá realizovatelnost sondy na nepájivém kontaktním poli a praktičnost ve výuce. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF#footnote[Point of failure - Bodů selhání].
+== Motivace <rozbor-vyuka>
+Během laboratorních cvičení zaměřených na logické obvody a vestavné systémy studenti navrhují digitální obvody a programují mikrokontroléry (MCU). Při vývoji však mohou narazit na situaci, kdy jejich řešení úlohy náhle přestane fungovat podle očekávání, aniž by byla zjevná příčina problému. Najít závadu může být velice časově náročné jak pro studenta, tak pro vyučujícího.
+ 
+Při návrhu softwaru pro mikrokontroléry je klíčové průběžně ověřovat funkčnost pomocí pulsů. Studenti tak mohou například zjistit, zda je generován výstupní pulz požadované frekvence, zda obvod správně reaguje na vstupní impuls, nebo zda je signál přenášen přes daný vodič. Praktickým příkladem je vývoj čítače pulzů s výstupem na 7-segmentový displej – zde sonda umožňuje okamžitě validovat, zda software správně zpracovává vstupy a aktualizuje výstup. Studenti při sestavování obvodů také často čelí problémům jako nefunkční komponenty (spálené LED, vadné senzory) nebo chybám v zapojení – například prohození Tx/Rx vodičů UART, chybějící pull-up rezistory na I2C sběrnici, nebo nesoulad s referenčním schématem. Takové chyby vedou k časově náročnému hledání závad. 
 
-Firmware a hardware bude vyvinut pro STM32G030 v pouzdře SOP8 a TSSOP20, které svou nabídkou periferií jsou vhodné pro jednoduché sestavení. Také bude vyvinuta v omezené míře na Rasbeperry Pi Pico. Sonda je vytvořena za účelem použití při výuce. Hlavní využití Sonda bude vybavena tzn. "lokálním režimem" a "terminálovým režimem".
+Standardní logická sonda je elektronické zařízení sloužící k diagnostice logických obvodů. Pomáhá určovat logické úrovně a detekovat pulsy. Je to jeden ze standardních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilita použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu. Další běžné nástroje pro diagnostiku logických obvodů jsou osciloskop a logický analyzátor. Tyto nástroje jsou vhodné pro diagnostiku např. I2C sběrnice nebo SPI rozhraní, kdy uživatel může vidět konkrétní průběh signálu. Pro výukové účely však mají zásadní nevýhody: Pořizování analyzátorů a osciloskopů může být velice nákladné, jejich ovládání vyžaduje pokročilé znalosti, a student musí nejprve pochopit, jak s přístrojem zacházet. Navíc nabízejí spoustu funkcí, které jsou pro účely výuky nadbytečné a mohou začátečníky dezorientovat.
 
-Lokální režim bude sloužit pro rychlou základní analýzu obvodů s indikací pomocí WS2812 RGB LED a ovládání skrze jedno tlačítko. Bude fungovat bez nutnosti připojení zařízení k PC skrze USB nebo USB převodník. Tlačítkem bude uživatel přepínat módy, kanály a úrovně. Lokální režim bude mít následující vlastnosti: nastavení úrovní kanálů, odchytávání pulsů, prověření logické úrovně a generace pravidelných pulsů.
+Multifunkční diagnostická logická sonda (dále jen sonda), která je navržena v rámci této bakalářské práce má za cíl, minimalizovat zmíněné problémy konvenčních diagnostických nástrojů a obecně zpřístupnit diagnostiku studentům, kteří jsou stále ve fázi učení. Sonda, která je vyvinuta, přináší levné řešení, které obsahuje potřebné funkce pro základní diagnostiku logických obvodů a snaží se studentovi zjednodušit celý proces hledání problému v řešení úlohy i bez hlubokých předchozích znalostí s používáním pokročilých diagnostických nástrojů. 
 
-Terminálový režim bude poskytovat konkrétní měření veličin digitálního obvodu a testování sběrnic. Logická sonda bude v tomto režimu ovládána UART pomocí převodníku UART/USB. Sonda takto poskytne uživatelské rozhraní, které se vygeneruje na straně mikrokontroleru a zobrazí skrze terminálovou aplikací podporující tzn. ANSI sekvence#footnote[Např. PuTTY, GTKTerm...].
+Student si může tak osvojit metodiku debugování od základních kontrol napájení, přes odchytávání pulsů po analýzu komunikačních periferií. Možnost sestrojení sondy na nepájivém kontaktním poli poskytuje flexibilitu vyučujícím vytvořit rychle multifunkční logickou sondu. Jelikož návrh bere zřetel na možnost realizace studentem, je při sestavování použito minimální počet externích součástek. Tímto je možno dosáhnout úspory času na straně vyučujícího, kdy vyučující odkáže na použití sondy při hledání problému. Použití MCU typu STM32 a RP2040 umožňuje transparentnost, a možnost hlubšího pochopení fungování sondy z důvodu velkého množství manuálů a návodů na internetu.
+
+== Požadavky<cil>
+V rámci bakalářské práce bude navržena a realizována multifunkční diagnostická logická sonda (dále jen sonda) na platformě STM32. V návrhu sondy je potřeba zohlednit následující klíčové oblasti: jednoduchost ovládání i uživateli, kteří nemají zkušenosti s používáním pokročilých diagnostických nástrojů, rychlá realizovatelnost sondy na nepájivém kontaktním poli a praktičnost ve výuce. Aby nástroj nebylo komplikované sestavit, je nutné aby bylo využito co nejméně externích součástek. Tím je redukován čas sestavení a také je sníženo množství POF.
+
+Firmware a hardware sondy jsou primárně navrženy pro mikrokontrolér STM32G030 v pouzdrech SOP8 a TSSOP20, které díky integrovaným periferiím (UART, GPIO, časovače) umožňují jednoduché sestavení i na nepájivém kontaktním poli. Sonda bude s omezenou verzí realizována i na Raspberry Pi Pico. Sonda bude vybavena tzv. "lokálním režimem" a "terminálovým režimem".
+
+Lokální režim bude sloužit pro rychlou základní diagnostiku obvodů s indikací pomocí RGB LED a ovládání skrze jedno tlačítko. Bude fungovat bez nutnosti připojení zařízení k PC skrze  UART-USB převodník. Tlačítkem bude uživatel přepínat módy, kanály a úrovně. Lokální režim bude mít následující vlastnosti: nastavení úrovní kanálů, odchytávání pulsů, prověření logické úrovně a generace pravidelných pulsů.
+
+Terminálový režim bude poskytovat konkrétní měření veličin logického obvodu a diagnostiku sběrnic. Sonda bude v tomto režimu ovládána odesíláním symbolů za pomocí periferie UART skrze převodník UART-USB. Sonda takto poskytne uživatelské rozhraní, které se vygeneruje na straně mikrokontroleru a zobrazí skrze terminálovou aplikací podporující tzn. ANSI sekvence#footnote[Např. PuTTY, GTKTerm...]. Oproti ovládání prostřednictvím specializované aplikace vyvinuté namíru sondě, tento přístup zajišťuje přenositelnost napříč operačními systémy a nenutí uživatele instalovat další software, což je výhodné zejména na sdílených zařízeních, jako jsou fakultní počítače.
 
 Sonda v tomto režimu bude nabízet funkce základní a pokročilé. Mezi základní funkce patří: detekce logických úrovní, detekce impulsů, určení jejich frekvence, nastavení logických úrovní, generace impulsů, měření napětí a měření odporu. Mezi pokročilé náleží diagnostika sběrnic UART, I2C, SPI a Neopixel. Sběrnice sonda bude pasivně poslouchat nebo aktivně vysílat. Získaná data budou zobrazováná skrze terminálovou aplikaci.
-== Využití ve výuce<rozbor-vyuka>
-Logická sonda je elektronické zařízení sloužící k diagnostice a analýze digitálních obvodů. Pomáhá určovat logické úrovně, detekovat pulsy, měřit frekvenci a další. Je to jeden ze standartních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilitou použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu.
 
-Další ze základních nástrojů ve výuce je multimetr. Multimetr kombinuje několik funkcí jako např. voltmetr, ampermetr, ohmmetr. Tyto nástroje jsou podstatné pro určení základních veličin v obvodu, proto je tento nástroj nezbytný při sestavování obvodu ve výuce. Student napřiklad využije multimetr pro zjistění odporu rezistoru pokud nezná barevné kódování na obalu, pro zjistění kontaktování na nepájivém kontaktním poli či pro ověření správného napětí na napájení.
-
-Logická sonda je sestrojena za účelem sloučení funkcí těchto standartních nástrojů, do jednoho multifunkčního zařízení, což zjednoduší studentovi celkovou analýzu. Pro nástroj používaný ve výuce je podstatné aby nástroj bylo pokud možno využívat i bez předchozích zkušeností. Student si může osvojit metodiku debugování od základních kontrol napájení až po analýzu časových signálů.
-
-Pokud navrhne softwarové řešení zadaného problému, je žádoucí toto řešení během vývoje testovat pulzy. Jedná se například o testování zda je pulz vysílán po vodiči, zda je na výstupu správná frekvence nebo testování reakce na vyslaný impuls. Typické využití následujích nástrojů může být během tvorby čítače pulzů a zobrazování hodnoty na 7-segmentovém displeji. Sonda vzhledem k těmto vlastnostem může sloužit jako univerzální nástroj pro studenské projekty od jednoduchých čítačů po řídící systémy.
-
-Během sestavování hardwarového řešení je nutné vyloučit nefunkčnost hardwarových součástí obvodu. Potíže mohou činit například spálené RGB LED, nefunkční disleje, či senzory. Kromě vyloženého selhání hardwaru se vývojář může setkat s chybným zapojením součástky, která neodpovídá referenčního manuálu. Typicky: prohození vodičů na UART, zapomenutí pull up rezistorů na vodičích I2C apod. Zmíněné problémy mohou způsobit zdlouhavé hledání chyby. Pro zjistění problému je podstatné ověřit správnosti komunikace mezi částmi obvodu a tak vyloužit případný hardwarový problém.
-
-Pořizování běžných analyzátorů může být velice nákladné, protože je těchto přístrojů je potřeba velký počet. Sestrojení sondy na nepájivém kontaktním poli poskytuje flexibilitu vyučujícím vytvořit rychle logickou sondu. Jelikož návrh bere zřetel na možnost realizace studentem, je při sestavování použito minimální počet externích součástek. Použití MCU typu STM32 a RP2040 umožňuje transparentní výuku hardwarového designu.
-
-== Volba mikrokontrolerů
-=== STM32G030
-//#todo["doc. Fischer hovořil, že není vhodné leaknout problem s G031 a G030 mám tu psát o G030 nebo G031"]
-Pro návrh v této bakalářské práci byl zvolen mikrořadič STM32G030 od firmy
+== Volba mikrokontrolerů pro realizaci sondy
+=== MCU STM32G031
+Pro návrh v této bakalářské práci byl zvolen mikrořadič STM32G031 od firmy
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
 energeticky efektivní a nabízí dostatečný výkon pro běžné vestavné aplikace.
-Obsahuje 32 KiB flash paměť a 8 KiB SRAM @STM32G0-REF.
-
-Pro řadu G030 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
+Obsahuje 64 KiB flash paměť a 8 KiB SRAM @STM32G0-REF. Pro řadu G031 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněné pouzdra jsou použity pro implementaci logické sondy, o které pojednává @realizace.
+integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněná pouzdra jsou použity pro implementaci logické sondy, o které pojednává #todo[doplnit kapitolu].
 ==== Analogo-digitální převodník <adc>
-Mikrokontrolér STM32G030 je vybaven ADC, který obsahuje 8~analogových kanálů
-o~rozlišení 12 bitů. Maximální vzorkovací frekvence
-převodníku je 2 MSPS. Při měření kanálů se postupuje sekvenčně, která je určená pomocí tzv. ranků#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při
-požadavku o měření převodník nejprve změří první nastavený kanál, při dalším
-požadavku druhý a až změří všechny, tak pokračuje opět od počátku.
-Aby během měření bylo dosaženo maximální přesnosti, převodník podporuje tzn.
-oversampling#footnote[Proběhne více měření a následně jsou výsledky např. zprůměrovány aby byla
-  zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*,
-který akumuluje měření a~poté pomocí data shifteru vydělí počtem cyklu @STM32G0-ADC.
+Mikrokontrolér STM32G031 je vybaven analogo-digitálním převodníkem#footnote[Neboli ADC], který obsahuje 8~analogových kanálů
+o~rozlišení 12 bitů. Maximální vzorkovací frekvence převodníku je 2 MSPS. Při měření kanálů se postupuje sekvenčně, která je určená pomocí tzv. ranků#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při požadavku o měření převodník nejprve změří první nastavený kanál, při dalším požadavku druhý a až změří všechny, tak pokračuje opět od počátku.
+Aby během měření bylo dosaženo maximální přesnosti, převodník podporuje tzv. oversampling#footnote[Proběhne více měření a následně jsou výsledky např. zprůměrovány aby byla zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*, který přičítá každé měření a~poté pomocí data shifteru vydělí počtem cyklu, kde počet cyklů je vždy mocnina dvojky z důvodu složitého dělení na MCU @STM32G0-ADC. Tato metoda zamezuje rušení na kanálu.
 #figure(
   caption: [Blokový diagram AD převodníku @STM32G0-ADC], image("pic/adc-block-diagram.png"),
 )
-$ "měření" = 1/M × sum_(n=0)^(n=N-1) "Konverze"(t_n) $
+$ "měření" = 1/2^m × sum_(n=0)^(n=N-1) "Konverze"(t_n) $
 
 AD převodník, po dokončení měření vzorků, vrací hodnotu, která není napětí. Tato hodnota je poměrná hodnota vůči napájecímu napětí vyjádřena 12 bitově#footnote[Např. hodnota 4095 značí, že naměřené napětí je stejně velké jako napájecí napětí.]. Pro
 převedení hodnoty převodníku na napětí je nutné znát referenční napětí systému ($V_("REF+")$).
 Referenční napětí může být proměnlivé, hlavně pokud systém využívá $"VDDA"$#footnote[VDDA je označení pro analogové napájecí napětí v mikrokontrolérech STM32.] jako
-referenci, která může být `2 V` až `3.6 V` a také může kolísat vlivem napájení nebo zatížení. Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REFINT")$ kalibrační
+referenci, která může být $2$ V až $3.6$ V a také může kolísat vlivem napájení nebo zatížení. Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REFINT")$ kalibrační
 data uložená během výroby mikrořadiče a naměřené hodnoty z ADC @STM32G0-REF.
 
 Vztah pro výpočet je následující:
@@ -183,15 +173,19 @@ kde:
 - $V_("REF+")$ je referenční hodnota napětí.
 
 ==== Časovače <timery>
-STM32G030 obsahuje několik časovačů, které se dají využít pro logickou sondu.
-Mikrořadič má zabudovaných několik základních a jeden
-advanced timer. Základní timery jsou 16~bitové a jsou
+STM32G031 obsahuje několik časovačů (timeru), které se dají využít pro logickou sondu.
+Mikrořadič má zabudovaných několik základních a jeden pokročilý časovač. Základní časovače jsou 16~bitové a jsou
 vhodné pro měření doby či generování jednoduchých PWM signálů. Pokročilý časovač
 je na tomto mikrokontroleru 32bitový a poskytuje více kanálů. Tyto časovače také
 podporují nejen generování signálů na výstup, ale také zachytávání signálů a
 měření délky pulzů externího signálu. Pokročilý časovač nabízí řadu nastavení
 např. nastavování mezi normálním a inverzním výstupem PWM, generovat přerušení
 při dosažení specifické hodnoty časovače apod @TIMERS.
+#figure(
+    placement: top,
+  caption: [Blokové schéma STM32G031 časovače @STM32G0-REF],
+    image("pic/timer_diagram.png"),
+)
  
 Před spuštěním časovače je potřeba nastavit, jak často má časovač čítat.
 Frekvenci časovače nastavuje tzn. prescaler, neboli "předdělička". Prescaler
@@ -208,7 +202,7 @@ vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interva
 který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
-=== STM HAL
+=== Knihovna STM HAL
 Hardware abstraction layer je knihovna poskytovaná společností
 STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
 abstrakce mezi aplikací a~periferiemi mikrokontroléru. Pokytuje funkce na vyšší
@@ -220,7 +214,7 @@ mikrořadičů například využívají jiné adresy pro specifickou funkcionali
 vývojář bude potřebovat portovat aplikaci na jiný mikrořadič, není nutné
 přepisovat různé adresy a logiku programu ale pouze změnit hardware a jelikož
 program pracuje s abstrakcí, bude nadále fungovat.ti přímého přístupu k
-registrům procesoru. Na @stm32cubemx-arch je znázorněn diagram, který znázorňuje
+registrům procesoru. @stm32cubemx-arch znázorňuje diagram, který znázorňuje
 architekturu HAL @STM-HAL-ARCH.
 
 Součástí HALu je tzv. CMSIS,
@@ -234,25 +228,30 @@ je ten, že CMSIS je poskytnuto přímo ARM a slouží pouze na ovládání Cort
 procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
 #figure(
-    placement: top,
+    placement: none,
   caption: [STM32CubeMX HAL architektura @HAL-DIAGRAM],
     image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
 
-== Měření veličin digitálního obvodu
-Pro měření veličin je nutné využít vztahů pro analýzu obvodů a schopnost sondy na vypočítat veličiny na základě měření AD převodníku nebo hodnot čítače. 
+== Měření veličin testovaného obvodu
+Pro měření veličin je nutné využít vztahů pro analýzu obvodů a schopnost sondy na vypočítat veličiny na základě měření AD převodníku nebo hodnot čítače. #todo[rozvinout]
 === Měření napětí a logických úrovní
-Pro měření napětí jak již zmiňuje @adc je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 25 vzorků měření do dvou bloků tj. 50 vzorků celkem. Každých 250 ms se provede průběžné měření 25 vzorků (vzorkovací frekvence $~$100 Hz). Nejstarší blok 25 vzorků je odstraněn a nahrazen novými daty. Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
-Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (50 vzorků), který reprezentuje výsledné napětí.
+Pro měření napětí, jak již zmiňuje #ref(<adc>, supplement: [kapitola]), je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 32 vzorků měření do dvou bloků tj. 64 vzorků celkem. Každých 250 ms se provede průběžné měření 32 vzorků (vzorkovací frekvence $~$128 Hz). Nejstarší blok 32 vzorků je odstraněn a nahrazen novými daty.
+#v(10pt)
+$ U = (sum_(i=0)^(2^5)(U_"staré i") + sum_(i=0)^(2^5)(U_"nové j")) / 2^6 $
+#v(10pt)
+
+Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
+Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření s frekvencí vyšší než 100 Hz zajistí, že dojde k potlačení rušení 50 Hz, které se může na vstupu vyskytnout #footnote[Dojde k eliminaci aliasingu.]. #todo[ozdrojovat]
 #v(10pt)
 #diagram(
 	edge-stroke: 1pt,
     node-stroke: 1pt,
-	node((0,0), [smazání\ nejstaršího\ bloku]),
+	node((0,0), [smazání\ nejstarších\ 32 vzorků]),
 	edge("r", "->", label-pos: 0.1),
-	node((1,0), [naměření\ 25 vzorků]),
+	node((1,0), [naměření\ 32 vzorků]),
 	edge("r", "->", label-pos: 0.1),
-	node((2,0), [Aritmetický \průměr\ z 50 vzorků]),
+	node((2,0), [Aritmetický \průměr\ z 64 vzorků]),
 	edge("r,d,l,l,l,l,u,r", "->", label-pos: 0.1),
 )
 #v(10pt)
@@ -265,22 +264,23 @@ $ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
 
 
 
-=== Měření odporu
-Měření odporu je využíván AD převodník, o kterém mluví @adc a dělič napětí. @divider-img ukazuje schéma děliče napětí. Rezistory jsou zapojeny do serie v uzavřené smyčce. Součet úbytků napětí na rezistorech je dle KVL#footnote[Kirchhoffův napěťový zákon] roven napětí $U$. Úbytek napětí se na odporech rozdělí podle poměru velikostí odporů $R_1$ a $R_2$. Za předpokladu, že $R_2$ není známo, a je známá velikost rezistoru $R_1$, napětí $U$ a napětí $U_2$ je možné pomocí @divider-1-rov vyjádřit $R_2$ @WIKI-DIVIDER-TEXT.
+=== Měření odporu #todo[jinak]
+K měření odporu je využíván AD převodník, o kterém mluví @adc a dělič napětí. @divider-img ukazuje schéma děliče napětí. Rezistory jsou zapojeny do serie v uzavřené smyčce. Součet úbytků napětí na rezistorech je dle KVL#footnote[Kirchhoffův napěťový zákon] roven napětí $U$. Úbytek napětí se na odporech rozdělí podle poměru velikostí odporů $R_1$ a $R_2$. Za předpokladu, že $R_2$ není známo, a je známá velikost rezistoru $R_1$, napětí $U$ a napětí $U_2$ je možné pomocí @divider-1-rov vyjádřit $R_2$ @WIKI-DIVIDER-TEXT.
 
-$ U_2 = U times (R_2)/(R_1 + R_2) $<divider-1-rov>
-$ R_2 = R_1 times (U_2)/(U - U_2) $<divider-2-rov>
+$ U_2 = U times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
+$ R_x = R_"norm" times (U_2)/(U - U_2) $<divider-2-rov>
 
 Pro změření odporu rezistoru logickou sondou uživatel vytvoří dělič napětí s fixní velikostí rezistoru (ve schématu $R_1$) připojený mezi kanálem 0 a $V_"cc"$, a připojením rezistoru s neznámou velikostí (ve schématu $R_2$) připojený mezi kanál 0 a zemí. Logická sonda na základě měření napětí na kanálu 0 vypočítá pomocí @divider-2-rov velikost odporu rezistoru.
 
 
 #figure(
     placement: none,
-    caption: [Schéma děliče napětí],
+    caption: [Schéma děliče napětí @WIKI-VOLTAGE-DIVIDER],
     image("pic/divider.png", width: 40%)
 )<divider-img>
 === Měření frekvence a střídy PWM
-=== Měření šířky pulzů
+K měření frekvence je využíván 32 bitový časovač, 
+=== Detekce pulzů
 == Analýza komunikačních rozhraní
 @rozbor-vyuka zmiňuje testování hardwarových částí obvodu. 
 Analýza seriové komunikace je častá nutnost při hledání chyby v implementaci studenta či vývojáře nebo jako otestování funkčnosti součástky. Logická sonda poskytne prostředí pro pasivní poslouchání komunikace, které pomůže vývojáři nalézt chybu v programu nebo studentovi při realizaci školního projektu.
