@@ -51,7 +51,7 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
 }
 
 void adc_start_measure(adc_vars_t* adc_ch) {
-    __HAL_TIM_SET_AUTORELOAD(adc_ch->timer, 9);
+    __HAL_TIM_SET_AUTORELOAD(adc_ch->timer, 7);
     adc_ch->measures_index = 0;
     HAL_TIM_Base_Start_IT(adc_ch->timer);
 }

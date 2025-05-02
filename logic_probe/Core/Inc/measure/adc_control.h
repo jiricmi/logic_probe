@@ -5,7 +5,7 @@
 #include "global_structs.h"
 #include "main.h"
 
-#define CHANNEL_NUM_SAMPLES 50  // Number of samples per channel for averaging
+#define CHANNEL_NUM_SAMPLES 64  // Number of samples per channel for averaging
 #define V_REF_DEFAULT 3300      // Default reference voltage in millivolts
 #define ADC_TIMEOUT 100
 
