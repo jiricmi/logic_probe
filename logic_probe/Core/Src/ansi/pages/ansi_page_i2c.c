@@ -113,18 +113,18 @@ void ansi_i2c_master_vals(i2c_perif_t* i2c_perif) {
     if (i2c_perif->read_bit) {
         snprintf(buff, sizeof(buff), "0x%02X",
                  i2c_perif->master_read_send_data[0]);
-        ansi_set_cursor(base_row, base_col - (strlen(buff) / 2));
+        ansi_set_cursor(base_row, base_col - 5 - (strlen(buff) / 2));
         ansi_send_text(buff, i2c_perif->edit_vals ? &ansi_green_bold_conf
                                                   : &ansi_default_conf);
 
         ansi_set_cursor(10, base_col - 5 - (3 * i2c_perif->bytes_to_catch));
         for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
             ansi_send_text(" | ", &ansi_default_conf);
-            snprintf(buff, sizeof(buff), "0x%02X ",
+            snprintf(buff, sizeof(buff), "0x%02X",
                      i2c_perif->slave_received_data[i]);
             ansi_send_text(buff, &ansi_default_conf);
         }
-        ansi_send_text(" | ", &ansi_default_conf);
+        ansi_send_text(" |", &ansi_default_conf);
 
     } else {
         ansi_set_cursor(10, base_col - 5 - (3 * i2c_perif->bytes_to_catch));
@@ -137,7 +137,7 @@ void ansi_i2c_master_vals(i2c_perif_t* i2c_perif) {
                           ? &ansi_green_bold_conf
                           : &ansi_default_conf);
         }
-        ansi_send_text(" | ", &ansi_default_conf);
+        ansi_send_text(" |", &ansi_default_conf);
     }
 }
 
@@ -183,12 +183,14 @@ void ansi_print_i2c_error(HAL_StatusTypeDef status, I2C_HandleTypeDef* hi2c) {
 
 void ansi_i2c_render_read_vals(i2c_perif_t* i2c_perif) {
     char buff[6];
-    ansi_set_cursor(12, TERMINAL_CENTER - (2 * i2c_perif->bytes_to_catch));
+    ansi_set_cursor(12, TERMINAL_CENTER - 5 - (2 * i2c_perif->bytes_to_catch));
     for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
-        snprintf(buff, sizeof(buff), "0x%02X ",
+        ansi_send_text(" | ", &ansi_default_conf);
+        snprintf(buff, sizeof(buff), "0x%02X",
                  i2c_perif->slave_received_data[i]);
         ansi_send_text(buff, &ansi_default_conf);
     }
+    ansi_send_text(" |", &ansi_default_conf);
 }
 
 void ansi_i2c_render_scan(i2c_perif_t* i2c_perif) {

@@ -19,9 +19,17 @@ static void render_edit_spi_status(_Bool edit) {
 void ansi_render_spi_measure_page(void) {
     ansi_clear_terminal();
     ansi_render_border('%', "%", "");
-    const char* header = "SCK-PA5/12 | MISO-PA6/13 | MOSI-PA7/14 | NSS-PB0/15";
-    ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
-    ansi_send_text(header, &ansi_bold_conf);
+    const char* header_master =
+        "SCK-PA5/12 | MISO-PA6/13 | MOSI-PA7/14 | NSS-PB0/15";
+    const char* header_monitor = "SCK-PA5/12 | MONITOR-PA7/14";
+    if (global_var.device_state == DEV_STATE_ADV_SPI_SLAVE) {
+        ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header_monitor) / 2));
+        ansi_send_text(header_monitor, &ansi_bold_conf);
+
+    } else {
+        ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header_master) / 2));
+        ansi_send_text(header_master, &ansi_bold_conf);
+    }
 
     const uint8_t state = global_var.device_state;
     spi_perif_t* perif = global_var.spi_perif;
@@ -32,7 +40,7 @@ void ansi_render_spi_measure_page(void) {
     const char* title = "";
     switch (state) {
         case DEV_STATE_ADV_SPI_SLAVE:
-            title = "SPI SLAVE";
+            title = "SPI Monitor";
             ansi_spi_render_slave_settings(perif);
             ansi_spi_render_read_vals(perif);
             help_slave_spi();
@@ -95,11 +103,13 @@ void ansi_spi_render_slave_settings(spi_perif_t* perif) {
 
 void ansi_spi_render_read_vals(spi_perif_t* perif) {
     char buff[6];
-    ansi_set_cursor(12, TERMINAL_CENTER - (2 * perif->bytes_count));
+    ansi_set_cursor(12, TERMINAL_CENTER - 5 - (3 * perif->bytes_count));
     for (uint8_t i = 0; i < perif->bytes_count; ++i) {
-        snprintf(buff, sizeof(buff), "0x%02X ", perif->data[i]);
+        ansi_send_text(" | ", &ansi_default_conf);
+        snprintf(buff, sizeof(buff), "0x%02X", perif->data[i]);
         ansi_send_text(buff, &ansi_default_conf);
     }
+    ansi_send_text(" |", &ansi_default_conf);
 }
 
 void ansi_spi_master_vals(spi_perif_t* perif) {
@@ -183,6 +193,7 @@ void help_spi_display(void) {
         ansi_print_help_msg("T: stop edit | U: Polarity | Y: Phase ", 1);
         ansi_print_help_msg("I: byte count | O: MSB/LSB | P: read/write", 0);
     } else {
-        ansi_print_help_msg("S: send | T: edit settings | M: change mode | G: reset perif", 0);
+        ansi_print_help_msg(
+            "S: send | T: edit settings | M: change mode | G: reset perif", 0);
     }
 }

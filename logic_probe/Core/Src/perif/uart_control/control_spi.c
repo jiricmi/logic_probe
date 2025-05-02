@@ -25,10 +25,11 @@ void control_spi_page(char received_char) {
                 perif->edit_settings = !perif->edit_settings;
             }
             perif->error = SPI_ERROR_NONE;
-            if (perif->edit_settings) {
+            if (!perif->edit_settings) {
                 dev_mode_update_perif();
-                dev_mode_request_frontend_change();
             }
+            dev_mode_request_frontend_change();
+
             break;
         case 'g':
         case 'G':

@@ -15,9 +15,22 @@ void spi_init_struct(spi_perif_t* perif, SPI_HandleTypeDef* hspi) {
 }
 
 void spi_deinit_perif(spi_perif_t* perif) {
-    HAL_SPI_DMAStop(perif->hspi);
+    HAL_DMA_Abort(perif->hspi->hdmarx);
+    HAL_DMA_Abort(perif->hspi->hdmatx);
+    __HAL_SPI_DISABLE(perif->hspi);
+
+    while (__HAL_SPI_GET_FLAG(perif->hspi, SPI_FLAG_RXNE)) {
+        volatile uint16_t dummy = perif->hspi->Instance->DR;
+    }
+
+    __HAL_SPI_CLEAR_OVRFLAG(perif->hspi);
+    __HAL_SPI_CLEAR_FREFLAG(perif->hspi);
+
     HAL_SPI_DeInit(perif->hspi);
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
+
+    __HAL_RCC_SPI1_FORCE_RESET();
+    __HAL_RCC_SPI1_RELEASE_RESET();
 }
 
 void spi_init_perif(spi_perif_t* perif) {
