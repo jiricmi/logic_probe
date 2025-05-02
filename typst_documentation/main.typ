@@ -242,7 +242,7 @@ $ U = (sum_(i=0)^(2^5)(U_"staré i") + sum_(i=0)^(2^5)(U_"nové j")) / 2^6 $
 #v(10pt)
 
 Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
-Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření s frekvencí vyšší než 100 Hz zajistí, že dojde k potlačení rušení 50 Hz, které se může na vstupu vyskytnout #footnote[Dojde k eliminaci aliasingu.]. #todo[ozdrojovat]
+Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření s frekvencí vyšší než 100 Hz zajistí, že dojde k potlačení rušení 50 Hz, které se může na vstupu vyskytnout #footnote[Dojde k eliminaci aliasingu.] @Nazeran2004-io.
 #v(10pt)
 #diagram(
 	edge-stroke: 1pt,
@@ -264,19 +264,25 @@ $ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
 
 
 
-=== Měření odporu #todo[jinak]
-K měření odporu je využíván AD převodník, o kterém mluví @adc a dělič napětí. @divider-img ukazuje schéma děliče napětí. Rezistory jsou zapojeny do serie v uzavřené smyčce. Součet úbytků napětí na rezistorech je dle KVL#footnote[Kirchhoffův napěťový zákon] roven napětí $U$. Úbytek napětí se na odporech rozdělí podle poměru velikostí odporů $R_1$ a $R_2$. Za předpokladu, že $R_2$ není známo, a je známá velikost rezistoru $R_1$, napětí $U$ a napětí $U_2$ je možné pomocí @divider-1-rov vyjádřit $R_2$ @WIKI-DIVIDER-TEXT.
-
-$ U_2 = U times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
-$ R_x = R_"norm" times (U_2)/(U - U_2) $<divider-2-rov>
-
-Pro změření odporu rezistoru logickou sondou uživatel vytvoří dělič napětí s fixní velikostí rezistoru (ve schématu $R_1$) připojený mezi kanálem 0 a $V_"cc"$, a připojením rezistoru s neznámou velikostí (ve schématu $R_2$) připojený mezi kanál 0 a zemí. Logická sonda na základě měření napětí na kanálu 0 vypočítá pomocí @divider-2-rov velikost odporu rezistoru.
-
+=== Měření odporu
+Pro měření neznámého odporu $R_x$ je využit AD převodník (viz #ref(<adc>, supplement: [kapitola])) v kombinaci s napěťovým děličem, jehož schéma je znázorněno na obrázku @divider-img. Rezistory $R_norm$ (normálový rezistor) a $R_x$ (měřený odpor) jsou zapojeny v sérii, čímž tvoří uzavřenou smyčku. Podle Kirchhoffova napěťového zákona platí, že součet úbytků napětí na obou rezistorech je roven napájecímu napětí @DIVIDER_TEXT @Center_2017:
+#v(10pt)
+$ U_"dd" = U_R_norm + U_R_x $ <ubytek-napet>
+#v(10pt)
+Pomocí pravidla pro napěťový dělič lze vztah mezi napětími a odpory vyjádřit jako:
+#v(10pt)
+$ U_R_x = U_"dd" times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
+#v(10pt)
+Za předpokladu, že $R_norm$ a napájecí napětí $U_"dd"$ jsou známé, a hodnota $U_R_x$ je změřena ADC, lze neznámý odpor $R_x$ vypočítat z upravené #ref(<divider-1-rov>, supplement:[rovnice]) @DIVIDER_TEXT:
+#v(10pt)
+$ R_x = R_"norm" times (U_R_x)/(U_"dd" - U_R_x) $<divider-2-rov>
+#v(10pt)
+V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: Uživatel sestaví napěťový dělič skládající se z normálového rezistoru $R_norm$ (typicky 10 $k Omega$) a měřeného rezistoru $R_x$. Normálový rezistor je připojen mezi referenční napětí $U_"dd"$ a vstup ADC (kanál 1), zatímco $R_x$ je zapojen mezi tento vstup a zem (viz schéma @divider-img). Sonda následně změří napětí $U_"dd"$ na kanálu 1 ADC a pomocí #ref(<divider-2-rov>, supplement: [rovnice]), vypočítá hodnotu neznámého odporu @DIVIDER_TEXT.
 
 #figure(
     placement: none,
-    caption: [Schéma děliče napětí @WIKI-VOLTAGE-DIVIDER],
-    image("pic/divider.png", width: 40%)
+    caption: [Schéma děliče napětí],
+    image("pic/divider.png", width: 30%)
 )<divider-img>
 === Měření frekvence a střídy PWM
 K měření frekvence je využíván 32 bitový časovač, 
@@ -306,11 +312,11 @@ Pokud rozhraní neodesílá žádné bity, na vodičích se nachází vysoká ú
 V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda umí toto rozhraní pasivně sledovat i aktivně odesílat testovací sekvence @uart-signal-picture ukazuje způsob zpracování signálů @UART-SIGNAL-PICTURE. Testování tohoto rozhraní je potřeba pokud student či vývojář potřebuje najít chybu např. při implementaci seriové komunikace mezi dvěma mikrokontrolery, kde se právě často využívá UART.
 #figure(
     placement: none,
-  caption: [Způsob zpracování signálu UART @UART-SIGNAL-PICTURE], image("pic/UART-signal.png"),
+  caption: [Způsob zpracování signálu UART bez parity], image("pic/UART-signal.png"),
 )<uart-signal-picture>
 
-=== I2C
-*Inter-Integrated Circuit* je seriový komunikační protokol, který byl vytvořen Philips Semiconductor jako nízkorychlostní protokol pro propojení zařízení jako např. mikrokonkrolery a procesory se senzory, periferiemi apod. Od roku 2006 implementace protokolu nevyžaduje licenci a proto se začal široce používat např. v IOT. Výhoda protokolu je, že pro komunikaci potřebuje pouze dva vodiče, na které je možné připojit až 128 zařízení najednou, jelikož využívá systém adres @I2C_TI.
+=== I2C Bus
+*Inter-Integrated Circuit* je seriová komunikační sběrnice, který byl vytvořen Philips Semiconductor jako nízkorychlostní sběrnice pro propojení zařízení jako např. mikrokonkrolery a procesory se senzory, periferiemi apod. Od roku 2006 implementace protokolu nevyžaduje licenci a proto se začal široce používat např. v IOT. Výhoda sběrnice je, že pro komunikaci potřebuje pouze dva vodiče, na které je možné připojit až 128 zařízení najednou, jelikož využívá systém adres @I2C_TI.
 
 SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový vodič. Protokol rozlišuje zařízení typu master a slave. Master řídí hodinový signál a protože je I2C obousměrný half duplex protokol, tak master zahajuje a zastavuje komunikaci aby nedocházelo ke konfliktům. Oba vodiče mají otevřený kolektor, z důvodu, že je na lince připojeno více zařízení a vodiče jsou pull up rezistorem přivedeny na společný zdroj napětí, což znamená, v klidovém režimu, jsou na vodičích vysoké logické úrovně @I2C_TI.
 #v(10pt)
@@ -323,7 +329,7 @@ SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový v
     ), 
     [#figure(
         image("pic/i2c_zeros_ones.png", height: 113pt),
-        caption: [Logická jednička a nula v I2C @I2C_TI],
+        caption: [Logická jednička a logická nula v~I2C @I2C_TI],
     )<i2c-zeros-ones>]
 )
 #v(10pt)
@@ -343,27 +349,30 @@ Po identifikaci se zahájí odesílání datových rámců, které se skládají
 === SPI
 *Serial peripherial interface* je jeden z nejvíce využívaných rozhraní používaný mezi mikrokontrolery a periferiemi jako např. AD převodníky, SRAM, EEPROM apod. Rozhraní nemá definované jaké napětí se používají a ani velikosti rámců. Typicky se používá 8 bitů. Oproti UART a I2C vyniká rychlostí komunikace, která je v řádu MHz.
 
-SPI má vždy jedno master zařízení a i několik podřízených slave zařízení. SPI je synchronní full duplex rozhraní, které má celkem 4 vodiče#footnote[4 vodiče má v případě jednoho slave zařízení. S každým dalším slave zařízením musí být připojen další `SS`.]. `SCLK`, což je hodinový signál, který určuje synchronizaci dat, `MOSI`, neboli vodič, kde probíhá komunikace od masteru ke slave, `MISO`, kde probíhá komunikace od slave k masteru a poté `SS`#footnote[Někdy také `CS` jako chip select.], neboli slave select. Ten určuje, se kterým slave zařízením probíhá komunikace, každé zařízení má vlastní `SS` pin @ANALOG-SPI @WIKI-SPI.
+SPI má vždy jedno master zařízení a i několik podřízených slave zařízení. SPI je synchronní full duplex rozhraní, které má celkem 4 vodiče#footnote[4 vodiče má v případě jednoho slave zařízení. S každým dalším slave zařízením musí být připojen další `SS`.]. `SCLK`, což je hodinový signál, který určuje synchronizaci dat, `MOSI`, neboli vodič, kde probíhá komunikace od masteru ke slave, `MISO`, kde probíhá komunikace od slave k masteru a poté `SS`#footnote[Někdy také `CS` jako chip select.], neboli slave select. Ten určuje, se kterým slave zařízením probíhá komunikace, každé zařízení má vlastní `SS` pin @ANALOG-SPI.
+@pic-spi-diagram-single ukazuje způsob zapojení vodičů v případě jednoho slave zařízení. Pro zahájení komunikace nastaví logicky nízkou úroveň na `SS`#footnote[Jelikož se spíná vodič do log. 1, tak má značka `SS` nad sebou negaci.]. Master zahájí generování hodinového signálu, podle kterého se synchronizuje komunikace. Jelikož je komunikace full duplex, komunikace začne probíhat mezi master a slave oběma směry tzn. na vodičích `MISO` a `MOSI`. Po dokončení komunikace master ukončí vysílání hodinového signálu a nastaví `SS` na vysokou logickou úroveň. @pic-spi-diagram-multi znázorňuje připojení více slave zařízení. V tomto případě master využívá více `SS` a podle přivedení nízké logické úrovně určuje směr komunikace @ANALOG-SPI.
+
 #v(10pt)
 #grid(
     columns: 2,
     [
         #figure(
-            caption:[Diagram SPI komunikace s jedním slave zařízením @WIKI-SPI-SINGLE-PIC ],
+            caption:[Diagram SPI komunikace s jedním slave zařízením],
             image("pic/spi_single_diagram.png")
         )<pic-spi-diagram-single>],
     [
         #figure(
-            caption:[Diagram SPI komunikace s více slave zařízeními @WIKI-SPI-MULTI-PIC ],
+            caption:[Diagram SPI komunikace s více slave zařízeními],
             image("pic/spi_multi_diagram.png")
         )<pic-spi-diagram-multi>
     ]
 )
 #v(10pt)
-@pic-spi-diagram-single ukazuje způsob zapojení vodičů v případě jednoho slave zařízení. Pro zahájení komunikace nastaví logicky nízkou úroveň na `SS`#footnote[Jelikož se spíná vodič do log. 1, tak má značka `SS` nad sebou negaci.]. Master zahájí generování hodinového signálu, podle kterého se synchronizuje komunikace. Jelikož je komunikace full duplex, komunikace začne probíhat mezi master a slave oběma směry tzn. na vodičích `MISO` a `MOSI`. Po dokončení komunikace master ukončí vysílání hodinového signálu a nastaví `SS` na vysokou logickou úroveň. @pic-spi-diagram-multi znázorňuje připojení více slave zařízení. V tomto případě master využívá více `SS` a podle přivedení nízké logické úrovně určuje směr komunikace @WIKI-SPI.
+
 
 Zjištění logické 0 a 1 vychází z přečtení logické úrovně v momentě vzestupné nebo sestupné hraně hodinového signálu. Vztah mezi hodinovým signálem a daty tzn. `CPOL` bitem a `CPHA` bitem. `CPOL` bit určuje, jakou logickou úroveň má klidový stav hodinového signálu. Při log. 0 je klidová úroveň nízká a hodinový signál započne náběhovou hranou, při log. 1 naopak. `CPHA` určuje, jaká hrana má určovat logickou úroveń signálu, při log. 0 je čtena hodnota při první hraně signálu, při log. 1 je čtena hodnota při druhé hraně hodinového signálu#footnote[Pokud bude `CPOL` bit = 0 a `CPHA` = 0, tak signál bude čten při náběžné hraně, při `CPOL` = 0 a `CPHA` = 1 bude čtena při sestupné hraně.].
 #figure(
+    placement: none,
     caption: [Časový diagram SPI zobrazující úroveň a posun hodinového signálu @WIKI-SPI-DIAGRAM],
     image("pic/spi-cpol.png", width: 70%)
 )
@@ -374,11 +383,13 @@ Zjištění logické 0 a 1 vychází z přečtení logické úrovně v momentě 
 Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vodiče: ground, Vcc, DIn a DOut. LED má vlastní řídící obvod, který ovládá barvy diody na základě signálu z vodiče DIn. Výhoda LED je možnost připojit diody do serie, a jedním vodičem ovládat všechny LED v sérii @NEOPIXEL-REF. @label-neopixel znázorňuje zapojení více LED do série a~schopnost ovládání jedním vodičem.
 
 Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje jednu barevnou složku. Parametry pořadí složek, časování apod. se může lišit v závislosti na konkrétním verzi a provedení LED. V této práci je vycházeno z WS2812D. První bit složky je, v případě WS2812, MSB#footnote[Most significant bit]. 
-
 #figure(
-  image("pic/NEOPIXEL_SCHEME_SERIE.png"),
+  image("pic/NEOPIXEL_SCHEME_SERIE.png", width: 80%),
   caption: [Způsob zapojení RGB LED do série @NEOPIXEL-REF],
 ) <label-neopixel>
+    #figure(
+    caption: [Diagram posílání dat pro zapojené WS2812D v sérii @NEOPIXEL-REF],
+    image("pic/neopixel_signal.png", width: 90%))
 #v(5pt)
 #figure(
   placement: none,
@@ -414,14 +425,11 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
     )
 )<neopixel_bit_time>
 
-#figure(
-    caption: [Diagram posílání dat pro zapojené WS2812D v sérii @NEOPIXEL-REF],
-    image("pic/neopixel_signal.png")
-)
+
 == Grafické řešení
 @rozbor-vyuka zmiňuje důraz na jednoduchou přístupnost ve výuce, což zahrnuje i jednoduché zobrazení informací, které uživatel potřebuje. Proto aby byla sonda jednoduše použitelná bez nutnosti instalace specialního softwaru byla zvolena metoda generování TUI v terminálové aplikaci. Ke generaci rozhraní bude docházet na straně mikrokontroleru a posíláno UART periferií do PC. 
 === Ansi sekvence
-ANSI escape kódy představují standardizovanou sadu řídicích sekvencí pro manipulaci s textovým rozhraním v terminálech podporujících ANSI/X3.64 standard. Tyto kódy umožňují dynamickou úpravu vizuálních vlastností textu (barva, styl), pozicování kurzoru a další efekty, čímž tvoří základ pro tvorbu pokročilých terminálových aplikací.
+ANSI escape kódy představují standardizovanou sadu řídicích sekvencí pro manipulaci s textovým rozhraním v terminálech podporujících ANSI/X3.64 standard. Tyto kódy umožňují dynamickou úpravu vizuálních vlastností textu (barva, styl), pozicování kurzoru a další efekty, čímž tvoří základ pro tvorbu pokročilých terminálových aplikací @Grainger.
 ==== Syntaxe
 Základní syntaxe escape sekvencí pro formátování textu je:
 ```bash
@@ -466,7 +474,8 @@ Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál a
 ```
 #v(5pt)
 ==== Mazání obsahu
-ANSI escape kódy umožňují kromě formátování textu také dynamické mazání obsahu obrazovky nebo řádků, což je klíčové pro aktualizaci TUI. Tyto sekvence se využívají např. pro překreslování statických prvků nebo odstranění přebytečného textu.
+ANSI escape kódy umožňují kromě formátování textu také dynamické mazání obsahu obrazovky nebo řádků, což je klíčové pro aktualizaci TUI. Tyto sekvence se využívají např. pro překreslování statických prvků nebo odstranění přebytečného textu @GITHUB-ANSI.
+.
 ```bash
     \033[2J // Smazání celého displeje
     \033[0K // Smazání textu od pozice kurzoru do konce řádku
@@ -525,7 +534,7 @@ Na pinu `PA0` se nachází AD převodníkový kanál. Pin také disponuje kanál
 
 #figure(
     caption: [Schéma zapojení STM32G030 v pouzdře TSSOP20],
-    image("pic/tssop20_hw.png", width: 80%)
+    image("pic/tssop20_hw.png", width: 60%)
 )<tssop20-hw>
 
 
