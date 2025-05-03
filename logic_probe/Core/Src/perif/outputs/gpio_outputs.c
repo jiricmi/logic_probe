@@ -32,6 +32,7 @@ void gpio_init_push_pull(void) {
     GPIO_InitStruct.Pin = GPIO_PIN_7;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     GPIO_InitStruct.Pin = GPIO_PIN_1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);

@@ -9,6 +9,7 @@
 extern global_vars_t global_var;
 
 void control_shift_register_page(char received_char) {
+    shift_register_t* perif = global_var.adv_shift_register;
     switch (received_char) {
         case 'q':
         case 'Q':
@@ -25,14 +26,26 @@ void control_shift_register_page(char received_char) {
         case '7':
         case '8': {
             uint8_t index = cdtoi(received_char);
-            global_var.adv_shift_register->bits[index - 1] =
-                !global_var.adv_shift_register->bits[index - 1];
+            perif->bits[index - 1] = !perif->bits[index - 1];
             dev_mode_request_frontend_change();
             break;
         }
+        case 'd':
+        case 'D':
+            perif->ready_to_send_bit = true;
+            break;
+        case 'f':
+        case 'F':
+            perif->index = 0;
+            break;
+        case 'g':
+        case 'G':
+            perif->send_rclk = true;
+            break;
         case 's':
         case 'S':
-            global_var.adv_shift_register->ready_to_send = true;
+            perif->index = 0;
+            perif->ready_to_send = true;
             break;
         default:
             break;

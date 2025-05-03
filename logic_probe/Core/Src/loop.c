@@ -9,6 +9,7 @@
 #include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
 #include "ansi_page_levels.h"
+#include "ansi_page_shift_register.h"
 #include "ansi_page_spi.h"
 #include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
@@ -81,9 +82,8 @@ void dev_mode_run_with_uart(void) {
         case DEV_STATE_ADV_NEOPIXEL_WRITE:
             break;
         case DEV_STATE_ADV_SHIFT_REGISTER:
-            if (global_var.adv_shift_register->ready_to_send) {
-                shift_register_send_signal(global_var.adv_shift_register);
-            }
+            shift_register_check_signal(global_var.adv_shift_register);
+            ansi_render_shift_register_page();
             break;
         case DEV_STATE_ADV_UART_READ: {
             ansi_render_read_vals(global_var.uart_perif);
