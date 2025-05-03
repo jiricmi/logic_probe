@@ -89,17 +89,15 @@ void ansi_render_read_vals(uart_perif_t* uart) {
 void ansi_render_write_vals(uart_perif_t* uart) {
     ansi_set_cursor(12, 10);
     ansi_text_config_t conf = {"", GREEN_BG, ""};
-    char buff[4];
-    for (uint8_t i = 0; i < UART_SEND_SIZE; ++i) {
-        ansi_send_text(" | ", &ansi_default_conf);
-        snprintf(buff, 4, "%3d", uart->received_char[i]);
+    char buff[8];
+    for (uint8_t i = 0; i < uart->symbols_to_send; ++i) {
+        snprintf(buff, 8, "| %c |", uart->received_char[i]);
         if (uart->edit_send && i == uart->edit_index) {
             ansi_send_text(buff, &conf);
         } else {
             ansi_send_text(buff, &ansi_default_conf);
         }
     }
-    ansi_send_text(" |", &ansi_default_conf);
 }
 
 void help_read_uart(void) {
@@ -108,7 +106,8 @@ void help_read_uart(void) {
         ansi_print_help_msg(
             "X: delete baudrate | Y: word len | U: parity | I: stop bit", 0);
     } else {
-        ansi_print_help_msg("T: edit settings | M: change mode", 0);
+        ansi_print_help_msg(
+            "T: edit settings | M: change mode | G: reset perif", 0);
     }
 }
 
@@ -119,11 +118,12 @@ void help_write_uart(void) {
         ansi_print_help_msg(
             "X: delete baudrate | Y: word len | U: parity | I: stop bit", 0);
     } else if (global_var.uart_perif->edit_send) {
-        ansi_print_help_msg(
-            "0-9: edit val | X: delete val | K: stop edit | L: move cursor", 0);
+        ansi_print_help_msg(" (,): stop edit | (.): move cursor", 0);
 
     } else {
         ansi_print_help_msg(
-            "T: edit settings | K: edit vals | S: send | M: change mode", 0);
+            "T: edit settings | (,): edit vals | S: send | M: change mode | G: "
+            "reset perif",
+            0);
     }
 }

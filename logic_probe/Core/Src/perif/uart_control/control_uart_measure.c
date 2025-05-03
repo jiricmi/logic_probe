@@ -1,4 +1,5 @@
 #include "control_uart_measure.h"
+#include <string.h>
 #include "ansi_abstraction_layer.h"
 #include "ansi_pages.h"
 #include "global_vars.h"
@@ -8,6 +9,43 @@
 extern global_vars_t global_var;
 
 void control_uart_page(char received_char) {
+    if (global_var.uart_perif->edit_send) {
+        control_uart_edit_page(received_char);
+    } else {
+        control_uart_nonedit_page(received_char);
+    }
+}
+
+void control_uart_edit_page(char received_char) {
+    uart_perif_t* perif = global_var.uart_perif;
+    switch (received_char) {
+        case ',':
+            if (!perif->edit &&
+                global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
+                perif->edit_send = !perif->edit_send;
+                perif->edit_index = 0;
+            }
+            dev_mode_request_frontend_change();
+            break;
+        case '.':
+            if (perif->edit_send &&
+                global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
+                perif->edit_index++;
+                if (perif->edit_index >= perif->symbols_to_send) {
+                    perif->edit_index = 0;
+                }
+            }
+            dev_mode_request_frontend_change();
+            break;
+        default:
+            perif->received_char[perif->edit_index] = received_char;
+            dev_mode_request_frontend_change();
+
+            break;
+    }
+}
+
+void control_uart_nonedit_page(char received_char) {
     uart_perif_t* perif = global_var.uart_perif;
     switch (received_char) {
         case 'q':
@@ -53,7 +91,12 @@ void control_uart_page(char received_char) {
                 }
             }
             dev_mode_request_frontend_change();
-
+            break;
+        case 'g':
+        case 'G':
+            memset(perif->received_char, 0, sizeof(perif->received_char));
+            dev_mode_update_perif();
+            dev_mode_request_frontend_change();
             break;
         case 'i':
         case 'I':
@@ -78,23 +121,11 @@ void control_uart_page(char received_char) {
                 }
             }
             break;
-        case 'k':
-        case 'K':
+        case ',':
             if (!perif->edit &&
                 global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
                 perif->edit_send = !perif->edit_send;
                 perif->edit_index = 0;
-            }
-            dev_mode_request_frontend_change();
-            break;
-        case 'l':
-        case 'L':
-            if (perif->edit_send &&
-                global_var.device_state == DEV_STATE_ADV_UART_WRITE) {
-                perif->edit_index++;
-                if (perif->edit_index >= UART_SEND_SIZE) {
-                    perif->edit_index = 0;
-                }
             }
             dev_mode_request_frontend_change();
             break;
@@ -129,14 +160,6 @@ void control_uart_page(char received_char) {
             if (perif->edit && digits_count(perif->baudrate) <= 7) {
                 perif->baudrate *= 10;
                 perif->baudrate += (uint32_t)cdtoi((char)received_char);
-            } else if (perif->edit_send) {
-                uint16_t number = perif->received_char[perif->edit_index];
-                number *= 10;
-                number += (uint16_t)cdtoi((char)received_char);
-                if (number >= 255) {
-                    number = 255;
-                }
-                perif->received_char[perif->edit_index] = (unsigned char)number;
             }
             dev_mode_request_frontend_change();
 
@@ -146,8 +169,6 @@ void control_uart_page(char received_char) {
         case 'X':
             if (perif->edit) {
                 perif->baudrate /= 10;
-            } else if (perif->edit_send) {
-                perif->received_char[perif->edit_index] /= 10;
             }
             dev_mode_request_frontend_change();
 
