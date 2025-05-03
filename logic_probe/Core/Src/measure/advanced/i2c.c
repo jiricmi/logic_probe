@@ -20,7 +20,10 @@ void i2c_init_struct(i2c_perif_t* i2c_perif, I2C_HandleTypeDef* hi2c) {
 void i2c_init_perif(i2c_perif_t* i2c_perif) {
     i2c_perif->hi2c->Instance = I2C1;
     i2c_perif->hi2c->Init.Timing = 0x10B17DB5;
-    i2c_perif->hi2c->Init.OwnAddress1 = i2c_perif->slave_address;
+    i2c_perif->hi2c->Init.OwnAddress1 =
+        (global_var.device_state == DEV_STATE_ADV_I2C_SLAVE)
+            ? i2c_perif->slave_address << 1
+            : i2c_perif->slave_address;
     i2c_perif->hi2c->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
     i2c_perif->hi2c->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
     i2c_perif->hi2c->Init.OwnAddress2 = 0;
@@ -119,7 +122,8 @@ void i2c_monitor_init(i2c_perif_t* i2c_perif, const spi_perif_t* spi_perif) {
     }
     memset(i2c_perif->monitor_data, 0, I2C_ARRAY_SIZE);
     gpio_spi_slave_init();
-    HAL_SPI_Receive_DMA(spi_perif->hspi, (uint8_t*)i2c_perif->monitor_data, I2C_ARRAY_SIZE * 2);
+    HAL_SPI_Receive_DMA(spi_perif->hspi, (uint8_t*)i2c_perif->monitor_data,
+                        I2C_ARRAY_SIZE * 2);
 }
 
 void i2c_monitor_deinit(spi_perif_t* spi_perif) {
