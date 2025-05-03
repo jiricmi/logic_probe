@@ -104,6 +104,7 @@ void dev_mode_run_with_uart(void) {
             } else {
                 i2c_read_data_master(global_var.i2c_perif);
             }
+            ansi_i2c_master_vals(global_var.i2c_perif);
             break;
         }
         case DEV_STATE_ADV_I2C_TEST_DISPLAY: {

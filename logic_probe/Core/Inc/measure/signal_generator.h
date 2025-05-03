@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "main.h"
 
-#define MIN_PERIOD_VALUE 100
+#define MIN_PERIOD_VALUE 1
 #define N_OF_OUTPUTS 3
 
 #define GEN_PINS_ARRAY {GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3}
@@ -25,6 +25,7 @@ typedef struct {
     uint8_t repeat;
     _Bool local_pulsing;
     _Bool send;
+    _Bool permanent_send;
 } sig_generator_t;
 
 void init_generator(sig_generator_t* generator, TIM_HandleTypeDef* htim);
@@ -37,5 +38,6 @@ void generator_apply_temp_period(sig_generator_t* generator);
 void generator_unapply_temp_period(sig_generator_t* generator);
 void generator_setup_timers(sig_generator_t* generator);
 void generator_send_pulse(sig_generator_t* generator);
+void generator_send_permanent(sig_generator_t* generator);
 
 #endif

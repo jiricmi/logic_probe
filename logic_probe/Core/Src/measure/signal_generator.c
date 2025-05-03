@@ -3,6 +3,7 @@
 #include <string.h>
 #include "global_structs.h"
 #include "global_vars.h"
+#include "loop.h"
 #include "stm32g0xx_hal_gpio.h"
 #include "tim_setup.h"
 
@@ -86,5 +87,16 @@ void generator_send_pulse(sig_generator_t* generator) {
             HAL_TIM_PWM_Start(generator->htim, TIM_CHANNEL_1);
             HAL_Delay((period > 0) ? period : 2);
         }
+    }
+}
+
+void generator_send_permanent(sig_generator_t* generator) {
+    if (generator->permanent_send) {
+        HAL_TIM_OnePulse_DeInit(generator->htim);
+        HAL_TIM_OnePulse_Init(generator->htim, TIM_OPMODE_REPETITIVE);
+        HAL_TIM_PWM_Start(generator->htim, TIM_CHANNEL_1);
+    } else {
+        HAL_TIM_PWM_Stop(generator->htim, TIM_CHANNEL_1);
+        dev_mode_update_perif();
     }
 }

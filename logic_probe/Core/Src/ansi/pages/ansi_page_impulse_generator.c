@@ -48,6 +48,8 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
         ansi_send_text("Editing period!", &ansi_red_bold_conf);
     } else if (generator->edit_repeat) {
         ansi_send_text("Editing repeat!", &ansi_red_bold_conf);
+    } else if (generator->permanent_send) {
+        ansi_send_text("Sending repeating pulses!", &ansi_red_bold_conf);
     }
     help_signal_generator();
 }
@@ -60,6 +62,7 @@ void help_signal_generator(void) {
         ansi_print_help_msg(
             "0-9: change repeat | X: delete repeat | Y: stop edit", 0);
     } else {
+        ansi_print_help_msg("D: permanent sending signals", 1);
         ansi_print_help_msg(
             "T: toggle output(High/Low)| S: send pulse| Y: edit repeat| E: "
             "edit period ",
