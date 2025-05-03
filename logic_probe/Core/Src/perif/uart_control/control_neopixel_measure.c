@@ -29,12 +29,14 @@ void control_neopixel_measure_page(char received_char) {
             break;
         case 'k':
         case 'K': {
-            neopixel->edit = !neopixel->edit;
-            if (neopixel->rgb_index == 3 && neopixel->rgb_send[3] == 0) {
-                neopixel->rgb_send[3] = 1;
+            if (global_var.device_state == DEV_STATE_ADV_NEOPIXEL_WRITE) {
+                neopixel->edit = !neopixel->edit;
+                if (neopixel->rgb_index == 3 && neopixel->rgb_send[3] == 0) {
+                    neopixel->rgb_send[3] = 1;
+                }
+                neopixel->rgb_index = 0;
+                dev_mode_request_frontend_change();
             }
-            neopixel->rgb_index = 0;
-            dev_mode_request_frontend_change();
             break;
         }
         case 'l':
