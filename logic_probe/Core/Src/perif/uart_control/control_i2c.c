@@ -22,7 +22,8 @@ void control_i2c_page(char received_char) {
             break;
         case 't':
         case 'T':
-            if (!perif->edit_vals) {
+            if (!perif->edit_vals &&
+                global_var.device_state != DEV_STATE_ADV_I2C_MONITOR) {
                 perif->edit_settings = !perif->edit_settings;
                 if (perif->edit_settings) {
                     i2c_deinit_perif(perif);
@@ -41,6 +42,7 @@ void control_i2c_page(char received_char) {
                        sizeof(perif->slave_received_data));
                 memset(perif->master_read_send_data, 0,
                        sizeof(perif->master_read_send_data));
+                memset(perif->monitor_data, 0, I2C_MONITOR_SIZE);
                 dev_mode_update_perif();
                 dev_mode_request_frontend_change();
             }

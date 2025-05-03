@@ -1,12 +1,12 @@
 #include "advanced/spi.h"
 #include <string.h>
-#include "ansi_abstraction_layer.h"
 #include "global_vars.h"
 #include "gpio_outputs.h"
 #include "ssd1306.h"
 #include "stm32g0xx_hal_spi.h"
 
 extern global_vars_t global_var;
+extern DMA_HandleTypeDef hdma_spi1_rx;
 
 void spi_init_struct(spi_perif_t* perif, SPI_HandleTypeDef* hspi) {
     memset(perif, 0, sizeof(*perif));
@@ -15,6 +15,7 @@ void spi_init_struct(spi_perif_t* perif, SPI_HandleTypeDef* hspi) {
 }
 
 void spi_deinit_perif(spi_perif_t* perif) {
+    HAL_SPI_DMAStop(perif->hspi);
     HAL_DMA_Abort(perif->hspi->hdmarx);
     HAL_DMA_Abort(perif->hspi->hdmatx);
     __HAL_SPI_DISABLE(perif->hspi);
@@ -58,12 +59,15 @@ void spi_init_perif(spi_perif_t* perif) {
     if (HAL_SPI_Init(perif->hspi) != HAL_OK) {
         Error_Handler();
     }
-
-    memset(perif->data, 0, SPI_ARRAY_SIZE);
+    HAL_DMA_Abort(&hdma_spi1_rx);
+    hdma_spi1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    HAL_DMA_Init(&hdma_spi1_rx);
 
     if (global_var.device_state == DEV_STATE_ADV_SPI_SLAVE) {
         gpio_spi_slave_init();
-        HAL_SPI_Receive_DMA(perif->hspi, perif->data, perif->bytes_count);
+        HAL_SPI_Receive_DMA(perif->hspi, (uint8_t*)perif->data,
+                            perif->bytes_count);
     } else {
         gpio_spi_master_init();
     }
@@ -78,8 +82,8 @@ void spi_transmit(spi_perif_t* perif) {
     perif->error = SPI_ERROR_SUCCESS;
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
     if (!perif->read_bit) {
-        if (HAL_SPI_Transmit(perif->hspi, perif->data, perif->bytes_count,
-                             PERIF_DELAY) != HAL_OK) {
+        if (HAL_SPI_Transmit(perif->hspi, (uint8_t*)perif->data,
+                             perif->bytes_count, PERIF_DELAY) != HAL_OK) {
             perif->error = SPI_ERROR_SEND;
         }
     } else {

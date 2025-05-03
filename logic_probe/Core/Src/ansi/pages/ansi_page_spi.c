@@ -19,17 +19,13 @@ static void render_edit_spi_status(_Bool edit) {
 void ansi_render_spi_measure_page(void) {
     ansi_clear_terminal();
     ansi_render_border('%', "%", "");
-    const char* header_master =
-        "SCK-PA5/12 | MISO-PA6/13 | MOSI-PA7/14 | NSS-PB0/15";
-    const char* header_monitor = "SCK-PA5/12 | MONITOR-PA7/14";
-    if (global_var.device_state == DEV_STATE_ADV_SPI_SLAVE) {
-        ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header_monitor) / 2));
-        ansi_send_text(header_monitor, &ansi_bold_conf);
+    const char* header =
+        (global_var.device_state != DEV_STATE_ADV_SPI_SLAVE)
+            ? "SCK-PA5/12 | MISO-PA6/13 | MOSI-PA7/14 | NSS-PB0/15"
+            : "SCK-PA5/12 | MONITOR-PA7/14";
 
-    } else {
-        ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header_master) / 2));
-        ansi_send_text(header_master, &ansi_bold_conf);
-    }
+    ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
+    ansi_send_text(header, &ansi_bold_conf);
 
     const uint8_t state = global_var.device_state;
     spi_perif_t* perif = global_var.spi_perif;
@@ -102,7 +98,7 @@ void ansi_spi_render_slave_settings(spi_perif_t* perif) {
 }
 
 void ansi_spi_render_read_vals(spi_perif_t* perif) {
-    char buff[6];
+    char buff[8];
     ansi_set_cursor(12, TERMINAL_CENTER - 5 - (3 * perif->bytes_count));
     for (uint8_t i = 0; i < perif->bytes_count; ++i) {
         ansi_send_text(" | ", &ansi_default_conf);
@@ -113,7 +109,7 @@ void ansi_spi_render_read_vals(spi_perif_t* perif) {
 }
 
 void ansi_spi_master_vals(spi_perif_t* perif) {
-    char buff[6];
+    char buff[8];
     const uint8_t base_row = 8;
     const uint8_t base_col = TERMINAL_CENTER;
 

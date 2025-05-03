@@ -94,6 +94,10 @@ void dev_mode_run_with_uart(void) {
             ansi_i2c_render_scan(global_var.i2c_perif);
             break;
         }
+        case DEV_STATE_ADV_I2C_MONITOR: {
+            ansi_render_i2c_monitor(global_var.i2c_perif);
+            break;
+        }
         case DEV_STATE_ADV_I2C_MASTER: {
             if (!global_var.i2c_perif->read_bit) {
                 i2c_transmit_master(global_var.i2c_perif);
@@ -203,6 +207,9 @@ void dev_mode_update_perif(void) {
         case DEV_STATE_ADV_I2C_SLAVE:
             i2c_init_perif(global_var.i2c_perif);
             i2c_start_slave_listen(global_var.i2c_perif);
+            break;
+        case DEV_STATE_ADV_I2C_MONITOR:
+            i2c_monitor_init(global_var.i2c_perif, global_var.spi_perif);
             break;
         case DEV_STATE_ADV_I2C_SCAN:
         case DEV_STATE_ADV_I2C_MASTER:

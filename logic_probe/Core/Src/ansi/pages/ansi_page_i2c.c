@@ -24,7 +24,10 @@ static void render_edit_status(uint8_t edit_flag) {
 void ansi_render_i2c_measure_page(void) {
     ansi_render_border('&', "&", "");
 
-    const char* header = "SCL - PB8/1 | SDA - PB9/2";
+    const char* header = (global_var.device_state == DEV_STATE_ADV_I2C_MONITOR)
+                             ? "SCK - PA5/12 | Monitor - PA7/14"
+                             : "SCL - PB8/1 | SDA - PB9/2";
+
     ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
     ansi_send_text(header, &ansi_bold_conf);
 
@@ -41,6 +44,11 @@ void ansi_render_i2c_measure_page(void) {
             ansi_i2c_render_settings(perif);
             ansi_i2c_render_read_vals(perif);
             help_slave_i2c();
+            break;
+        case DEV_STATE_ADV_I2C_MONITOR:
+            title = "I2C Monitor";
+            ansi_render_i2c_monitor(perif);
+            help_monitor_i2c();
             break;
 
         case DEV_STATE_ADV_I2C_MASTER:
@@ -183,7 +191,7 @@ void ansi_print_i2c_error(HAL_StatusTypeDef status, I2C_HandleTypeDef* hi2c) {
 
 void ansi_i2c_render_read_vals(i2c_perif_t* i2c_perif) {
     char buff[6];
-    ansi_set_cursor(12, TERMINAL_CENTER - 5 - (2 * i2c_perif->bytes_to_catch));
+    ansi_set_cursor(12, TERMINAL_CENTER - 5 - (3 * i2c_perif->bytes_to_catch));
     for (uint8_t i = 0; i < i2c_perif->bytes_to_catch; ++i) {
         ansi_send_text(" | ", &ansi_default_conf);
         snprintf(buff, sizeof(buff), "0x%02X",
@@ -224,6 +232,37 @@ void ansi_i2c_render_scan(i2c_perif_t* i2c_perif) {
     }
 }
 
+void ansi_render_i2c_monitor(i2c_perif_t* perif) {
+    uint8_t row = 7;
+    char buff[50];
+    ansi_set_cursor(row++, TERMINAL_CENTER - 10);
+    snprintf(buff, 50, "Address: 0x%02X %s %s", perif->monitor_data[0] >> 2,
+             (perif->monitor_data[0] & 0x02) ? "R" : "W",
+             (perif->monitor_data[0] & 0x01) ? "NACK" : "ACK");
+    ansi_send_text(buff, &ansi_default_conf);
+    for (uint8_t i = 1; i < I2C_ARRAY_SIZE; ++i) {
+        ansi_set_cursor(row++, TERMINAL_CENTER - 4);
+        if (i == 2 && (perif->monitor_data[i] & 0x100) == 0 &&
+            (perif->monitor_data[i] & 0x1) == 1) {
+            ansi_set_cursor(row++, TERMINAL_CENTER - 10);
+            snprintf(buff, 50, "Address: 0x%02X R",
+                     perif->monitor_data[i] >> 1);
+        } else if (i >= 2 && (perif->monitor_data[2] & 0x100) == 0 &&
+                   (perif->monitor_data[2] & 0x1) == 1) {
+            uint16_t n = perif->monitor_data[i];
+
+            snprintf(buff, 50, "0x%02X %s", n,
+                     (perif->monitor_data[i + 1] == 0) ? "NACK" : "ACK");
+
+        } else {
+            snprintf(buff, 50, "0x%02X %s", perif->monitor_data[i] >> 1,
+                     (perif->monitor_data[i] & 0x01) ? "NACK" : "ACK");
+        }
+
+        ansi_send_text(buff, &ansi_default_conf);
+    }
+}
+
 void help_slave_i2c(void) {
     if (global_var.i2c_perif->edit_settings) {
         ansi_print_help_msg("T: stop edit | 0-F: edit slave address", 1);
@@ -242,11 +281,13 @@ void help_master_i2c(void) {
 
     } else if (global_var.i2c_perif->edit_vals) {
         ansi_print_help_msg(
-            "0-F: change val | X: delete val | L: move cursor | K: stop edit",
+            "0-F: change val | X: delete val | L: move cursor | K: stop "
+            "edit",
             0);
     } else {
         ansi_print_help_msg(
-            "S: send | T: edit settings | K: edit vals  | M: change mode | G: "
+            "S: send | T: edit settings | K: edit vals  | M: change mode | "
+            "G: "
             "reset perif",
             0);
     }
@@ -265,4 +306,8 @@ void help_display_i2c(void) {
 
 void help_scan_i2c(void) {
     ansi_print_help_msg("M: change mode", 0);
+}
+
+void help_monitor_i2c(void) {
+    ansi_print_help_msg("M: change mode | G: reset perif", 0);
 }

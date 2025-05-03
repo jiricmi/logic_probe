@@ -1,9 +1,14 @@
 #include "advanced/i2c.h"
 #include <string.h>
+#include "advanced/spi.h"
 #include "ansi_page_i2c.h"
 #include "global_structs.h"
+#include "global_vars.h"
+#include "gpio_outputs.h"
 #include "ssd1306.h"
 #include "stm32g0xx_hal_def.h"
+
+extern global_vars_t global_var;
 
 void i2c_init_struct(i2c_perif_t* i2c_perif, I2C_HandleTypeDef* hi2c) {
     memset(i2c_perif, 0, sizeof(*i2c_perif));
@@ -93,4 +98,30 @@ void i2c_test_display(i2c_perif_t* perif) {
         HAL_StatusTypeDef ret = SSD_i2c_test_display(perif);
         ansi_print_i2c_error(ret, perif->hi2c);
     }
+}
+
+void i2c_monitor_init(i2c_perif_t* i2c_perif, const spi_perif_t* spi_perif) {
+    spi_perif->hspi->Instance = SPI1;
+    spi_perif->hspi->Init.Mode = SPI_MODE_SLAVE;
+    spi_perif->hspi->Init.Direction = SPI_DIRECTION_2LINES;
+    spi_perif->hspi->Init.DataSize = SPI_DATASIZE_9BIT;
+    spi_perif->hspi->Init.CLKPolarity = SPI_POLARITY_HIGH;
+    spi_perif->hspi->Init.CLKPhase = SPI_PHASE_2EDGE;
+    spi_perif->hspi->Init.NSS = SPI_NSS_SOFT;
+    spi_perif->hspi->Init.FirstBit = SPI_FIRSTBIT_MSB;
+    spi_perif->hspi->Init.TIMode = SPI_TIMODE_DISABLE;
+    spi_perif->hspi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    spi_perif->hspi->Init.CRCPolynomial = 7;
+    spi_perif->hspi->Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+    spi_perif->hspi->Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+    if (HAL_SPI_Init(spi_perif->hspi) != HAL_OK) {
+        Error_Handler();
+    }
+    memset(i2c_perif->monitor_data, 0, I2C_ARRAY_SIZE);
+    gpio_spi_slave_init();
+    HAL_SPI_Receive_DMA(spi_perif->hspi, (uint8_t*)i2c_perif->monitor_data, I2C_ARRAY_SIZE * 2);
+}
+
+void i2c_monitor_deinit(spi_perif_t* spi_perif) {
+    spi_deinit_perif(spi_perif);
 }
