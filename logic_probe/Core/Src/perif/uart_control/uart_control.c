@@ -4,6 +4,7 @@
 #include "control_frequency_reader.h"
 #include "control_i2c.h"
 #include "control_impulse_generator.h"
+#include "control_levels.h"
 #include "control_neopixel_measure.h"
 #include "control_shift_register.h"
 #include "control_spi.h"
@@ -32,6 +33,9 @@ void get_current_control(void) {
             break;
         case ANSI_PAGE_IMPULSE_GENERATOR:
             control_impulse_generator_page(received_char);
+            break;
+        case ANSI_PAGE_LEVELS:
+            control_levels_page(received_char);
             break;
         case ANSI_PAGE_NEOPIXEL_MEASURE:
             control_neopixel_measure_page(received_char);
@@ -69,6 +73,13 @@ void control_main_page(void) {
         case 'G':
             ansi_set_current_page(ANSI_PAGE_IMPULSE_GENERATOR);
             dev_mode_change_mode(DEV_STATE_PULSE_GEN);
+            break;
+        case 'l':
+        case 'L':
+            if (NOT_SOP) {
+                ansi_set_current_page(ANSI_PAGE_LEVELS);
+                dev_mode_change_mode(DEV_STATE_LEVEL);
+            }
             break;
         case 'a':
         case 'A':

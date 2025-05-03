@@ -31,6 +31,7 @@ target_sources(
           Core/Src/ansi/ansi_pages.c
           Core/Src/ansi/ansi_ascii_text.c
           Core/Src/ansi/pages/ansi_page_main.c
+          Core/Src/ansi/pages/ansi_page_levels.c
           Core/Src/ansi/pages/ansi_page_voltage_measure.c
           Core/Src/ansi/pages/ansi_page_shift_register.c
           Core/Src/ansi/pages/ansi_page_neopixel_measure.c
@@ -43,6 +44,7 @@ target_sources(
           Core/Src/measure/signal_detector.c
           Core/Src/measure/signal_generator.c
           Core/Src/measure/tim_setup.c
+          Core/Src/measure/levels.c
           Core/Src/measure/advanced/neopixel.c
           Core/Src/measure/advanced/shift_register.c
           Core/Src/measure/advanced/uart.c
@@ -55,6 +57,7 @@ target_sources(
           Core/Src/perif/outputs/ssd1306.c
           Core/Src/perif/inputs/extern_button.c
           Core/Src/perif/uart_control/uart_control.c
+          Core/Src/perif/uart_control/control_levels.c
           Core/Src/perif/uart_control/control_shift_register.c
           Core/Src/perif/uart_control/control_neopixel_measure.c
           Core/Src/perif/uart_control/control_voltage_measure.c
@@ -95,7 +98,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
   # Size optimization for Release mode
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os)
+    target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Os)
 
     add_custom_command(
       TARGET ${CMAKE_PROJECT_NAME}

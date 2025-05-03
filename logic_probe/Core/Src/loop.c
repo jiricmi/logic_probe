@@ -8,12 +8,14 @@
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
+#include "ansi_page_levels.h"
 #include "ansi_page_spi.h"
 #include "ansi_page_uart.h"
 #include "ansi_page_voltage_measure.h"
 #include "ansi_pages_neopixel_measure.h"
 #include "global_vars.h"
 #include "gpio_outputs.h"
+#include "levels.h"
 #include "signal_detector.h"
 #include "tim_setup.h"
 
@@ -68,6 +70,9 @@ void dev_mode_run_with_uart(void) {
                 generator_send_pulse(global_var.signal_generator);
             }
             ansi_render_impulse_generator(global_var.signal_generator);
+            break;
+        case DEV_STATE_LEVEL:
+            ansi_render_levels_page();
             break;
         case DEV_STATE_ADV_NEOPIXEL_READ:
             delay = 200;
@@ -156,6 +161,7 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
     HAL_TIM_IC_Stop_DMA(sig_det->slave_tim, TIM_CHANNEL_1);
     HAL_TIM_IC_Stop_DMA(sig_det->slave_tim, TIM_CHANNEL_2);
+    deinit_level_gpio();
 
     // TODO: TOTO JE PRO TSOP20
     deinit_uart(global_var.uart_perif);
@@ -188,6 +194,10 @@ void dev_mode_update_perif(void) {
             break;
         case DEV_STATE_PULSE_GEN:
             generator_setup_timers(sig_gen);
+            break;
+        case DEV_STATE_LEVEL:
+            init_level_gpio();
+            ansi_render_levels_page();
             break;
         case DEV_STATE_ADV_NEOPIXEL_READ:
             adv_neopixel_read_init_timers(neopixel_measure);

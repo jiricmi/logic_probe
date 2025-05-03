@@ -6,6 +6,7 @@
 #include "ansi_page_frequency_reader.h"
 #include "ansi_page_i2c.h"
 #include "ansi_page_impulse_generator.h"
+#include "ansi_page_levels.h"
 #include "ansi_page_main.h"
 #include "ansi_page_shift_register.h"
 #include "ansi_page_spi.h"
@@ -30,6 +31,9 @@ void ansi_render_current_page(void) {
             break;
         case ANSI_PAGE_IMPULSE_GENERATOR:
             ansi_render_impulse_generator_page();
+            break;
+        case ANSI_PAGE_LEVELS:
+            ansi_render_levels_page();
             break;
         case ANSI_PAGE_NEOPIXEL_MEASURE:
             ansi_render_neopixel_measure_page();

@@ -27,6 +27,9 @@ void ansi_page_main_render_menu(void) {
         ansi_render_button("g - Signal generator", row++, center,
                            &ansi_default_conf);
         if (NOT_SOP) {
+            ansi_render_button("l - GPIO Levels", row++, center,
+                               &ansi_default_conf);
+
             ansi_render_button("a - Advanced mode", row++, center,
                                &ansi_default_conf);
         }
