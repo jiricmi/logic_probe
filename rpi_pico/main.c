@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include "global_vars.h"
 #include "hardware/adc.h"
+#include "hardware/pwm.h"
 #include "loop.h"
 #include "measure/adc_control.h"
 #include "pico/stdlib.h"
 #include "probe_usb.h"
+#include "signal_detection.h"
 
 extern global_vars_t global_var;
 
@@ -18,8 +20,6 @@ void setup() {
 
 int main() {
     setup();
-    adc_start_measure(&global_var.adc_perif);
-
     while (true) {
         dev_mode_run();
     }

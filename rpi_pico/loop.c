@@ -3,6 +3,7 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
+#include "pages/ansi_page_frequency_reader.h"
 #include "pages/ansi_page_voltage_measure.h"
 #include "perif/uart_control/uart_control.h"
 
@@ -57,7 +58,8 @@ void dev_mode_update_perif(void) {
             adc_start_measure(adc_perif);
             break;
         case DEV_STATE_FREQUENCY_READ:
-            // detector_setup_timers(sig_det, false);
+            sig_det_frequecy_counter_init(&global_var.sig_det_perif.gate_perif);
+            sig_det_gate_timer_init(&global_var.sig_det_perif.gate_perif);
             break;
         case DEV_STATE_PULSE_GEN:
             //   generator_setup_timers(sig_gen);
@@ -71,6 +73,7 @@ void dev_mode_update_perif(void) {
 void dev_mode_run(void) {
     dev_mode_check_update();
     adc_vars_t* adc_perif = &global_var.adc_perif;
+    sig_det_t* sig_det_perif = &global_var.sig_det_perif;
 
     uint32_t delay = 500;
     switch (global_var.device_state) {
@@ -87,7 +90,11 @@ void dev_mode_run(void) {
             delay = 250;
             break;
         case DEV_STATE_FREQUENCY_READ:
-            //  ansi_generate_frequency_reader(global_var.signal_detector);
+            sig_det_counters_start(&sig_det_perif->gate_perif);
+            while (sig_det_check_ready_gate(&sig_det_perif->gate_perif))
+                ;
+            sig_det_get_freq_value(sig_det_perif);
+            ansi_generate_frequency_reader(sig_det_perif);
             break;
         case DEV_STATE_PULSE_GEN:
             //  if (global_var.signal_generator->send) {

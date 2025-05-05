@@ -15,49 +15,45 @@ void ansi_render_frequency_reader_page(void) {
     global_var.current_page = ANSI_PAGE_FREQUENCY_READER;
     ansi_render_border('x', "x", "");
     ansi_render_title(ASCII_LOGO_SIGNAL_DETECT, YELLOW_TEXT);
-    ansi_generate_frequency_reader(global_var.signal_detector);
+    ansi_generate_frequency_reader(&global_var.sig_det_perif);
     ansi_help_reader();
 }
 
-void ansi_generate_frequency_reader(sig_detector_t* detector) {
+void ansi_generate_frequency_reader(sig_det_t* detector) {
     uint8_t row = FREQ_READER_ROW_TEXT;
     ansi_get_detector_mode(detector->mode);
     char buff[BASE_TEXT_BUFF_LEN];
     if (detector->mode == DETECTOR_MODE_FREQUENCY) {
         char number_buff[NUM_BUFF_LEN];
-        format_number_with_spaces(detector->frequency, number_buff);
+        format_number_with_spaces(detector->freq, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        snprintf(buff, BASE_TEXT_BUFF_LEN, "Frequency (A0): %9.9s Hz",
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Frequency (GPIO 21): %9.9s Hz",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
-        format_number_with_spaces(detector->rec_frequency, number_buff);
+        format_number_with_spaces(detector->rec_freq, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "Reciprocial frequency: %9.9s Hz",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        format_number_with_spaces(detector->widths[DET_HIGH_WIDTH],
-                                  number_buff);
+        // format_number_with_spaces(detector->widths[DET_HIGH_WIDTH],
+        //                           number_buff);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "High pulse width: %9.9s us ",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        format_number_with_spaces(detector->widths[DET_LOW_WIDTH], number_buff);
+        // format_number_with_spaces(detector->widths[DET_LOW_WIDTH],
+        // number_buff);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "Low pulse width: %9.9s us ",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        snprintf(buff, BASE_TEXT_BUFF_LEN, "Duty: %3u %%",
-                 (uint16_t)detector->pwm_duty);
-        ansi_send_text(buff, &ansi_default_conf);
-
-        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        snprintf(buff, BASE_TEXT_BUFF_LEN, "Gate time: %5u ms",
-                 GATE_TIMES[detector->gate_time_index]);
+        //      snprintf(buff, BASE_TEXT_BUFF_LEN, "Duty: %3u %%",
+        //              (uint16_t)detector->pwm_duty);
         ansi_send_text(buff, &ansi_default_conf);
 
     } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
@@ -69,13 +65,13 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
 
         ansi_set_cursor(FREQ_READER_ROW_TEXT,
                         TERMINAL_CENTER + strlen(pulse_text) / 2);
-        if (detector->one_pulse_found) {
-            text_conf.color = WHITE_TEXT;
-            text_conf.bg_color = GREEN_BG;
-            ansi_send_text(" TRUE  ", &text_conf);
-        } else {
-            ansi_send_text(" FALSE ", &text_conf);
-        }
+        // if (detector->one_pulse_found) {
+        //     text_conf.color = WHITE_TEXT;
+        //     text_conf.bg_color = GREEN_BG;
+        //     ansi_send_text(" TRUE  ", &text_conf);
+        // } else {
+        //     ansi_send_text(" FALSE ", &text_conf);
+        // }
     }
 }
 
@@ -103,8 +99,8 @@ void ansi_get_detector_mode(detector_mode_t mode) {
 }
 
 void ansi_help_reader(void) {
-    if (global_var.signal_detector->mode == DETECTOR_MODE_FREQUENCY) {
-        ansi_print_help_msg("T: change gate time | M: one pulse mode", 0);
+    if (global_var.sig_det_perif.mode == DETECTOR_MODE_FREQUENCY) {
+        ansi_print_help_msg("M: one pulse mode", 0);
     } else {
         ansi_print_help_msg("D: delete catch flag | M: change mode", 0);
     }

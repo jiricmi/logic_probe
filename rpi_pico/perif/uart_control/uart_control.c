@@ -1,6 +1,7 @@
 #include "uart_control.h"
 #include <stdbool.h>
 #include "ansi_pages.h"
+#include "control_frequency_reader.h"
 #include "control_voltage_measure.h"
 #include "global_vars.h"
 #include "loop.h"
@@ -21,8 +22,8 @@ void get_current_control(const char received_char) {
             control_voltage_page(received_char);
             break;
         case ANSI_PAGE_FREQUENCY_READER:
-            //  control_frequency_reader_page(received_char,
-            //  global_var.signal_detector);
+            control_frequency_reader_page(received_char,
+                                          &global_var.sig_det_perif);
             break;
         case ANSI_PAGE_IMPULSE_GENERATOR:
             //  control_impulse_generator_page(received_char);

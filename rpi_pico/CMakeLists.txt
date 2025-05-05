@@ -14,10 +14,13 @@ add_executable(
   ansi/ansi_ascii_text.c
   ansi/pages/ansi_page_main.c
   ansi/pages/ansi_page_voltage_measure.c
+  ansi/pages/ansi_page_frequency_reader.c
   ansi/ansi_pages.c
   perif/uart_control/uart_control.c
   perif/uart_control/control_voltage_measure.c
+  perif/uart_control/control_frequency_reader.c
   measure/adc_control.c
+  measure/signal_detection.c
   probe_usb.c
   probe_error.c
   global_vars.c
@@ -30,7 +33,8 @@ target_include_directories(
   PRIVATE ${CMAKE_SOURCE_DIR}/perif/uart_control
   PRIVATE ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(logic_probe pico_stdlib pico_multicore hardware_adc)
+target_link_libraries(logic_probe pico_stdlib pico_multicore hardware_adc
+                      hardware_dma hardware_pwm)
 
 pico_enable_stdio_usb(logic_probe 1)
 pico_enable_stdio_uart(logic_probe 0)
