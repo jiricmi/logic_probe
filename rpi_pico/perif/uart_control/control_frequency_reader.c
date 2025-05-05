@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "ansi_abstraction_layer.h"
+#include "global_structs.h"
 #include "global_vars.h"
 #include "loop.h"
 #include "signal_detection.h"
@@ -18,13 +19,21 @@ void control_frequency_reader_page(char received_char, sig_det_t* sig_det) {
             dev_mode_change_mode(DEV_STATE_NONE);
             break;
         case 'm':
-        case 'M':
-            // detector_change_mode(sig_det);
-            //  dev_mode_request_update();
+        case 'M': {
+            dev_state_t state = global_var.device_state;
+            if (state == DEV_STATE_DETECT_PULSE_DOWN) {
+                state = DEV_STATE_FREQUENCY_READ;
+            } else {
+                ++state;
+            }
+            global_var.sig_det_perif.pulse_found = false;
+            dev_mode_change_mode(state);
+            dev_mode_request_frontend_change();
             break;
+        }
         case 'd':
         case 'D':
-            // global_var.signal_detector->one_pulse_found = false;
+            global_var.sig_det_perif.pulse_found = false;
             break;
     }
 }

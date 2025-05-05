@@ -23,6 +23,8 @@ void dev_mode_check_update(void) {
 
 void dev_mode_perif_turn_off(adc_vars_t* adc_perif) {
     adc_stop_measure(adc_perif);
+    gpio_set_irq_enabled_with_callback(
+        FREQUECY_PIN, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, false, NULL);
 }
 
 void dev_mode_change_mode(dev_state_t mode) {
@@ -61,6 +63,10 @@ void dev_mode_update_perif(void) {
             sig_det_frequecy_counter_init(&global_var.sig_det_perif.gate_perif);
             sig_det_gate_timer_init(&global_var.sig_det_perif.gate_perif);
             break;
+        case DEV_STATE_DETECT_PULSE_UP:
+        case DEV_STATE_DETECT_PULSE_DOWN:
+            sig_det_pulse_detect_init(&global_var.sig_det_perif);
+            break;
         case DEV_STATE_PULSE_GEN:
             //   generator_setup_timers(sig_gen);
             break;
@@ -94,6 +100,8 @@ void dev_mode_run(void) {
             while (sig_det_check_ready_gate(&sig_det_perif->gate_perif))
                 ;
             sig_det_get_freq_value(sig_det_perif);
+        case DEV_STATE_DETECT_PULSE_UP:
+        case DEV_STATE_DETECT_PULSE_DOWN:
             ansi_generate_frequency_reader(sig_det_perif);
             break;
         case DEV_STATE_PULSE_GEN:

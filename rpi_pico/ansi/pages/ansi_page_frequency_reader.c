@@ -21,9 +21,9 @@ void ansi_render_frequency_reader_page(void) {
 
 void ansi_generate_frequency_reader(sig_det_t* detector) {
     uint8_t row = FREQ_READER_ROW_TEXT;
-    ansi_get_detector_mode(detector->mode);
+    ansi_get_detector_mode();
     char buff[BASE_TEXT_BUFF_LEN];
-    if (detector->mode == DETECTOR_MODE_FREQUENCY) {
+    if (global_var.device_state == DEV_STATE_FREQUENCY_READ) {
         char number_buff[NUM_BUFF_LEN];
         format_number_with_spaces(detector->freq, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
@@ -56,7 +56,7 @@ void ansi_generate_frequency_reader(sig_det_t* detector) {
         //              (uint16_t)detector->pwm_duty);
         ansi_send_text(buff, &ansi_default_conf);
 
-    } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
+    } else {
         char pulse_text[] = "Pulse found: ";
         ansi_set_cursor(FREQ_READER_ROW_TEXT,
                         TERMINAL_CENTER - strlen(pulse_text) / 2);
@@ -65,29 +65,29 @@ void ansi_generate_frequency_reader(sig_det_t* detector) {
 
         ansi_set_cursor(FREQ_READER_ROW_TEXT,
                         TERMINAL_CENTER + strlen(pulse_text) / 2);
-        // if (detector->one_pulse_found) {
-        //     text_conf.color = WHITE_TEXT;
-        //     text_conf.bg_color = GREEN_BG;
-        //     ansi_send_text(" TRUE  ", &text_conf);
-        // } else {
-        //     ansi_send_text(" FALSE ", &text_conf);
-        // }
+        if (detector->pulse_found) {
+            text_conf.color = WHITE_TEXT;
+            text_conf.bg_color = GREEN_BG;
+            ansi_send_text(" TRUE  ", &text_conf);
+        } else {
+            ansi_send_text(" FALSE ", &text_conf);
+        }
     }
 }
 
-void ansi_get_detector_mode(detector_mode_t mode) {
+void ansi_get_detector_mode(void) {
     ansi_set_cursor(FREQ_READER_ROW_MODE, TERMINAL_CENTER - 8);
     ansi_text_config_t text_conf = {WHITE_TEXT, "", 1};
 
-    switch (mode) {
-        case DETECTOR_MODE_FREQUENCY:
+    switch (global_var.device_state) {
+        case DEV_STATE_FREQUENCY_READ:
             ansi_send_text("Frequency/PWM", &text_conf);
             break;
-        case DETECTOR_MODE_PULSE_UP:
+        case DEV_STATE_DETECT_PULSE_UP:
             text_conf.color = BLUE_TEXT;
             ansi_send_text("Rise Edge Pulse", &text_conf);
             break;
-        case DETECTOR_MODE_PULSE_DOWN:
+        case DEV_STATE_DETECT_PULSE_DOWN:
             text_conf.color = MAGENTA_TEXT;
             ansi_send_text("Fall Edge Pulse", &text_conf);
             break;
@@ -99,7 +99,7 @@ void ansi_get_detector_mode(detector_mode_t mode) {
 }
 
 void ansi_help_reader(void) {
-    if (global_var.sig_det_perif.mode == DETECTOR_MODE_FREQUENCY) {
+    if (global_var.device_state == DEV_STATE_FREQUENCY_READ) {
         ansi_print_help_msg("M: one pulse mode", 0);
     } else {
         ansi_print_help_msg("D: delete catch flag | M: change mode", 0);

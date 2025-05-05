@@ -1,7 +1,10 @@
 #include "signal_detection.h"
+#include "global_vars.h"
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
+
+extern global_vars_t global_var;
 
 void sig_det_frequecy_counter_init(timer_gate_perif_t* perif) {
     perif->timer_slice = pwm_gpio_to_slice_num(FREQUECY_PIN);
@@ -11,6 +14,17 @@ void sig_det_frequecy_counter_init(timer_gate_perif_t* perif) {
     pwm_config_set_clkdiv_mode(&config, PWM_DIV_B_RISING);
     pwm_config_set_clkdiv(&config, 1);
     pwm_init(perif->timer_slice, &config, false);
+}
+
+void sig_det_pulse_detect_init(sig_det_t* det_perif) {
+    gpio_init(FREQUECY_PIN);
+    gpio_set_dir(FREQUECY_PIN, GPIO_IN);
+    uint32_t mask = (global_var.device_state == DEV_STATE_DETECT_PULSE_UP)
+                        ? GPIO_IRQ_EDGE_RISE
+                        : GPIO_IRQ_EDGE_FALL;
+
+    gpio_set_irq_enabled_with_callback(FREQUECY_PIN, mask, true,
+                                       &sig_det_pulse_detect_callback);
 }
 
 void sig_det_gate_timer_init(timer_gate_perif_t* perif) {
@@ -57,4 +71,16 @@ void sig_det_get_freq_value(sig_det_t* perif) {
     pwm_set_enabled(perif->gate_perif.gate_slice, false);
     perif->freq = pwm_get_counter(perif->gate_perif.timer_slice) *
                   SAMPLE_FREQ;  // TODO: upravit
+}
+
+void sig_det_pulse_detect_callback(uint gpio, uint32_t events) {
+    if (gpio == FREQUECY_PIN) {
+        if (events & GPIO_IRQ_EDGE_RISE &&
+            global_var.device_state == DEV_STATE_DETECT_PULSE_UP) {
+            global_var.sig_det_perif.pulse_found = true;
+        } else if (events & GPIO_IRQ_EDGE_FALL &&
+                   global_var.device_state == DEV_STATE_DETECT_PULSE_DOWN) {
+            global_var.sig_det_perif.pulse_found = true;
+        }
+    }
 }

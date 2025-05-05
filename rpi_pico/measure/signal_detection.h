@@ -9,7 +9,8 @@
 #define SAMPLE_FREQ (125000000 / (GATE_TIMER_PRESCALER * GATE_TIMER_WRAP))
 
 typedef enum {
-    DETECTOR_MODE_FREQUENCY, DETECTOR_MODE_PULSE_UP,
+    DETECTOR_MODE_FREQUENCY,
+    DETECTOR_MODE_PULSE_UP,
     DETECTOR_MODE_PULSE_DOWN,
 } detector_mode_t;
 
@@ -26,11 +27,12 @@ typedef struct {
     timer_gate_perif_t gate_perif;
     uint64_t freq;
     uint64_t rec_freq;
-    detector_mode_t mode;
-
+    bool pulse_found;
 } sig_det_t;
 
 void sig_det_frequecy_counter_init(timer_gate_perif_t* perif);
+
+void sig_det_pulse_detect_init(sig_det_t* det_perif);
 
 void sig_det_gate_timer_init(timer_gate_perif_t* perif);
 
@@ -39,5 +41,7 @@ bool sig_det_check_ready_gate(timer_gate_perif_t* perif);
 void sig_det_counters_start(timer_gate_perif_t* perif);
 
 void sig_det_get_freq_value(sig_det_t* perif);
+
+void sig_det_pulse_detect_callback(uint gpio, uint32_t events);
 
 #endif

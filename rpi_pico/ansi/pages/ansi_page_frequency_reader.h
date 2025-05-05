@@ -12,6 +12,6 @@ void ansi_render_frequency_reader_page(void);
 
 void ansi_generate_frequency_reader(sig_det_t* detector);
 
-void ansi_get_detector_mode(detector_mode_t mode);
+void ansi_get_detector_mode(void);
 void ansi_help_reader(void);
 #endif
