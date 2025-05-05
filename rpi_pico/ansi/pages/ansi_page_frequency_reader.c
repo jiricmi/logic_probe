@@ -31,29 +31,39 @@ void ansi_generate_frequency_reader(sig_det_t* detector) {
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
-        format_number_with_spaces(detector->rec_freq, number_buff);
+        uint32_t rec_freq = (detector->widths[DET_PERIOD_WIDTH] == 0)
+                                ? 0
+                                : 1000000 / detector->widths[DET_PERIOD_WIDTH];
+
+        format_number_with_spaces(rec_freq, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "Reciprocial frequency: %9.9s Hz",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        // format_number_with_spaces(detector->widths[DET_HIGH_WIDTH],
-        //                           number_buff);
+        format_number_with_spaces(detector->widths[DET_HIGH_WIDTH],
+                                  number_buff);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "High pulse width: %9.9s us ",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        // format_number_with_spaces(detector->widths[DET_LOW_WIDTH],
-        // number_buff);
+        format_number_with_spaces(detector->widths[DET_LOW_WIDTH], number_buff);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "Low pulse width: %9.9s us ",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
+        uint16_t duty;
+        if (detector->widths[DET_PERIOD_WIDTH] == 0) {
+            duty = 0;
+        } else {
+            duty = (detector->widths[DET_HIGH_WIDTH] * 100) /
+                   detector->widths[DET_PERIOD_WIDTH];
+        }
+
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        //      snprintf(buff, BASE_TEXT_BUFF_LEN, "Duty: %3u %%",
-        //              (uint16_t)detector->pwm_duty);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Duty: %3u %%", (uint16_t)duty);
         ansi_send_text(buff, &ansi_default_conf);
 
     } else {

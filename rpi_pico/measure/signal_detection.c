@@ -8,6 +8,8 @@ extern global_vars_t global_var;
 
 void sig_det_frequecy_counter_init(timer_gate_perif_t* perif) {
     perif->timer_slice = pwm_gpio_to_slice_num(FREQUECY_PIN);
+    gpio_init(FREQUECY_PIN);
+    gpio_set_dir(FREQUECY_PIN, GPIO_IN);
 
     gpio_set_function(FREQUECY_PIN, GPIO_FUNC_PWM);
     pwm_config config = pwm_get_default_config();
@@ -17,8 +19,6 @@ void sig_det_frequecy_counter_init(timer_gate_perif_t* perif) {
 }
 
 void sig_det_pulse_detect_init(sig_det_t* det_perif) {
-    gpio_init(FREQUECY_PIN);
-    gpio_set_dir(FREQUECY_PIN, GPIO_IN);
     uint32_t mask = (global_var.device_state == DEV_STATE_DETECT_PULSE_UP)
                         ? GPIO_IRQ_EDGE_RISE
                         : GPIO_IRQ_EDGE_FALL;
@@ -81,6 +81,51 @@ void sig_det_pulse_detect_callback(uint gpio, uint32_t events) {
         } else if (events & GPIO_IRQ_EDGE_FALL &&
                    global_var.device_state == DEV_STATE_DETECT_PULSE_DOWN) {
             global_var.sig_det_perif.pulse_found = true;
+        }
+    }
+}
+
+void sig_det_calculate_rec(void) {
+    sig_det_t* perif = &global_var.sig_det_perif;
+
+    perif->widths[DET_HIGH_WIDTH] =
+        perif->edge_times[DET_EDGE2_FALL] - perif->edge_times[DET_EDGE1_RISE];
+    perif->widths[DET_LOW_WIDTH] =
+        perif->edge_times[DET_EDGE3_RISE] - perif->edge_times[DET_EDGE2_FALL];
+    perif->widths[DET_PERIOD_WIDTH] =
+        perif->widths[DET_LOW_WIDTH] + perif->widths[DET_HIGH_WIDTH];
+}
+
+void __not_in_flash("gpio_callback")
+    sig_det_recproc_pulse_callback(uint gpio, uint32_t events) {
+    if (gpio != FREQUECY_PIN)
+        return;
+    sig_det_t* perif = &global_var.sig_det_perif;
+
+    uint32_t current_time = timer_hw->timelr;
+
+    if (events & GPIO_IRQ_EDGE_RISE) {
+        if (perif->edge_mode == DET_EDGE1_RISE) {
+            perif->edge_times[DET_EDGE1_RISE] = current_time;
+            perif->edge_mode = DET_EDGE2_FALL;
+            gpio_set_irq_enabled(FREQUECY_PIN, GPIO_IRQ_EDGE_RISE, false);
+            gpio_set_irq_enabled(FREQUECY_PIN, GPIO_IRQ_EDGE_FALL, true);
+        } else if (perif->edge_mode == DET_EDGE3_RISE) {
+            perif->edge_times[DET_EDGE3_RISE] = current_time;
+            perif->is_rec_finished = true;
+            perif->is_rec = false;
+            perif->edge_mode = DET_EDGE1_RISE;
+            gpio_set_irq_enabled(
+                FREQUECY_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, false);
+            sig_det_calculate_rec();
+        }
+    } else if (events & GPIO_IRQ_EDGE_FALL) {
+        if (perif->edge_mode == DET_EDGE2_FALL) {
+            perif->edge_times[DET_EDGE2_FALL] = current_time;
+            perif->edge_mode = DET_EDGE3_RISE;
+            // Přepnutí triggeru na RISING hranu
+            gpio_set_irq_enabled(FREQUECY_PIN, GPIO_IRQ_EDGE_FALL, false);
+            gpio_set_irq_enabled(FREQUECY_PIN, GPIO_IRQ_EDGE_RISE, true);
         }
     }
 }
