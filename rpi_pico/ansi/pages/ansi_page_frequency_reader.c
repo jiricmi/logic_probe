@@ -65,6 +65,10 @@ void ansi_generate_frequency_reader(sig_det_t* detector) {
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
         snprintf(buff, BASE_TEXT_BUFF_LEN, "Duty: %3u %%", (uint16_t)duty);
         ansi_send_text(buff, &ansi_default_conf);
+        ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Gate time: %5u ms",
+                 GATE_TIMES[detector->gate_perif.gate_index]);
+        ansi_send_text(buff, &ansi_default_conf);
 
     } else {
         char pulse_text[] = "Pulse found: ";
@@ -110,7 +114,7 @@ void ansi_get_detector_mode(void) {
 
 void ansi_help_reader(void) {
     if (global_var.device_state == DEV_STATE_FREQUENCY_READ) {
-        ansi_print_help_msg("M: one pulse mode", 0);
+        ansi_print_help_msg("M: one pulse mode | T: change gate time", 0);
     } else {
         ansi_print_help_msg("D: delete catch flag | M: change mode", 0);
     }

@@ -31,6 +31,14 @@ void control_frequency_reader_page(char received_char, sig_det_t* sig_det) {
             dev_mode_request_frontend_change();
             break;
         }
+        case 't':
+        case 'T':
+            sig_det->gate_perif.gate_index++;
+            if (sig_det->gate_perif.gate_index >= GATE_TIME_COUNT) {
+                sig_det->gate_perif.gate_index = 0;
+            }
+            dev_mode_request_update();
+            break;
         case 'd':
         case 'D':
             global_var.sig_det_perif.pulse_found = false;

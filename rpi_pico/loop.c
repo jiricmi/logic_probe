@@ -1,5 +1,6 @@
 #include "loop.h"
 #include <stdint.h>
+#include <stdio.h>
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
@@ -25,6 +26,7 @@ void dev_mode_perif_turn_off(adc_vars_t* adc_perif) {
     adc_stop_measure(adc_perif);
     gpio_set_irq_enabled_with_callback(
         FREQUECY_PIN, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, false, NULL);
+    sig_det_gate_timer_deinit(&global_var.sig_det_perif.gate_perif);
     global_var.sig_det_perif.is_rec = false;
     global_var.sig_det_perif.is_rec_finished = true;
 }
@@ -111,6 +113,7 @@ void dev_mode_run(void) {
                         FREQUECY_PIN, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
                         true, &sig_det_recproc_pulse_callback);
                 }
+                delay = 1;
             }
         case DEV_STATE_DETECT_PULSE_UP:
         case DEV_STATE_DETECT_PULSE_DOWN:

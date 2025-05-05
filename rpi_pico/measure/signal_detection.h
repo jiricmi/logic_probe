@@ -4,12 +4,16 @@
 #include "pico/stdlib.h"
 
 #define FREQUECY_PIN 21
-#define GATE_TIMER_PRESCALER 250  // toto vysvetlit
-#define GATE_TIMER_WRAP 125000
-#define SAMPLE_FREQ (125000000 / (GATE_TIMER_PRESCALER * GATE_TIMER_WRAP))
+#define GATE_TIMER_PRESCALER 250
+#define SAMPLE_FREQ 125000000
 
 #define DETECTOR_N_OF_EDGES 3
 #define DETECTOR_N_OF_WIDTHS 3
+
+#define GATE_TIME_COUNT 4
+
+static uint32_t GATE_WRAPS[] = {125000, 62500, 12500, 6250};
+static uint32_t GATE_TIMES[] = {250, 125, 25, 1};
 
 typedef enum { DET_EDGE1_RISE, DET_EDGE2_FALL, DET_EDGE3_RISE } det_n_edge_t;
 
@@ -27,6 +31,7 @@ typedef struct {
     uint32_t timer_slice;
     uint32_t gate_slice;
     uint32_t gate_dma_channel;
+    uint8_t gate_index;
 
 } timer_gate_perif_t;
 
@@ -47,6 +52,7 @@ void sig_det_pulse_detect_init(sig_det_t* det_perif);
 
 void sig_det_gate_timer_init(timer_gate_perif_t* perif);
 
+void sig_det_gate_timer_deinit(timer_gate_perif_t* perif);
 bool sig_det_check_ready_gate(timer_gate_perif_t* perif);
 
 void sig_det_counters_start(timer_gate_perif_t* perif);

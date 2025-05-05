@@ -31,8 +31,9 @@ void sig_det_gate_timer_init(timer_gate_perif_t* perif) {
     perif->gate_slice = pwm_gpio_to_slice_num(0);
 
     pwm_set_clkdiv_int_frac(perif->gate_slice, GATE_TIMER_PRESCALER, 0);
-    pwm_set_wrap(perif->gate_slice, GATE_TIMER_WRAP / 2 - 1);
-    pwm_set_chan_level(perif->gate_slice, PWM_CHAN_B, GATE_TIMER_WRAP / 4);
+    pwm_set_wrap(perif->gate_slice, GATE_WRAPS[perif->gate_index] / 2 - 1);
+    pwm_set_chan_level(perif->gate_slice, PWM_CHAN_B,
+                       GATE_WRAPS[perif->gate_index] / 4);
     pwm_set_phase_correct(perif->gate_slice, true);
 
     perif->gate_dma_channel = dma_claim_unused_channel(true);
@@ -47,6 +48,14 @@ void sig_det_gate_timer_init(timer_gate_perif_t* perif) {
                           &perif->csr_timer_stop, &perif->csr_timer_stop, 1,
                           false);
     pwm_set_enabled(perif->gate_slice, true);
+}
+
+void sig_det_gate_timer_deinit(timer_gate_perif_t* perif) {
+    pwm_set_enabled(perif->gate_slice, false);
+
+    dma_channel_abort(perif->gate_dma_channel);
+
+    dma_channel_unclaim(perif->gate_dma_channel);
 }
 
 bool sig_det_check_ready_gate(timer_gate_perif_t* perif) {
@@ -70,7 +79,8 @@ void sig_det_get_freq_value(sig_det_t* perif) {
         ;
     pwm_set_enabled(perif->gate_perif.gate_slice, false);
     perif->freq = pwm_get_counter(perif->gate_perif.timer_slice) *
-                  SAMPLE_FREQ;  // TODO: upravit
+                  (SAMPLE_FREQ / (GATE_TIMER_PRESCALER *
+                                  GATE_WRAPS[perif->gate_perif.gate_index]));
 }
 
 void sig_det_pulse_detect_callback(uint gpio, uint32_t events) {
