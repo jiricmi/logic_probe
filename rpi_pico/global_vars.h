@@ -5,6 +5,7 @@
 #include "measure/adc_control.h"
 #include "probe_usb.h"
 #include "signal_detection.h"
+#define LED_STATE_COUNT 3
 
 typedef struct {
     dev_state_t device_state;
@@ -16,6 +17,7 @@ typedef struct {
     // measures
     adc_vars_t adc_perif;
     sig_det_t sig_det_perif;
+    bool gpio_level_state[LED_STATE_COUNT];
     //    sig_generator_t* signal_generator;
 } global_vars_t;
 

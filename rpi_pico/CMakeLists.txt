@@ -15,12 +15,15 @@ add_executable(
   ansi/pages/ansi_page_main.c
   ansi/pages/ansi_page_voltage_measure.c
   ansi/pages/ansi_page_frequency_reader.c
+  ansi/pages/ansi_page_levels.c
   ansi/ansi_pages.c
   perif/uart_control/uart_control.c
   perif/uart_control/control_voltage_measure.c
   perif/uart_control/control_frequency_reader.c
+  perif/uart_control/control_levels.c
   measure/adc_control.c
   measure/signal_detection.c
+  measure/levels.c
   probe_usb.c
   probe_error.c
   global_vars.c

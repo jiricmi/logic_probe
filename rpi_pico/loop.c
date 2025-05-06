@@ -4,7 +4,9 @@
 #include "adc_control.h"
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
+#include "levels.h"
 #include "pages/ansi_page_frequency_reader.h"
+#include "pages/ansi_page_levels.h"
 #include "pages/ansi_page_voltage_measure.h"
 #include "perif/uart_control/uart_control.h"
 
@@ -29,6 +31,7 @@ void dev_mode_perif_turn_off(adc_vars_t* adc_perif) {
     sig_det_gate_timer_deinit(&global_var.sig_det_perif.gate_perif);
     global_var.sig_det_perif.is_rec = false;
     global_var.sig_det_perif.is_rec_finished = true;
+    deinit_level_gpio();
 }
 
 void dev_mode_change_mode(dev_state_t mode) {
@@ -73,6 +76,9 @@ void dev_mode_update_perif(void) {
             break;
         case DEV_STATE_PULSE_GEN:
             //   generator_setup_timers(sig_gen);
+            break;
+        case DEV_STATE_LEVEL:
+            init_level_gpio();
             break;
         default:
             break;
@@ -124,6 +130,9 @@ void dev_mode_run(void) {
             //      generator_send_pulse(global_var.signal_generator);
             //   }
             //   ansi_render_impulse_generator(global_var.signal_generator);
+            break;
+        case DEV_STATE_LEVEL:
+            ansi_render_levels_page();
             break;
         default:
             break;

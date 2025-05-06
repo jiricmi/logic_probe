@@ -5,6 +5,7 @@
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
 #include "pages/ansi_page_frequency_reader.h"
+#include "pages/ansi_page_levels.h"
 #include "pages/ansi_page_main.h"
 #include "pages/ansi_page_voltage_measure.h"
 
@@ -25,6 +26,9 @@ void ansi_render_current_page(void) {
             break;
         case ANSI_PAGE_IMPULSE_GENERATOR:
             //    ansi_render_impulse_generator_page();
+            break;
+        case ANSI_PAGE_LEVELS:
+            ansi_render_levels_page();
             break;
         default:
             ansi_render_main_page();

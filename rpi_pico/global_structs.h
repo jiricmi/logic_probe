@@ -9,6 +9,7 @@ typedef enum {
     DEV_STATE_DETECT_PULSE_UP,
     DEV_STATE_DETECT_PULSE_DOWN,
     DEV_STATE_PULSE_GEN,
+    DEV_STATE_LEVEL,
 } dev_state_t;
 
 #endif
