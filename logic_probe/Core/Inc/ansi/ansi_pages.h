@@ -24,4 +24,6 @@ void ansi_render_current_page(void);
 void ansi_set_current_page(ansi_page_type_t page);
 
 void ansi_print_help_msg(const char* msg, const uint8_t row_offset);
+
+void ansi_render_welcome_message(void);
 #endif

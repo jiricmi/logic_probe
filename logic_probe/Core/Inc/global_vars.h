@@ -19,6 +19,7 @@
 #define SETUP_WAIT 300
 
 typedef struct {
+    _Bool booted;
     dev_state_t device_state;
     local_state_t local_state;
     local_substate_t local_substate;

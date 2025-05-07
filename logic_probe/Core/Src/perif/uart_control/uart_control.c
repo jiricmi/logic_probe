@@ -16,6 +16,9 @@
 extern global_vars_t global_var;
 
 void get_current_control(void) {
+    if (!global_var.booted) {
+        return;
+    }
     char received_char = global_var.received_char;
     switch (global_var.current_page) {
         case ANSI_PAGE_MAIN:

@@ -81,7 +81,8 @@ uart_perif_t uart_perif;
 i2c_perif_t i2c_perif;
 spi_perif_t spi_perif;
 
-global_vars_t global_var = {DEV_STATE_NONE,
+global_vars_t global_var = {false,
+                            DEV_STATE_NONE,
                             LOCAL_STATE_LOGIC_PROBE,
                             LOCAL_SUBSTATE_CHANNEL_1,
                             DEV_SETUP_UART,
@@ -183,6 +184,12 @@ int main(void) {
     } else {
         neopixel_send_color(global_var.visual_output, NEOPIXEL_RED);
     }
+
+    while (!global_var.booted) {
+        ansi_render_welcome_message();
+        HAL_Delay(200);
+    }
+
     /* USER CODE END 2 */
 
     /* Infinite loop */

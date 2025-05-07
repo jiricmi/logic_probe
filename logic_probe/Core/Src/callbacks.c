@@ -15,15 +15,13 @@ extern global_vars_t global_var;
 
 extern UART_HandleTypeDef UART;
 
-extern TIM_HandleTypeDef htim14;
-extern TIM_HandleTypeDef htim16;
-
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
     if (huart->Instance == UART_INST) {
         if (global_var.received_char == 'r' ||
             global_var.received_char == 'R') {  // reload
             ansi_clear_terminal();
             ansi_render_current_page();
+            global_var.booted = true;
         } else {
             get_current_control();
         }

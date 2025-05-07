@@ -64,3 +64,9 @@ void ansi_print_help_msg(const char* msg, const uint8_t row_offset) {
                     TERMINAL_CENTER - (strlen(msg) / 2));
     ansi_send_text(msg, &ansi_default_conf);
 }
+
+void ansi_render_welcome_message(void) {
+    ansi_render_border('r', "r", "");
+    ansi_set_cursor(12, TERMINAL_CENTER - 9);
+    ansi_send_text("Press 'R' to start", &ansi_bold_conf);
+}
