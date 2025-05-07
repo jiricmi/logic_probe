@@ -9,6 +9,7 @@
 #define LED_STATE_COUNT 3
 
 typedef struct {
+    bool booted;
     dev_state_t device_state;
     bool need_frontend_update;
     bool need_perif_update;

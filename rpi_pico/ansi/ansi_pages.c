@@ -5,6 +5,7 @@
 #include "ansi_abstraction_layer.h"
 #include "global_vars.h"
 #include "pages/ansi_page_frequency_reader.h"
+#include "pages/ansi_page_impulse_generator.h"
 #include "pages/ansi_page_levels.h"
 #include "pages/ansi_page_main.h"
 #include "pages/ansi_page_voltage_measure.h"
@@ -44,4 +45,10 @@ void ansi_print_help_msg(const char* msg, const uint8_t row_offset) {
     ansi_set_cursor(TERMINAL_HEIGHT - 2 - row_offset,
                     TERMINAL_CENTER - (strlen(msg) / 2));
     ansi_send_text(msg, &ansi_default_conf);
+}
+
+void ansi_render_welcome_message(void) {
+    ansi_render_border('r', "r", "");
+    ansi_set_cursor(12, TERMINAL_CENTER - 9);
+    ansi_send_text("Press 'R' to start", &ansi_bold_conf);
 }

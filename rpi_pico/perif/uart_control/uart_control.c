@@ -13,6 +13,7 @@ extern global_vars_t global_var;
 void get_current_control(const char received_char) {
     if (received_char == 'r' || received_char == 'R') {
         dev_mode_request_frontend_change();
+        global_var.booted = true;
         return;
     }
     switch (global_var.current_page) {
@@ -40,6 +41,9 @@ void get_current_control(const char received_char) {
 }
 
 void control_main_page(const char received_char) {
+    if (!global_var.booted) {
+        return;
+    }
     switch (received_char) {
         case 'v':
         case 'V':
