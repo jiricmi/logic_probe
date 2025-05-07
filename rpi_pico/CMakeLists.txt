@@ -15,19 +15,25 @@ add_executable(
   ansi/pages/ansi_page_main.c
   ansi/pages/ansi_page_voltage_measure.c
   ansi/pages/ansi_page_frequency_reader.c
+  ansi/pages/ansi_page_impulse_generator.c
   ansi/pages/ansi_page_levels.c
   ansi/ansi_pages.c
   perif/uart_control/uart_control.c
   perif/uart_control/control_voltage_measure.c
   perif/uart_control/control_frequency_reader.c
+  perif/uart_control/control_impulse_generator.c
   perif/uart_control/control_levels.c
   measure/adc_control.c
   measure/signal_detection.c
   measure/levels.c
+  measure/signal_generation.c
   probe_usb.c
   probe_error.c
   global_vars.c
   loop.c)
+
+pico_generate_pio_header(logic_probe ${CMAKE_SOURCE_DIR}/measure/pulse_up.pio)
+pico_generate_pio_header(logic_probe ${CMAKE_SOURCE_DIR}/measure/pulse_down.pio)
 
 target_include_directories(
   ${CMAKE_PROJECT_NAME}
@@ -36,8 +42,14 @@ target_include_directories(
   PRIVATE ${CMAKE_SOURCE_DIR}/perif/uart_control
   PRIVATE ${CMAKE_SOURCE_DIR})
 
-target_link_libraries(logic_probe pico_stdlib pico_multicore hardware_adc
-                      hardware_dma hardware_pwm)
+target_link_libraries(
+  logic_probe
+  pico_stdlib
+  pico_multicore
+  hardware_adc
+  hardware_dma
+  hardware_pwm
+  hardware_pio)
 
 pico_enable_stdio_usb(logic_probe 1)
 pico_enable_stdio_uart(logic_probe 0)

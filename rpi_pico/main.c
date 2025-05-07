@@ -16,6 +16,7 @@ void setup() {
     adc_set_temp_sensor_enabled(false);
     usb_init(&global_var.usb_perif);
     adc_init_struct(&global_var.adc_perif);
+    sig_gen_init_struct(&global_var.sig_gen_perif);
 }
 
 int main() {

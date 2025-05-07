@@ -25,7 +25,7 @@ void ansi_render_current_page(void) {
             ansi_render_frequency_reader_page();
             break;
         case ANSI_PAGE_IMPULSE_GENERATOR:
-            //    ansi_render_impulse_generator_page();
+            ansi_render_impulse_generator_page();
             break;
         case ANSI_PAGE_LEVELS:
             ansi_render_levels_page();

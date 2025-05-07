@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "ansi_pages.h"
 #include "control_frequency_reader.h"
+#include "control_impulse_generator.h"
 #include "control_levels.h"
 #include "control_voltage_measure.h"
 #include "global_vars.h"
@@ -27,7 +28,7 @@ void get_current_control(const char received_char) {
                                           &global_var.sig_det_perif);
             break;
         case ANSI_PAGE_IMPULSE_GENERATOR:
-            //  control_impulse_generator_page(received_char);
+            control_impulse_generator_page(received_char);
             break;
         case ANSI_PAGE_LEVELS:
             control_levels_page(received_char);
