@@ -19,7 +19,7 @@
   meta: (
     title: "Multifunkční diagnostická logická sonda", author: (
       name: "Milan Jiříček", email: "jiricmi1@fel.cvut.cz", url: "https://github.com/jiricmi/logic_probe",
-    ), bachelor: true, diff_usage:false, supervisor: "doc. Ing. Jan Fischer, CSc.", faculty: "Fakulta elektrotechnická", department: "Katedra měření", study-programme: "Otevřená informatika",
+    ), bachelor: true, diff_usage:false, supervisor: "doc. Ing. Jan Fischer, CSc.", faculty: "Fakulta elektrotechnická", department: "Katedra kybernetiky", study-programme: "Otevřená informatika", study-spec: "Základy umělé inteligence a počítačových věd",
     abbrs: (
         "SOP": "Small Outline Package",
         "TSSOP": "Thin Shrink Small Outline Package",
@@ -203,23 +203,15 @@ který je požadován. Časový interval lze vypočítat @timer-int.
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
 === Knihovna STM HAL
-Hardware abstraction layer je knihovna poskytovaná společností
-STMicroelectronics pro jejich mikrořadiče řady STM32. Tato knihovna tvoří vrstvu
-abstrakce mezi aplikací a~periferiemi mikrokontroléru. Pokytuje funkce na vyšší
-úrovni, které usnadňují přístup např. k GPIO, USART, SPI, I2C bez nutnosti
-přímého přístupu k registrům procesoru @STM-CUBE.
+Hardware Abstraction Layer (HAL) od společnosti STMicroelectronics je knihovna určená pro mikrořadiče řady STM32, která slouží jako abstrakční vrstva mezi aplikací a hardwarem zařízení. Jejím hlavním cílem je zjednodušit vývojářům práci s periferiemi, jako jsou GPIO piny, komunikační rozhraní USART, SPI nebo I2C, a to bez nutnosti přímého zápisu do hardwarových registrů procesoru. HAL je součástí širšího ekosystému STM32Cube, který zahrnuje také nástroje pro konfiguraci mikrokontrolérů (např. STM32CubeMX) a generování kódu @STM-CUBE.
 
-Mezi vlastnosti, kromě zmíněné jednoduchosti patří přenositelnost. Spousta
-mikrořadičů například využívají jiné adresy pro specifickou funkcionalitu. Pokud
-vývojář bude potřebovat portovat aplikaci na jiný mikrořadič, není nutné
-přepisovat různé adresy a logiku programu ale pouze změnit hardware a jelikož
-program pracuje s abstrakcí, bude nadále fungovat.ti přímého přístupu k
-registrům procesoru. @stm32cubemx-arch znázorňuje diagram, který znázorňuje
+Mezi klíčové vlastnosti HAL je přenositelnost kódu. Protože různé modely MCU STM32 mohou mít odlišné mapování paměti nebo specifické hardwarové vlastnosti, HAL tyto rozdíly abstrahuje. Pokud vývojář potřebuje převést aplikaci na jiný čip z řady STM32, nemusí ručně upravovat adresy registrů a měnit logiku ovládání periferií, ale stačí využít nástroje na konfiguraci jako STM32CubeMX zatímco aplikační kód zůstává nezměněn. Tento přístup šetří čas a snižuje riziko chyb při portování projektů.
+@stm32cubemx-arch znázorňuje diagram, který znázorňuje
 architekturu HAL @STM-HAL-ARCH.
 
 Součástí HALu je tzv. CMSIS,
 což je sada standardizovanách rozhraní, které umožňují konfiguraci periferií,
-správu procesorového jádra, obsluhu přerušení a další @ARM-CMSIS.
+správu jádra, obsluhu přerušení a další @ARM-CMSIS.
 CMSIS je rozdělen do modulárních komponent, kdy vývojář může využít pouze části,
 které potřebuje. Např. CMSIS-CORE, která poskytuje přístup k jádru Cortex-M a
 periferiím procesoru, obsahuje definice registrů, přístup k NVIC apod.
@@ -234,7 +226,6 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 ) <stm32cubemx-arch>
 
 == Měření veličin testovaného obvodu
-Pro měření veličin je nutné využít vztahů pro analýzu obvodů a schopnost sondy na vypočítat veličiny na základě měření AD převodníku nebo hodnot čítače. #todo[rozvinout]
 === Měření napětí a logických úrovní
 Pro měření napětí, jak již zmiňuje #ref(<adc>, supplement: [kapitola]), je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 32 vzorků měření do dvou bloků tj. 64 vzorků celkem. Každých 250 ms se provede průběžné měření 32 vzorků (vzorkovací frekvence $~$128 Hz). Nejstarší blok 32 vzorků je odstraněn a nahrazen novými daty.
 #v(10pt)
@@ -284,9 +275,33 @@ V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: 
     caption: [Schéma děliče napětí],
     image("pic/divider.png", width: 30%)
 )<divider-img>
-=== Měření frekvence a střídy PWM
-K měření frekvence je využíván 32 bitový časovač, 
-=== Detekce pulzů
+=== Měření frekvence
+==== Metoda hradlování
+Pro měření frekvencí v řádu kHz a MHz je využívána metoda hradlování. Tato metoda využívá čítače, který registruje počet náběžných nebo sestupných hran měřené frekvence $N$, za určitý čas~$T_"gate"$. Čas, po který jsou počítány hrany se nazývá hradlovací (angl. gate time). Frekvence $f_"gate"$ touto metodou je vypočítán pomocí #ref(<gate-freq>, supplement: [rovnice]). Délka hradlovacího času může mít vliv na výsledek a proto není vhodné volit jeden čas, pro všechny druhy frekvencí. Pokud bude zvolen čas příliš dlouhý, může to zpomalovat měření a také může nastat problém na straně omezenosti hardwaru, kdy při měření vysoké frekvence může dojít k přetečení čítače. V případě příliš krátkého času dojde k nepřesnosti měření a případě nízkých frekvencích nemusí dojít k zachycení správného počtu hran. Proto v případě sondy bude čas volitelný uživatelem.
+
+$ f_"gate" = N/T_"gate" $<gate-freq>
+
+Pro měření metodou hradlování je využit časovač v režimu čítání pulzů, a další časovač pro měření času hradlování, kde tyto dva časovače jsou mezi sebou synchronizovány aby nedocházelo k velké odchylce mezi časem zahájení resp. ukončení činosti čítače a časovače hradlovacího času, případě odchylky může dojít k počítání hran, které nejsou v okně hradlovacího času. Časovač pro měření hradlovacího času je závislý na oscilátoru MCU, kde odchylka frekvence oscilátoru periferie může ovlivnit realný čas měření a ve finále také výslednou frekvenci. Prakticky tato metoda neumožňuje změřit střídu PWM signálu, protože jsou počítány pouze pulzy. 
+
+#figure(
+    placement: none,
+    caption: [Signál při měření metodou hradlování],
+    image("pic/signal-freq-diag.png")
+)
+==== Reciproční frekvence
+Reciproční frekvence vhodná pro měření nízkých frekvencí $F_"gate"$ (typicky $<$ $1$ KHz). Na rozdíl od hradlování nepočítá hrany za pevný čas, ale měří periodu signálu $T$, ze které frekvenci dopočítá #ref(<rec-freq>, supplement:[vztahem]). Perioda je detekována pomocí náběžné/sestupné hrany, kdy se zahájí měření a měření je ukončeno při další náběžné/sestupné hraně. Během této doby se počítají pulsy interního oscilátoru MCU. 
+$ f_"rec" = 1/T $<rec-freq>
+
+Výhoda této metody je možnost výpočtu střídy PWM signálu. V případě, že místo měření celé periody, může být změřen čas od náběžné hrany k sestupné hraně a poté od sestupné k náběžné hraně. Tímto je možno získat šířku pulzu ve vysoké logické úrovni a šířku pulzu v nízké logické úrovni. Pomocí #ref(<strida-freq>, supplement:[rovnice]) je možné dopočítat střídu PWM.
+
+$ D = tau_"high" / (tau_"high" + tau_"low") $<strida-freq>
+#figure(
+    placement: none,
+    caption: [Signál při měření reciproční frekvence],
+    image("pic/signal-freq-rec-diag.png")
+)
+
+
 == Analýza komunikačních rozhraní
 @rozbor-vyuka zmiňuje testování hardwarových částí obvodu. 
 Analýza seriové komunikace je častá nutnost při hledání chyby v implementaci studenta či vývojáře nebo jako otestování funkčnosti součástky. Logická sonda poskytne prostředí pro pasivní poslouchání komunikace, které pomůže vývojáři nalézt chybu v programu nebo studentovi při realizaci školního projektu.
