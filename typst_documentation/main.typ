@@ -235,7 +235,7 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 === Měření napětí a logických úrovní
 Pro měření napětí, jak již zmiňuje #ref(<adc>, supplement: [kapitola]), je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 32 vzorků měření do dvou bloků tj. 64 vzorků celkem. Každých 250 ms se provede průběžné měření 32 vzorků (vzorkovací frekvence $~$128 Hz). Nejstarší blok 32 vzorků je odstraněn a nahrazen novými daty.
 #v(10pt)
-$ U = (sum_(i=0)^(2^5)(U_"staré i") + sum_(i=0)^(2^5)(U_"nové j")) / 2^6 $
+$ V = (sum_(i=0)^(2^5)(V_"staré i") + sum_(i=0)^(2^5)(V_"nové j")) / 2^6 $
 #v(10pt)
 
 Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
@@ -264,17 +264,17 @@ $ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
 === Měření odporu
 Pro měření neznámého odporu $R_x$ je využit AD převodník (viz #ref(<adc>, supplement: [kapitola])) v kombinaci s napěťovým děličem, jehož schéma je znázorněno na obrázku @divider-img. Rezistory $R_norm$ (normálový rezistor) a $R_x$ (měřený odpor) jsou zapojeny v sérii, čímž tvoří uzavřenou smyčku. Podle Kirchhoffova napěťového zákona platí, že součet úbytků napětí na obou rezistorech je roven napájecímu napětí @DIVIDER_TEXT @Center_2017:
 #v(10pt)
-$ U_"dd" = U_R_norm + U_R_x $ <ubytek-napet>
+$ V_"dd" = V_R_norm + V_R_x $ <ubytek-napet>
 #v(10pt)
 Pomocí pravidla pro napěťový dělič lze vztah mezi napětími a odpory vyjádřit jako:
 #v(10pt)
-$ U_R_x = U_"dd" times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
+$ V_R_x = V_"dd" times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
 #v(10pt)
-Za předpokladu, že $R_norm$ a napájecí napětí $U_"dd"$ jsou známé, a hodnota $U_R_x$ je změřena ADC, lze neznámý odpor $R_x$ vypočítat z upravené #ref(<divider-1-rov>, supplement:[rovnice]) @DIVIDER_TEXT:
+Za předpokladu, že $R_norm$ a napájecí napětí $V_"dd"$ jsou známé, a hodnota $V_R_x$ je změřena ADC, lze neznámý odpor $R_x$ vypočítat z upravené #ref(<divider-1-rov>, supplement:[rovnice]) @DIVIDER_TEXT:
 #v(10pt)
-$ R_x = R_"norm" times (U_R_x)/(U_"dd" - U_R_x) $<divider-2-rov>
+$ R_x = R_"norm" times (V_R_x)/(V_"dd" - V_R_x) $<divider-2-rov>
 #v(10pt)
-V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: Uživatel sestaví napěťový dělič skládající se z normálového rezistoru $R_norm$ (typicky 10 $k Omega$) a měřeného rezistoru $R_x$. Normálový rezistor je připojen mezi referenční napětí $U_"dd"$ a vstup ADC (kanál 1), zatímco $R_x$ je zapojen mezi tento vstup a zem (viz schéma @divider-img). Sonda následně změří napětí $U_"dd"$ na kanálu 1 ADC a pomocí #ref(<divider-2-rov>, supplement: [rovnice]), vypočítá hodnotu neznámého odporu @DIVIDER_TEXT.
+V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: Uživatel sestaví napěťový dělič skládající se z normálového rezistoru $R_norm$ (typicky 10 $k Omega$) a měřeného rezistoru $R_x$. Normálový rezistor je připojen mezi referenční napětí $V_"dd"$ a vstup ADC (kanál 1), zatímco $R_x$ je zapojen mezi tento vstup a zem (viz schéma @divider-img). Sonda následně změří napětí $V_"dd"$ na kanálu 1 ADC a pomocí #ref(<divider-2-rov>, supplement: [rovnice]), vypočítá hodnotu neznámého odporu @DIVIDER_TEXT.
 
 #figure(
     placement: none,
@@ -283,7 +283,7 @@ V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: 
 )<divider-img>
 === Měření frekvence
 ==== Metoda hradlování
-Pro měření frekvencí v řádu kHz a MHz je využívána metoda hradlování. Tato metoda využívá čítače, který registruje počet náběžných nebo sestupných hran měřené frekvence $N$, za určitý čas~$T_"gate"$. Čas, po který jsou počítány hrany se nazývá hradlovací (angl. gate time). Frekvence $f_"gate"$ touto metodou je vypočítán pomocí #ref(<gate-freq>, supplement: [rovnice]). Délka hradlovacího času může mít vliv na výsledek a proto není vhodné volit jeden čas, pro všechny druhy frekvencí. Pokud bude zvolen čas příliš dlouhý, může to zpomalovat měření a také může nastat problém na straně omezenosti hardwaru, kdy při měření vysoké frekvence může dojít k přetečení čítače. V případě příliš krátkého času dojde k nepřesnosti měření a případě nízkých frekvencích nemusí dojít k zachycení správného počtu hran. Proto v případě sondy bude čas volitelný uživatelem.
+Pro měření frekvencí v řádu KHz a MHz je využívána metoda hradlování. Tato metoda využívá čítače, který registruje počet náběžných nebo sestupných hran měřené frekvence $N$, za určitý čas~$T_"gate"$. Čas, po který jsou počítány hrany se nazývá hradlovací (angl. gate time). Frekvence $f_"gate"$ touto metodou je vypočítán pomocí #ref(<gate-freq>, supplement: [rovnice]). Délka hradlovacího času může mít vliv na výsledek a proto není vhodné volit jeden čas, pro všechny druhy frekvencí. Pokud bude zvolen čas příliš dlouhý, může to zpomalovat měření a také může nastat problém na straně omezenosti hardwaru, kdy při měření vysoké frekvence může dojít k přetečení čítače. V případě příliš krátkého času dojde k nepřesnosti měření a případě nízkých frekvencích nemusí dojít k zachycení správného počtu hran. Proto v případě sondy bude čas volitelný uživatelem.
 
 $ f_"gate" = N/T_"gate" $<gate-freq>
 
@@ -295,7 +295,7 @@ Pro měření metodou hradlování je využit časovač v režimu čítání pul
     image("pic/signal-freq-diag.png")
 )
 ==== Reciproční frekvence
-Reciproční frekvence vhodná pro měření nízkých frekvencí $F_"gate"$ (typicky $<$ $1$ KHz). Na rozdíl od hradlování nepočítá hrany za pevný čas, ale měří periodu signálu $T$, ze které frekvenci dopočítá #ref(<rec-freq>, supplement:[vztahem]). Perioda je detekována pomocí náběžné/sestupné hrany, kdy se zahájí měření a měření je ukončeno při další náběžné/sestupné hraně. Během této doby se počítají pulsy interního oscilátoru MCU. 
+Reciproční frekvence vhodná pro měření nízkých frekvencí $f_"rec"$ (typicky $<$ $1$ KHz). Na rozdíl od hradlování nepočítá hrany za pevný čas, ale měří periodu signálu $T$, ze které frekvenci dopočítá #ref(<rec-freq>, supplement:[vztahem]). Perioda je detekována pomocí náběžné/sestupné hrany, kdy se zahájí měření a měření je ukončeno při další náběžné/sestupné hraně. Během této doby se počítají pulsy interního oscilátoru MCU. 
 $ f_"rec" = 1/T $<rec-freq>
 
 Výhoda této metody je možnost výpočtu střídy PWM signálu. V případě, že místo měření celé periody, může být změřen čas od náběžné hrany k sestupné hraně a poté od sestupné k náběžné hraně. Tímto je možno získat šířku pulzu ve vysoké logické úrovni a šířku pulzu v nízké logické úrovni. Pomocí #ref(<strida-freq>, supplement:[rovnice]) je možné dopočítat střídu PWM.
@@ -513,22 +513,24 @@ Sonda je napájena skrze UART/USB převodník. Jelikož USB pracuje s napětím 
     placement: none,
     caption: [Zapojení regulátoru pro napájení STM32G030 @fischer-regulator],
     image("pic/regulator.png", width: 70%)
-)
+)<hw-regulator>
 #v(10pt)
 
-Návrh zohledňuje implementaci lokálního módu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
+Návrh zohledňuje implementaci lokálního režimu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
 
 Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle datasheetu vyžaduje napětí $3.7 ~ 5.3$ V @NEOPIXEL-REF. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V @CMOS @STM32G0-REF. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
 
-Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního módu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
+Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního režimu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
 
 == SOP8
-@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v pouzdře SOP8. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu, na pouzdro SOP8, jsou implementován pouze lokální režim a základní funkce terminálového režimu, jako měření napětí, frekvence a vysílání pulzů.
+@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v pouzdře SOP8. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim, které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu, na pouzdro SOP8, jsou implementován pouze lokální režim a základní funkce terminálového režimu, jako měření napětí, frekvence a vysílání pulzů.
+#v(10pt)
 #figure(
-    placement: auto,
+    placement: none,
     caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
     image("pic/sop8_pinout.png", width: 80%),
 )<sop8-pinout>
+#v(10pt)
 
 Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. `NRST` požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít `PA0`. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a `PA0` bylo použitelné. Pomocí nastavení bude zajištěno, že `NRST` bude ignorován po dobu běhu programu, nicméně při bootu je nežádoucí, aby byl přiveden na logicky nízkou úroveň, protože stále MCU v této fázi ignoruje nastavení optional bitu.
 #v(10pt)
@@ -541,31 +543,31 @@ Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více perif
 
 Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná @STM32G0-REF. Standartně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
 #figure(
-    placement: auto,
+    placement: none,
     caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
     image("pic/sop8_hw.png", width: 80%),
 )<sop8-hw>
 První z pinů k užívání je pin `PB7`. Tento pin slouží jako kanál AD převodníku pro měření napětí a pro měření odporu, pin je také využit pro hodinový signál pro posuvný registr.
 Na pinu `PA0` se nachází AD převodníkový kanál. Pin také disponuje kanály TIM2 časovače. Pin je použit jako druhý kanál AD převodníku pro měření napětí, pro posuvný registr je pin využíván pro posouvání dat do posuvného registru, měření frekvence, odchytávání Neopixel dat, detekce pulsů a generování frekvence. Pin `PB6` je použit pro odesílání dat do testované RGB LED.
 == TSSOP20<tssop20>
-Pouzdro TSSOP20 nabízí větší počet pinů a tím pádem i jednodušší implementaci pokročilých funkcí. Pouzdro má celkem 20 pinů, což má za následek, že např. může být pin `NRST` oddělen od `PA0` a má tak vlastní pin. Z tohoto důvodu při flashování MCU není potřeba myslet na nastavení optional bits pro `NRST` a může zůstat v základním nastavení.
+Pouzdro TSSOP20 nabízí oproti SOP8 výhodu většího počet pinů a tím pádem i jednodušší implementaci pokročilých funkcí. Pouzdro má celkem 20 pinů, což má za následek, že např. může být pin `NRST` (pin 6) oddělen od `PA0` a má tak vlastní pin. Z tohoto důvodu při flashování MCU není potřeba myslet na nastavení optional bits pro `NRST` a může zůstat v základním nastavení. Nicméně pin `PA14-BOOT0` musí být nastaven stejným způsobem jako u SOP8, tzn. optional bit `nBOOT_SEL` je nutné nastavit na `0` aby bylo možné při startu MCU určit, zda má být nabootován program ve FLASH paměti, nebo má poslouchat periferie pro nahrání programu. 
+
+Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný návrhu SOP8.  Piny `PA11` a `PA12` jsou přemapovány na `PA9` a `PA10`. Na pin `PA10` je připojen rezistor o velikosti 10 $K Omega$ vůči zemi pro detekci komunikace s PC. Ze stejného důvodu byl zachován pin `PB6` jako výstup pro WS2812D a `PA13` pro tlačítko pro lokální režim. @tssop20-hw ukazuje schéma zapojení s pouzdrem TSSOP20. Rozmístění pokročilých funkcí vychází z charakteristik jednotlivých pinů. Pin 1 (`PB7`) je využit stejně jako v pouzdře SOP8 jako první kanál ADC. Na pinu 1 (`PB8`) a 2 (`PB9`) se nachází I2C periferie a proto jsou využity pro sledování komunikace I2C sběrnice. Pin 7 (`PA0`) je k měření frekvence a napětí. Piny 9 (`PA2`) a 10 (`PA3`) mají USART periferii a proto jsou vhodní kandidáti na sledování UART komunikace. Piny 12 (`PA5`), 13 (`PA6`), 14 (`PA7`) a 15 (`PB0`) mají SPI rozhraní a proto jsou použity pro sledování SPI komunikace. $V_"dd"$ je připojeno na výstup linearního stabilizátoru z #ref(<hw-regulator>, supplement: [obrázku]), který má na výstopu $3.3$ $V$.
+
 #figure(
     caption: [STM32G030Jx TSSOP20 Pinout @STM32G030x6-tsop],
-    image("pic/tssop20_pinout.png", width: 80%)
+    image("pic/tssop20_pinout.png", width: 100%)
 )<tssop20-pinout>
 
 #figure(
     caption: [Schéma zapojení STM32G030 v pouzdře TSSOP20],
-    image("pic/tssop20_hw.png", width: 60%)
+    image("pic/tssop20_hw.png", width: 80%)
 )<tssop20-hw>
-
-
-
 
 = SW návrh logické sondy STM32
 Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
 == Logika nastavení módů
-Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv @sop8-hw a @tssop20-hw má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň.
+Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv @sop8-hw a @tssop20-hw má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň. 
 #v(5pt)
 #diagram(
 	node-stroke: 1pt,
