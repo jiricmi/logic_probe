@@ -1,5 +1,5 @@
 #import "./template/template/template.typ": *
-#import "@preview/fletcher:0.5.4" as fletcher: diagram, node, edge, shapes
+#import "@preview/fletcher:0.5.4" as fletcher: diagram, node, edge, shapes, 
 #import "@preview/codly:1.3.0": *
 #import "@preview/codly-languages:0.1.1": *
 #show: codly-init.with()
@@ -14,6 +14,15 @@
     #body
   ]
 ]
+
+#let blob(pos, label, tint: white, ..args) = node(
+	pos, align(center, label),
+	width: 28mm,
+	fill: tint.lighten(60%),
+	stroke: 1pt + tint.darken(20%),
+	corner-radius: 5pt,
+	..args,
+)
 
 #show: template.with(
   meta: (
@@ -241,15 +250,21 @@ $ V = (sum_(i=0)^(2^5)(V_"staré i") + sum_(i=0)^(2^5)(V_"nové j")) / 2^6 $
 Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
 Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření s frekvencí vyšší než 100 Hz zajistí, že dojde k potlačení rušení 50 Hz, které se může na vstupu vyskytnout #footnote[Dojde k eliminaci aliasingu.] @Nazeran2004-io.
 #v(10pt)
-#diagram(
-	edge-stroke: 1pt,
-    node-stroke: 1pt,
-	node((0,0), [smazání\ nejstarších\ 32 vzorků]),
-	edge("r", "->", label-pos: 0.1),
-	node((1,0), [naměření\ 32 vzorků]),
-	edge("r", "->", label-pos: 0.1),
-	node((2,0), [Aritmetický \průměr\ z 64 vzorků]),
-	edge("r,d,l,l,l,l,u,r", "->", label-pos: 0.1),
+#figure(
+    caption: [Diagram způsobu sbírání vzorků z ADC],
+    placement: none,
+    diagram(
+        cell-size: (8mm, 10mm),
+	    edge-stroke: 1pt,
+	    edge-corner-radius: 5pt,
+	    mark-scale: 70%,
+        blob((0,0), [smazání\ nejstarších\ 32 vzorků], tint: red),
+        edge("r", "-|>", label-pos: 0.1),
+        blob((1,0), [naměření\ 32 vzorků], tint: yellow),
+        edge("r", "-|>", label-pos: 0.1),
+        blob((2,0), [Aritmetický \průměr\ z 64 vzorků], tint: green),
+        edge((0,0), "d,rr,u", "<|--"),
+    )
 )
 #v(10pt)
 
@@ -447,8 +462,103 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
 )<neopixel_bit_time>
 
 
-== Grafické řešení
-@rozbor-vyuka zmiňuje důraz na jednoduchou přístupnost ve výuce, což zahrnuje i jednoduché zobrazení informací, které uživatel potřebuje. Proto aby byla sonda jednoduše použitelná bez nutnosti instalace specialního softwaru byla zvolena metoda generování TUI v terminálové aplikaci. Ke generaci rozhraní bude docházet na straně mikrokontroleru a posíláno UART periferií do PC. 
+= HW návrh logické sondy STM32
+ Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost a pravidla pro sestavení byla co nejvíce podobná.
+== Sdílené vlastnosti mezi návrhy pouzder<komp>
+Sonda je napájena skrze UART/USB převodník. Jelikož USB pracuje s napětím $5$ V ale STM32G030 vyžaduje napájecí napětí  $1.7 ~ 3.6$~V @STM32G0-REF je nutné napětí snížit. Proto byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3$~$plus.minus$~$0.1$~V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F @HT7533.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Zapojení regulátoru pro napájení STM32G030 @fischer-regulator],
+    image("pic/regulator.png", width: 90%)
+)<hw-regulator>
+#v(10pt)
+
+Návrh zohledňuje implementaci lokálního režimu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
+
+Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle datasheetu vyžaduje napětí $3.7 ~ 5.3$ V @NEOPIXEL-REF. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V @CMOS @STM32G0-REF. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
+
+Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního režimu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
+
+== SOP8
+@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v pouzdře SOP8. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim, které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu, na pouzdro SOP8, jsou implementován pouze lokální režim a základní funkce terminálového režimu, jako měření napětí, frekvence a vysílání pulzů.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
+    image("pic/sop8_pinout.png", width: 80%),
+)<sop8-pinout>
+#v(10pt)
+
+Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. `NRST` požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít `PA0`. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a `PA0` bylo použitelné. Pomocí nastavení bude zajištěno, že `NRST` bude ignorován po dobu běhu programu, nicméně při bootu je nežádoucí, aby byl přiveden na logicky nízkou úroveň, protože stále MCU v této fázi ignoruje nastavení optional bitu.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Paměťový prostor Flash option bits @STM32G0-REF],
+    image("pic/option_bits.png"),
+)<optional-bits>
+#v(10pt)
+
+Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná @STM32G0-REF. Standartně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
+#figure(
+    placement: none,
+    caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
+    image("pic/sop8_hw.png", width: 80%),
+)<sop8-hw>
+První z pinů k užívání je pin `PB7`. Tento pin slouží jako kanál AD převodníku pro měření napětí a pro měření odporu, pin je také využit pro hodinový signál pro posuvný registr.
+Na pinu `PA0` se nachází AD převodníkový kanál. Pin také disponuje kanály TIM2 časovače. Pin je použit jako druhý kanál AD převodníku pro měření napětí, pro posuvný registr je pin využíván pro posouvání dat do posuvného registru, měření frekvence, odchytávání Neopixel dat, detekce pulsů a generování frekvence. Pin `PB6` je použit pro odesílání dat do testované RGB LED.
+== TSSOP20<tssop20>
+Pouzdro TSSOP20 nabízí oproti SOP8 výhodu většího počet pinů a tím pádem i jednodušší implementaci pokročilých funkcí. Pouzdro má celkem 20 pinů, což má za následek, že např. může být pin `NRST` (pin 6) oddělen od `PA0` a má tak vlastní pin. Z tohoto důvodu při flashování MCU není potřeba myslet na nastavení optional bits pro `NRST` a může zůstat v základním nastavení. Nicméně pin `PA14-BOOT0` musí být nastaven stejným způsobem jako u SOP8, tzn. optional bit `nBOOT_SEL` je nutné nastavit na `0` aby bylo možné při startu MCU určit, zda má být nabootován program ve FLASH paměti, nebo má poslouchat periferie pro nahrání programu. 
+
+Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný návrhu SOP8.  Piny `PA11` a `PA12` jsou přemapovány na `PA9` a `PA10`. Na pin `PA10` je připojen rezistor o velikosti 10 $K Omega$ vůči zemi pro detekci komunikace s PC. Ze stejného důvodu byl zachován pin `PB6` jako výstup pro WS2812D a `PA13` pro tlačítko pro lokální režim. @tssop20-hw ukazuje schéma zapojení s pouzdrem TSSOP20. Rozmístění pokročilých funkcí vychází z charakteristik jednotlivých pinů. Pin 1 (`PB7`) je využit stejně jako v pouzdře SOP8 jako první kanál ADC. Na pinu 1 (`PB8`) a 2 (`PB9`) se nachází I2C periferie a proto jsou využity pro sledování komunikace I2C sběrnice. Pin 7 (`PA0`) je k měření frekvence a napětí. Piny 9 (`PA2`) a 10 (`PA3`) mají USART periferii a proto jsou vhodní kandidáti na sledování UART komunikace. Piny 12 (`PA5`), 13 (`PA6`), 14 (`PA7`) a 15 (`PB0`) mají SPI rozhraní a proto jsou použity pro sledování SPI komunikace. $V_"dd"$ je připojeno na výstup linearního stabilizátoru z #ref(<hw-regulator>, supplement: [obrázku]), který má na výstopu $3.3$ $V$.
+
+#figure(
+    caption: [STM32G030Jx TSSOP20 Pinout @STM32G030x6-tsop],
+    image("pic/tssop20_pinout.png", width: 100%)
+)<tssop20-pinout>
+
+#figure(
+    caption: [Schéma zapojení STM32G030 v pouzdře TSSOP20],
+    image("pic/tssop20_hw.png", width: 80%)
+)<tssop20-hw>
+
+= Návrh terminál režimu STM32
+== Princip oblužní smyčky
+Terminálový režim využívá rozhraní UART, pro sériovou komunikaci s PC. Způsob vstoupení do terminálového režimu rozebírá #ref(<kap-log-rezim>, supplement: [kapitola]). Základ terminálového režimu běží v nekonečné smyčce, která je na konci oddělena čekáním #footnote[Toto čekání se mění na základě zvolené funkce.]. Smyčka slouží jako obsluha akcí, které jsou vyvolány, jak uživatelem prostřednictví TUI, tak periferiemi, které momentálně běží. Obsluha při každé iteraci provede jednotlivé úkony, pokud příznaky v globální struktuře (@code-global_vars_t) jsou nastaveny. Příznaky jsou běžně nastavovány skrze přerušení, například vyvolané uživatelem skrze odeslání symbolu seriovou komunikací. Obsluha v každé iteraci zkontroluje, zda příznak `need_frontend_update` vyžaduje vykreslit grafiku TUI (#todo[kapitola ansi]), zda příznak `need_perif_update` vyžaduje změnit periferii (#todo[kapitola periferii]), poté vykreslí data, které periferie získala a nakonec čeká na další smyčku. Sonda vykresluje data na základě `device_state` promněné, která určuje, jakou funkci uživatel momentálně používá.
+#v(10pt)
+#figure(
+caption:[Diagram smyčky terminálového módu],
+    placement: none,
+    diagram(
+        cell-size: (8mm, 10mm),
+	    edge-stroke: 1pt,
+	    edge-corner-radius: 5pt,
+	    mark-scale: 70%,
+        blob((1,0.3), [start], tint: yellow, extrude: (0,3)),
+        edge((1,1),"-|>"),
+        blob((0,1), [Vyžádáno\ nové nastavení\ periferií?], shape: shapes.hexagon, tint: red),
+	    edge("r", "=>", [Ano]),
+    	edge("d", "=>", [Ne]),
+        blob((1,1), [Nastavit\ periferie], tint: yellow),
+    	edge("d,l", "-|>", []),
+        blob((0,2), [Vyžádána\ aktualizace\ rozhraní?], shape: shapes.hexagon, tint: red),
+    	edge("l", "=>", [Ano]),
+    	edge("d", "=>", [Ne]),
+        blob((-1,2), [Vykreslit\ aktuální\ grafiku\ celé stránky], tint: yellow),
+    	edge("d,r", "-|>", []),
+    	blob((0,3), [Vykreslit\ naměřené\ hodnoty], tint: yellow),
+    	edge("d", "-|>", []),
+    	blob((0,4), [Čekej], corner-radius: 2pt, tint:orange, extrude: (2,4)),
+        edge((0,4), (-1.7,4), "uuu,rr", "--|>"),
+    )
+)<diagram-terminal-mod>
+
+Metoda periodické obsluhy nastavování periferií a vykreslování TUI, oproti okamžité reakci přímo v přerušení, má výhodu v tom, že nemůže dojít k překrytí činností mezi hlavní smyčkou a přerušeními. Např. pokud bude stránka periodicky vykreslována, a stisk tlačítka by vyvolal přerušení k překreslení programu, může se přerušit smyčka v momentě, kdy už k překreslení dochází. V tomto případě poté dojde k rozbití obrazu vykresleného na terminál. Obdobná věc hrozí při vypínání a zapínání periferií. Kdy průběh deinicializace periferie přerušen a nastane inicializace, může dojít k nepredikovatelnému chování. Metodou obsluhy jsou definovány posloupnosti úkonů, které se nemohou překrývat.
+#todo[pokračovat]
+
+== Grafické řešení TUI
+@rozbor-vyuka zmiňuje důraz na jednoduchou přístupnost ve výuce, což zahrnuje i jednoduché zobrazení informací, které uživatel potřebuje. Proto aby byla sonda jednoduše použitelná bez nutnosti instalace specialního softwaru byla zvolena metoda generování TUI v terminálové aplikaci #footnote[Například program PuTTY...]. Ke generaci rozhraní bude docházet na straně mikrokontroleru a posíláno UART periferií do PC.
+
 === Ansi sekvence
 ANSI escape kódy představují standardizovanou sadu řídicích sekvencí pro manipulaci s textovým rozhraním v terminálech podporujících ANSI/X3.64 standard. Tyto kódy umožňují dynamickou úpravu vizuálních vlastností textu (barva, styl), pozicování kurzoru a další efekty, čímž tvoří základ pro tvorbu pokročilých terminálových aplikací @Grainger.
 ==== Syntaxe
@@ -504,158 +614,161 @@ ANSI escape kódy umožňují kromě formátování textu také dynamické mazá
     \033[2K // Smazání celého řádku
     \033[2KProgress: 75% // Smazání řádku a vypsání nového textu
 ```
-= HW návrh logické sondy STM32
- Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost a pravidla pro sestavení byla co nejvíce podobná.
-== Sdílené vlastnosti mezi návrhy pouzder<komp>
-Sonda je napájena skrze UART/USB převodník. Jelikož USB pracuje s napětím $5$ V ale STM32G030 vyžaduje napájecí napětí  $1.7 ~ 3.6$~V @STM32G0-REF. Z toho důvodu je nutné napětí snížit. Proto byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3$~$plus.minus$~$0.1$~V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F @HT7533.
+=== Vykreslování stránek
+Stránky jsou grafická reprezentace zvolené funkce. Tyto stránky vykreslují ovládací prvky, data získané periferiemi či varovné zprávy. Každá stránka je vykreslována skrze USART1 periferii skrze jednoduchou funkci (@code-send_str), která pošle string skrze periferii o dané velikosti. Na této funkci poté staví další funkce, které dokážou sestavovat větší celky. Funkce z #ref(<code-set_cursor>, supplement: [úryvku kódu]) nastavuje, dle pravidel zmíněných výše, kurzor na příslušné souřadnice. Ve funkci se také nachází kontrola, zda se kurzor nachází v rámci rozměrů stránky, které jsou fixně nastavené na $80 times 24$. Tyto rozměry jsou v terminálové aplikaci ohraničeny ASCII symboly. Pro vykreslení textu je využita funkce z #ref(<code-uart_text>, supplement: [úryvku kódu]), kde k danému textovému řetězci jsou před odesláním přidány ANSI sekvence pro podbarvení pozadí, textu a nebo ztučnění symbolů. Aplikace těchto všech funkcí lze vidět na #ref(<tui-menu>, supplement:[obrázku]), kde je vygenerována hlavní stránka sondy. 
+#figure(
+    caption: [Způsob odeslání stringu UART periferií],
+    supplement:[Úryvek kódu],
+    ```C
+void ansi_send_string(const char* str) {
+    HAL_UART_Transmit(USART1, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+}
+    ```
+)<code-send_str>
+
+#figure(
+    caption: [Způsob odeslání stringu UART periferií],
+    supplement:[Úryvek kódu],
+    ```C
+void ansi_set_cursor(const uint8_t row, const uint8_t col) {
+    if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
+        Error_Handler();
+        return;
+    }
+
+    char result[CURSOR_BUFF_SIZE];
+    size_t ret = snprintf(result, CURSOR_BUFF_SIZE, "\033[%u;%uH", row, col);
+
+    if (ret >= sizeof(result)) {
+        Error_Handler();
+    }
+    ansi_send_string(result);
+}
+```
+)<code-set_cursor>
+
+
+#figure(
+    caption: [TUI stránka hlavního menu],
+    image("pic/tui_main.png")
+)<tui-menu>
+
+= Návrh lokálního režimu STM32
+== Logika nastavení režimů<kap-log-rezim>
+Při připojení MCU k napájení, dojde k bootování a pokud na pinu `PA14-BOOT0` je nízká logická úroveň, MCU načte program uložený ve FLASH paměti, který poté spustí. Při spuštění firmwaru sondy, proběhne inicializace globalních struktur, které jsou nezbytné pro chod celé sondy. Globální struktura poskytuje potřebná data různým periferiím, které například periferie využívají při přerušeních. Po inicializaci struktury, která je deklarována #ref(<code-global_vars_t>, supplement:[v úryvku kódu]), dojde k inicializaci všech potřebných periferií, které dále budou rozebrány v #todo[add kapitolu].
+
+Po inicializaci periferií, sonda zkontroluje stav pinu `PA10` na kterém se nachází *Rx* USART1 periferie. Jak bylo zmíněno v #ref(<uart>, supplement:[kapitole]), pokud jsou dvě zařízení propojeny a neprobíhá žádná komunikace, tak se na vodičích od `Tx` do `Rx` nachází logicky vysoká úroveň. Takto snda dokáže určit, zda je sonda připojena UART/USB převodníkem k PC, nebo je sonda pouze napájena např. skrze jiné MCU.
+@sop8-hw a @tssop20-hw má v zapojení, na pinu `PA10`, rezistor o velikosti $10$ $K Omega$, který při nepřipojeném vodiči uzemní `Rx`. @dia-init prezentuje způsob inicializace. Po zvolení režimu, zařízení přejde do různého nastavení, které jsou nutné pro fungování režimu. Opětovné nastavení režimu opět dojde při dalším bootu sondy, protože jednotlivé režimy běží v nekonečném cyklu dokud je zařízení napájeno.
+
 #v(10pt)
 #figure(
     placement: none,
-    caption: [Zapojení regulátoru pro napájení STM32G030 @fischer-regulator],
-    image("pic/regulator.png", width: 70%)
-)<hw-regulator>
+    caption: [Diagram nazpůsobu načítání režimů],
+    diagram(
+	    cell-size: (8mm, 10mm),
+	    edge-stroke: 1pt,
+	    edge-corner-radius: 5pt,
+	    mark-scale: 70%,
+        blob((0,0), [Start\ programu], tint: yellow, extrude: (0, 3)),
+        edge("-|>"),
+        blob((0,0.9), [Inicializace\ datové\ struktury], tint: yellow),
+        edge("-|>"),
+        blob((0,1.8), [Inicializace\ periferií], tint: yellow),
+        edge("-|>"),
+        blob((0,2.7), [ Vysoká úroveň\ na pinu `PA10`?], tint: red, shape: shapes.hexagon),
+	    edge("rr", "=>", [Ano], label-pos: 0.4),
+	    edge("ll", "=>", [Ne], label-pos: 0.4),
+        blob((1.5,2.7), [Terminálový režim], tint: green, extrude: (1, 3)),
+        edge("r,u,l,d", "--|>"),
+        blob((-1.5,2.7), [Lokální režim], tint: green, extrude: (1, 3)),
+        edge("l,u,r,d", "--|>"),
+    )
+)<dia-init>
 #v(10pt)
 
-Návrh zohledňuje implementaci lokálního režimu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
+== Ovládání lokálního režimu
+Jak #ref(<cil>, supplement: [kapitola]) zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je vhodný pro prvotní rychlou diagnostiku logického obvodu. Režim se ovládá skrze tlačítko a informace jsou zobrazovány prostřednictvím RGB LED WS2812. Lokální režim běží ve smyčce, kdy se periodicky kontrolují změny a uživatelské vstupy. Způsob zobrazování barev na WS2812 bude popsán v #todo[dodat kapitolu].
 
-Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle datasheetu vyžaduje napětí $3.7 ~ 5.3$ V @NEOPIXEL-REF. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V @CMOS @STM32G0-REF. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
+Při zmáčknutí tlačítka dojde k přerušení a je zavolána funkce z #ref(<code-exti_fall>, supplement:[úryvku kódu]), kde je zaznamenán čas zmáčknutí. Po uvolnění tlačítka dojde k přerušení náběžné hrany, a je zavolána funkce z #ref(<code-exti_raise>, supplement: [úryvku kódu]), kde je zaznamenán čas uvolnění a následně funkce `extern_button_check_press`, z #ref(<code-extern_button>, supplement:[úryvku kódu]), porovná časy s referencí a určí, o který stisk se jedná. Funkce nastaví příznak v globální struktuře a v hlavní smyčce se poté provede příslušná akce. Tato metoda dokáže eliminovat nechtěné kmity tlačítka při stisku a uvolnění, kdy MCU zaznamenává velký počet hran v krátký moment (bouncing tlačítka).
 
-Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního režimu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
+Zařízení skrze tlačítko rozpozná tři interakce: _krátký stisk_ slouží k přepínání logických úrovních na určitém kanálu, _dvojitý stisk_ umožňuje cyklické přepínání mezi měřícími kanály, zatímco _dlouhý stisk_ (nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově čtyři.
 
-== SOP8
-@sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v pouzdře SOP8. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim, které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu, na pouzdro SOP8, jsou implementován pouze lokální režim a základní funkce terminálového režimu, jako měření napětí, frekvence a vysílání pulzů.
-#v(10pt)
-#figure(
-    placement: none,
-    caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
-    image("pic/sop8_pinout.png", width: 80%),
-)<sop8-pinout>
-#v(10pt)
-
-Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. `NRST` požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít `PA0`. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a `PA0` bylo použitelné. Pomocí nastavení bude zajištěno, že `NRST` bude ignorován po dobu běhu programu, nicméně při bootu je nežádoucí, aby byl přiveden na logicky nízkou úroveň, protože stále MCU v této fázi ignoruje nastavení optional bitu.
-#v(10pt)
-#figure(
-    placement: none,
-    caption: [Paměťový prostor Flash option bits @STM32G0-REF],
-    image("pic/option_bits.png"),
-)<optional-bits>
-#v(10pt)
-
-Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná @STM32G0-REF. Standartně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
-#figure(
-    placement: none,
-    caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
-    image("pic/sop8_hw.png", width: 80%),
-)<sop8-hw>
-První z pinů k užívání je pin `PB7`. Tento pin slouží jako kanál AD převodníku pro měření napětí a pro měření odporu, pin je také využit pro hodinový signál pro posuvný registr.
-Na pinu `PA0` se nachází AD převodníkový kanál. Pin také disponuje kanály TIM2 časovače. Pin je použit jako druhý kanál AD převodníku pro měření napětí, pro posuvný registr je pin využíván pro posouvání dat do posuvného registru, měření frekvence, odchytávání Neopixel dat, detekce pulsů a generování frekvence. Pin `PB6` je použit pro odesílání dat do testované RGB LED.
-== TSSOP20<tssop20>
-Pouzdro TSSOP20 nabízí oproti SOP8 výhodu většího počet pinů a tím pádem i jednodušší implementaci pokročilých funkcí. Pouzdro má celkem 20 pinů, což má za následek, že např. může být pin `NRST` (pin 6) oddělen od `PA0` a má tak vlastní pin. Z tohoto důvodu při flashování MCU není potřeba myslet na nastavení optional bits pro `NRST` a může zůstat v základním nastavení. Nicméně pin `PA14-BOOT0` musí být nastaven stejným způsobem jako u SOP8, tzn. optional bit `nBOOT_SEL` je nutné nastavit na `0` aby bylo možné při startu MCU určit, zda má být nabootován program ve FLASH paměti, nebo má poslouchat periferie pro nahrání programu. 
-
-Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný návrhu SOP8.  Piny `PA11` a `PA12` jsou přemapovány na `PA9` a `PA10`. Na pin `PA10` je připojen rezistor o velikosti 10 $K Omega$ vůči zemi pro detekci komunikace s PC. Ze stejného důvodu byl zachován pin `PB6` jako výstup pro WS2812D a `PA13` pro tlačítko pro lokální režim. @tssop20-hw ukazuje schéma zapojení s pouzdrem TSSOP20. Rozmístění pokročilých funkcí vychází z charakteristik jednotlivých pinů. Pin 1 (`PB7`) je využit stejně jako v pouzdře SOP8 jako první kanál ADC. Na pinu 1 (`PB8`) a 2 (`PB9`) se nachází I2C periferie a proto jsou využity pro sledování komunikace I2C sběrnice. Pin 7 (`PA0`) je k měření frekvence a napětí. Piny 9 (`PA2`) a 10 (`PA3`) mají USART periferii a proto jsou vhodní kandidáti na sledování UART komunikace. Piny 12 (`PA5`), 13 (`PA6`), 14 (`PA7`) a 15 (`PB0`) mají SPI rozhraní a proto jsou použity pro sledování SPI komunikace. $V_"dd"$ je připojeno na výstup linearního stabilizátoru z #ref(<hw-regulator>, supplement: [obrázku]), který má na výstopu $3.3$ $V$.
 
 #figure(
-    caption: [STM32G030Jx TSSOP20 Pinout @STM32G030x6-tsop],
-    image("pic/tssop20_pinout.png", width: 100%)
-)<tssop20-pinout>
-
+    caption: [Přerušení zavolané při zmáčknutí tlačítka],
+    supplement: [Úryvek kódu],
+    ```C
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+    // Pokud došlo k přerušení na pinu tlačítka
+    if (GPIO_Pin == global_var.button_data->pin) {
+        button_data_t* button_data = global_var.button_data;
+        // zaznamenej čas, pokud tlačítko ještě nebylo stisknuto
+        if (!button_data->is_pressed) {
+            button_data->rise_edge_time = HAL_GetTick();
+            button_data->is_pressed = true;
+        }
+    }
+}
+```
+)<code-exti_fall>
 #figure(
-    caption: [Schéma zapojení STM32G030 v pouzdře TSSOP20],
-    image("pic/tssop20_hw.png", width: 80%)
-)<tssop20-hw>
-
-= SW návrh logické sondy STM32
-Při zapnutí mikrořadiče, proběhne inicializace všech nutných periferií. Pro STM32 je to Časovače číslo 1,2 a 3, AD převodník a UART1.
-== Logika nastavení módů
-Po inicializaci zařízení zařízení zkontroluje, zda má dále pokračovat v terminál módu, nebo lokálním módu. Mód se aktivuje v závislosti na logické úrovni pinu PA10 na kterém se nachází periferie USART1. Jak bylo zmíněno v @uart, pokud je PC propojeno vodičem s mikrořadičem, na vodiči se nachází vysoká úroveň. Takto dokáže kontroler určit, zda je USB převodník připojen či nikoliv @sop8-hw a @tssop20-hw má v zapojení rezistor o velikosti `10K` ohmů na pinu PA9 vůči zemi, který zaručuje, při nezapojeném pinu, nízkou logickou úroveň. 
-#v(5pt)
-#diagram(
-	node-stroke: 1pt,
-	node((0,0), [Start], corner-radius: 10pt),
-	edge("=>"),
-	node((0,1), [Inicializace\ periferií], corner-radius: 2pt),
-	edge("=>"),
-	node((0,2), align(center)[
-		Je na PA10\ vysoká\ úroveň?
-	], shape: shapes.diamond),
-	edge("r", "=>", [Ano], label-pos: 0.1),
-	edge("l", "=>", [Ne], label-pos: 0.1),
-	node((1,2), [Terminálový mód], corner-radius: 2pt),
-	edge("d,r,u,l", "=>", label-pos: 0.1),
-	node((-1,2), [Lokální mód], corner-radius: 2pt),
-	edge("d,l,u,r", "=>", label-pos: 0.1),
-)
-#v(5pt)
-Po načtení módu zařízení reaguje na různé podněty v závislosti, na načteném módu. Aby uživatel mohl měnit jednotlivé módy, tak je zařízení vždy nutné vypnout a zapnout aby došlo ke správné inicializaci. Jednotlivé módy běží v nekonečném cyklu, dokud zařízení není vypnuto.
-== Lokální mód
-Jak @cil zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Zařízení skrze tlačítko rozpozná tři interakce: `krátký stisk` slouží k přepínání logických úrovních na určitém kanálu, `dvojitý stisk` umožňuje cyklické přepínání mezi měřícími kanály, zatímco dlouhý stisk(nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově tři.
+    caption: [Přerušení zavolané při uvolnění tlačítka],
+    supplement: [Úryvek kódu],
+    ```C
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+    // Pokud došlo k přerušení na pinu tlačítka
+    if (GPIO_Pin == global_var.button_data->pin) {
+        button_data_t* button_data = global_var.button_data;
+    
+        if (button_data->is_pressed) {
+            // zaznamenej čas puštění tlačítka a zkontroluj
+            // délku stisknutí
+            button_data->fall_edge_time = HAL_GetTick();
+            extern_button_check_press(button_data);
+            button_data->is_pressed = false;
+        }
+    }
+}
+    ```
+)<code-exti_raise>
+== Možné stavy lokálního režimu
+#todo[dopsat tuto kapitolu]
+=== Stav logické sondy
 
 Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá CMOS logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
 
+==== Stav logických úrovní
 Další stav, který se po dlouhém stisku nastaví je *nastavování logických úrovní*. Stav při stisku tlačítka změní logickou úroveň na opačnou, tzn. pin je nastaven jako push-pull a pokud je na pinu nízká úroveň, změní se na vysokou a naopak. Tato úroveň lze nezávisle měnit na všech kanálech, který má řadič v návrhu k dispozici.
 
-Poslední stav je *detekce pulzů*. Detekování pulzů probíhá za pomocí input capture kanálu časovače. Při detekci hrany, je stav časovače uložen do registru a je vyvoláno přerušení. Přerušení poté nastaví pomocný flag, který bude zpracován při dalším cyklu smyčky. Smyčka poté na 1 sekundu rozsvítí LED jako detekci náběhové resp. sestupné hrany.
+=== Stav detekce pulzů
+Detekování pulzů probíhá za pomocí input capture kanálu časovače. Při detekci hrany, je stav časovače uložen do registru a je vyvoláno přerušení. Přerušení poté nastaví pomocný flag, který bude zpracován při dalším cyklu smyčky. Smyčka poté na 1 sekundu rozsvítí LED jako detekci náběhové resp. sestupné hrany.
 
-Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Důvod pro zvolení této metody je ten, že je nutné aby bylo přerušení krátké, tzn. není možné aby se na 1 sekundu rozsvítila led. Další důvod je ten, že takto je zaručeno, že se vždy splní úkony ve správném pořadí. V #todo[neco neco] je vysvětlen důvod podrobněji. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav. Poté program zkontroluje, zda bylo tlačítko zmáčknuto krátkou dobu, pokud ano, reaguje na tento úkon uživatele v závislosti na aktuálním stavu, stejně jako u dvojstisku. Je důležité podotknout, že stav tlačítka je vždy pouze jeden a nikdy se tlačítko nenachází ve více stavech zároveň. Následně po kontrole vstupní periferie proběhne kontrola hodnot a flagů aby smyčka zobrazila výstupní periferií informaci uživateli. Např. pokud je stav nastavení pulzů a flag, který symbolizuje nalezenou hranu, rozsvítí smyčka LED příslušné barvy. Po dokončení úkonů smyčka čeká určitou dobu, než zopakuje celý cyklus znovu. Doba se mění v závislosti na zvoleném stavu, tzn. detekce pulzů probíhá rychleji, než nastavování logických úrovní.
+Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Důvod pro zvolení této metody je ten, že takto je zaručeno, že se vždy splní úkony ve správném pořadí. V #todo[neco neco] je vysvětlen důvod podrobněji. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav. Poté program zkontroluje, zda bylo tlačítko zmáčknuto krátkou dobu, pokud ano, reaguje na tento úkon uživatele v závislosti na aktuálním stavu, stejně jako u dvojstisku. Je důležité podotknout, že stav tlačítka je vždy pouze jeden a nikdy se tlačítko nenachází ve více stavech zároveň. Následně po kontrole vstupní periferie proběhne kontrola hodnot a flagů aby smyčka zobrazila výstupní periferií informaci uživateli. Např. pokud je stav nastavení pulzů a flag, který symbolizuje nalezenou hranu, rozsvítí smyčka LED příslušné barvy. Po dokončení úkonů smyčka čeká určitou dobu, než zopakuje celý cyklus znovu. Doba se mění v závislosti na zvoleném stavu, tzn. detekce pulzů probíhá rychleji, než nastavování logických úrovní.
 
-#v(5pt)
+
 #diagram(
-	node-stroke: 1pt,
-	node((0,0), [Start], corner-radius: 10pt),
-	edge("=>"),
-	node((0,1), [dlouhý stisk\ tlačítka?], shape: shapes.diamond),
-	edge("r", "=>", [Ano], label-pos: 0.1),
-	edge("d", "=>", [Ne], label-pos: 0.1),
-	node((1,1), [Přepnout\ aktualní stav], corner-radius: 2pt),
-	edge("d,l", "=>", [], label-pos: 0.1),
-	node((0,2), [krátký stisk\ tlačítka?], shape: shapes.diamond),
-	edge("l", "=>", [Ano], label-pos: 0.1),
-	edge("d", "=>", [Ne], label-pos: 0.1),
-	node((-1,2), [Reagovat\ na krátký stisk], corner-radius: 2pt),
-	edge("d,r", "=>", [], label-pos: 0.1),
-	node((0,3), [dvojitý stisk\ tlačítka?], shape: shapes.diamond),
-    edge("r", "=>", [Ano], label-pos: 0.1),
-	edge("d", "=>", [Ne], label-pos: 0.1),
-	node((1,3), [Reagovat\ na dvojitý stisk], corner-radius: 2pt),
-    edge("d,l", "=>", [], label-pos: 0.1),
-	node((0,4), [Změna\ hodnot?], shape: shapes.diamond),
-    edge("l", "=>", [Ano], label-pos: 0.1),
-	edge("d", "=>", [Ne], label-pos: 0.1),
-	node((-1,4), [Rozsvítit led], corner-radius: 2pt),
-	edge("d,r", "=>", [], label-pos: 0.1),
-	node((0,5), [Čekej], corner-radius: 2pt),
-    edge("d,l,l,u,u,u,u,u,r,r", "=>", [], label-pos: 0.1),
+    cell-size: (8mm, 10mm),
+	edge-stroke: 1pt,
+	edge-corner-radius: 5pt,
+	mark-scale: 70%,
+	blob((0,0), [Start], tint: yellow, extrude: (0, 3)),
+    edge("-|>"),
+    blob((0,1), [Jak bylo\ stisknuto\ tlačítko?], shape: shapes.hexagon, tint: red),
+    edge((0,2), "=>", [Krátce]),
+    edge((-1,2),"=>", [Dlouze]),
+    edge((1,2),"=>", [Dvojitě]),
+
+    blob((-1,2), [Přepnout\ aktuální stav], tint: yellow),
+    edge((0,3), "-|>"),
+    blob((0,2), [Reagovat\ na krátký stisk], tint: yellow),
+    edge((0,3), "-|>"),
+    blob((1,2), [Reagovat\ na dvojitý stisk], tint: yellow),
+    edge((0,3), "-|>"),
+    blob((0,3), [Rozsviť LED \dle výsledků periferie], tint: yellow),
+    edge((1,3), "-|>"),
+    blob((1,3), [Čekej], tint: orange, extrude: (2,4)),
+    edge((1,3), (1.7,3), (1.7,2), (1.7, 1), "ll", "--|>"),
 )
-#v(5pt)
-== Terminálový mód
-Tento mód využívá rozhraní UART, pro seriovou komunikaci s PC. Mód funguje způsobem, kdy periodicky reaguje na změny, které periferie či uživatel vyvolá. Tuto skutečnost ukazuje @diagram-terminal-mod. Sonda obsahuje datovou strukturu, ve které uchovává flagy, které značí požadavek na změnu. Tyto flagy jsou ovládány skrze přerušení. Pokud uživatel, stiskne tlačítko a tím pošle znak, UART rozhraní vyvolá přerušení a následně se dle stavu sondy a poslaného znaku provede akce. Přerušení také nastaví flagy, pokud například, je nutné vykreslit jinou stránku, nebo změnit měřící režim. Smyčka při dalším cyklu na tyto skutečnosti zareaguje a přenastaví potřebné periferie a vykreslí stránku. Pokud stránka zobrazuje měřené hodnoty, jsou aktualizovány v každém cyklu.
-
-Tato metoda oproti okamžité reakci již v přerušení má výhodu v tom, že nemůže dojít k překrytí činnosti hlavní smyčky. Např. pokud bude stránka periodicky vykreslována, a stisk tlačítka by vyvolal přerušení k překreslení programu, může se přerušit smyčka v momentě, kdy už k překreslení dochází. V tomto případě poté dojde k rozbití obrazu vykresleného na terminál. Obdobná věc hrozí při vypínání a zapínání periferií. Touto medotou zajistíme, že vždy je vykonávána akce ve správném pořadí.
-#todo("dokončit, napsat o tom jak funguje nastavovani periferii apod")
-#figure(
-caption:[Diagram smyčky terminálového módu],
-    placement: none,
-    diagram(
-	    node-stroke: 1pt,
-     	node((0,0), [Start], corner-radius: 10pt),
-    	edge("=>"),
-        node((0,1), [Vyžádáno\ nové nastavení\ periferií?], shape: shapes.diamond),
-	    edge("r", "=>", [Ano], label-pos: 0.1),
-    	edge("d", "=>", [Ne], label-pos: 0.1),
-        node((1,1), [Nastavit\ periferie], corner-radius: 2pt),
-    	edge("d,l", "=>", [], label-pos: 0.1),
-        node((0,2), [Vyžádána\ aktualizace\ rozhraní?], shape: shapes.diamond),
-    	edge("l", "=>", [Ano], label-pos: 0.1),
-    	edge("d", "=>", [Ne], label-pos: 0.1),
-        node((-1,2), [Vykreslit\ aktualní stav\ celé stránky], corner-radius: 2pt),
-    	edge("d,r", "=>", [], label-pos: 0.1),
-    	node((0,3), [Vykreslit naměřené hodnoty], corner-radius: 2pt),
-    	edge("d", "=>", [], label-pos: 0.1),
-    	node((0,4), [Čekej], corner-radius: 2pt),
-        edge("d,l,l,u,u,u,u,r,r", "=>", [], label-pos: 0.1),
-    )
-)<diagram-terminal-mod>
-
 
 = Realizace logické sondy <realizace>
 #todo[REVIZE]
@@ -1190,4 +1303,118 @@ void sig_gen_toggle_pulse(sig_gen_t* generator, const _Bool con) {
 
 = Závěr a zhodnocení
 
+#start-appendix(lang: "cs")[
+= Citace
 #bibliography("bibliography.bib")
+
+= Dodatečné úryvky kódu
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Struktura globálních promněných],
+    placement: none,
+```C
+typedef struct {
+    _Bool booted; // true pokud uživatel připojil seriovou komunikací
+    dev_setup_t device_setup; // Lokální/Terminálový mód
+    dev_state_t device_state; // měřící mód (napětí, odpor atd.)
+    local_state_t local_state; // lokální režim měřící mód
+    local_substate_t local_substate; // lokální režim měřený kanál
+    unsigned char received_char; // Znak jako vstup
+    _Bool need_frontend_update; // příznak aktualizace TUI
+    _Bool need_perif_update; // příznak nastavení periferií
+    ansi_page_type_t current_page; // aktualní frontend stránka
+
+    // struktury pro základní měření
+    adc_vars_t* adc_vars;
+    sig_detector_t* signal_detector;
+    sig_generator_t* signal_generator;
+
+    // struktury pro vstupy/výstupy uživatele
+    visual_output_t* visual_output;
+    button_data_t* button_data;
+
+    // struktury pro pokročilé funkce
+    neopixel_measure_t* adv_neopixel_measure;
+    shift_register_t* adv_shift_register;
+    uart_perif_t* uart_perif;
+    i2c_perif_t* i2c_perif;
+    spi_perif_t* spi_perif;
+} global_vars_t;
+```
+)<code-global_vars_t>
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Funkce pro vykreslení barevného textu],
+    placement: none,
+```C
+void ansi_send_text(const char* str,
+                    const ansi_text_config_t* text_conf) {
+    char buffer[TEXT_SEND_BUFF_SIZE];
+    // offset stringu pro přidávání textu
+    size_t offset = 0;     
+    // Při nastavení barvy přidej ansi sekvenci pro zbarvení
+    if (strlen(text_conf->bg_color) != 0) {
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s",
+                           text_conf->bg_color);
+    }
+    
+    // Při nastavení barvy přidej ansi sekvenci pro zbarvení
+    if (strlen(text_conf->color) != 0) {
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s",
+                           text_conf->color);
+    }
+
+    // Nastav text tučně
+    if (text_conf->bold) {
+        offset +=
+            snprintf(buffer + offset, sizeof(buffer) - offset, "%s", BOLD_TEXT);
+    }
+
+    offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s", str);
+    
+    // Kontrola velikosti bufferu
+    if (offset >= sizeof(buffer)) {
+        PrintError("Buffer overflow in text");
+        return;
+    }
+    ansi_send_string(buffer);
+    // Escapování všech nastavení na konci stringu
+    ansi_clear_format(); 
+}
+```
+)<code-uart_text>
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Struktura globálních promněných],
+    placement: none,
+
+```C
+void extern_button_check_press(button_data_t* data) {
+    uint32_t time = data->fall_edge_time - data->rise_edge_time;
+    
+    // identifikace typu stisknutí
+    if (time > SHORT_PRESS_TIME && time < LONG_PRESS_TIME) {
+        data->short_press = true;
+        data->long_press = false;
+        uint32_t curr_time = HAL_GetTick();
+        
+        // detekce druhého krátkého stisknutí
+        if (curr_time - data->last_short_button_time < DOUBLE_PRESS_TIME &&
+            !data->double_press) {
+            data->double_press = true;
+            data->short_press = false;
+        } else {
+            data->last_short_button_time = curr_time;
+        }
+
+    } else if (time > LONG_PRESS_TIME && !data->long_press) {
+        data->long_press = true;
+        data->short_press = false;
+        data->double_press = false;
+    }
+}
+```
+)<code-extern_button>
+]
