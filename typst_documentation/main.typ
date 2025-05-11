@@ -240,7 +240,7 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
     image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
 
-== Měření veličin testovaného obvodu
+== Měření veličin testovaného obvodu <kap-mereni>
 === Měření napětí a logických úrovní
 Pro měření napětí, jak již zmiňuje #ref(<adc>, supplement: [kapitola]), je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 32 vzorků měření do dvou bloků tj. 64 vzorků celkem. Každých 250 ms se provede průběžné měření 32 vzorků (vzorkovací frekvence $~$128 Hz). Nejstarší blok 32 vzorků je odstraněn a nahrazen novými daty.
 #v(10pt)
@@ -524,7 +524,7 @@ Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný n
 
 = Návrh terminál režimu STM32
 == Princip oblužní smyčky
-Terminálový režim využívá rozhraní UART, pro sériovou komunikaci s PC. Způsob vstoupení do terminálového režimu rozebírá #ref(<kap-log-rezim>, supplement: [kapitola]). Základ terminálového režimu běží v nekonečné smyčce, která je na konci oddělena čekáním #footnote[Toto čekání se mění na základě zvolené funkce.]. Smyčka slouží jako obsluha akcí, které jsou vyvolány, jak uživatelem prostřednictví TUI, tak periferiemi, které momentálně běží. Obsluha při každé iteraci provede jednotlivé úkony, pokud příznaky v globální struktuře (@code-global_vars_t) jsou nastaveny. Příznaky jsou běžně nastavovány skrze přerušení, například vyvolané uživatelem skrze odeslání symbolu seriovou komunikací. Obsluha v každé iteraci zkontroluje, zda příznak `need_frontend_update` vyžaduje vykreslit grafiku TUI (@kap-tui), zda příznak `need_perif_update` vyžaduje změnit periferii (#todo[kapitola periferii]), poté vykreslí data, které periferie získala a nakonec čeká na další smyčku. Sonda vykresluje data na základě `device_state` promněné, která určuje, jakou funkci uživatel momentálně používá.
+Terminálový režim využívá rozhraní UART, pro sériovou komunikaci s PC. Způsob vstoupení do terminálového režimu rozebírá #ref(<kap-log-rezim>, supplement: [kapitola]). Základ terminálového režimu běží v nekonečné smyčce, která je na konci oddělena čekáním #footnote[Toto čekání se mění na základě zvolené funkce.]. Smyčka slouží jako obsluha akcí, které jsou vyvolány, jak uživatelem prostřednictví TUI, tak periferiemi, které momentálně běží. Obsluha při každé iteraci provede jednotlivé úkony, pokud příznaky v globální struktuře (@code-global_vars_t) jsou nastaveny. Příznaky jsou běžně nastavovány skrze přerušení, například vyvolané uživatelem skrze odeslání symbolu seriovou komunikací. Obsluha v každé iteraci zkontroluje, zda příznak `need_frontend_update` vyžaduje vykreslit grafiku TUI (@kap-tui), zda příznak `need_perif_update` vyžaduje změnit periferii (@kap-perif), poté vykreslí data, které periferie získala a nakonec čeká na další smyčku. Sonda vykresluje data na základě `device_state` promněné, která určuje, jakou funkci uživatel momentálně používá.
 #v(10pt)
 #figure(
 caption:[Diagram smyčky terminálového módu],
@@ -704,6 +704,74 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
 }
 ```
 )<code-UART-get>
+== Princip nastavení periferií<kap-perif>
+
+== Implementace měření s ADC
+=== Měření napětí a logických úrovní <kap-volt>
+Napětí je měřeno pomocí AD převodníku na dvou kanálech v případě SOP8 a na třech v případě TSSOP20 (+ kanál s referenčním napětím). Uživatel skrze TUI může vypnout či zapnout měření na určitém kanále. Jak bylo zmíněno v #ref(<kap-mereni>, supplement: [kapitole]), ADC průběžně měří $32$ vzorků za $250$~ms ($128$ Hz). Každé měření kanálu je nastaveno na 160 cyklů, což je maximální přesnost měření.
+
+K časování měření je využito časovače TIM3, který po uplynutí času vyvolá přerušení a je naměřena hodnota ADC. Časovač má nastavenou předděličku na $64-1$, což nastaví frekvenci časovače z $64$ MHz na $1$ Mhz (neboli časovač inkrementuje hodnotu každou 1~$mu$s). Jelikož ADC běží na frekvenci $32$ MHz a změření jednoho kanálu trvá $160$ cyklů, změření jednoho kanálu trvá $~5$ $mu$s. Protože frekvence měření je $128$ Hz, můžeme tuto hodnotu zanedbat a nastavit periodu časovače na $7000 - 1$.
+
+Při přetečení časovače je vyvoláno přerušení, které zavolá callback z #ref(<code-adc-callback>, supplement: [ukázky kódu]). Funkce zastaví časovač, a sekvenčně začne měřit poměrnou hodnotu mezi napětím na kanálu a $V_"dd"$. Po dokončení konverze je tato hodnota uložena do dynamicky alokovaného pole `voltage_measures` o velikosti $64 times "počet aktivních kanálů"$ #footnote[ADC při nastavení více kanálu sekvenčně prochází všechny kanály dokola.]. Toto pole se chová cyklicky, tzn. při překročení počtu prvků se začne plnit od začátku. Po změření všech kanálů je resetován a nastartován časovač.
+#v(10pt)
+#figure(
+    placement: none,
+    caption:[Naměření vzorku z ADC (ukázka bez ošetření)],
+    supplement: [Úryvek kódu],
+```C
+void adc_measure_callback(adc_vars_t* adc_perif) {
+    HAL_TIM_Base_Stop_IT(adc_perif->timer);
+    
+    HAL_ADC_Start(adc_perif->hadc);
+    for (uint8_t i = 0; i < adc_perif->n_active_channels; ++i) {
+        HAL_ADC_PollForConversion(adc_perif->hadc, ADC_DELAY);
+        adc_perif->voltage_measures[adc_perif->measures_index++] = HAL_ADC_GetValue(adc_perif->hadc);
+        if (adc_perif->measures_index >=
+            adc_perif->n_active_channels * CHANNEL_NUM_SAMPLES) {
+            adc_perif->measures_index = 0;
+        }
+    }
+
+    HAL_ADC_Stop(adc_perif->hadc);
+    __HAL_TIM_SET_COUNTER(adc_perif->timer, 0);
+    HAL_TIM_Base_Start_IT(adc_perif->timer);
+}
+```
+)<code-adc-callback>
+#v(10pt)
+
+Každých $250$ ms obslužní smyčka vezme naměřené vzorky z `voltage_measures` a udělá aritmetický průměr každého kanálu. Po provedení průměru je z poměrné hodnoty vypočítáno referenční napětí a napětí každého kanálu. K výpočtům napětí je, na základě vztahů z #ref(<adc>, supplement: [kapitoly]), využito makro z HAL knihovny (@code-calc-voltage). Toto napětí je poté zobrazeno dynamicky na stránce. U každého kanálu je také vyhodnocené zda naměřená hodnota napětí odpovídá log. "1", log, "0" nebo se napětí nachází v nedefinované oblasti#footnote[Podrobnosti je možné najít v manuálu použití.].
+
+#figure(
+    caption:[TUI měření napětí],
+    image("pic/tui_voltmetr.png")
+)<tui-voltmetr>
+=== Měření odporu
+Měření odporu vychází z principů měření z #ref(<kap-volt>, supplement:[kapitoly]). Pro změření odporu daných rezistorů, je změřeno napětí stejným způsobem jako v předchozí kapitole, ale pouze na prvním kanále obou pouzder. Z naměřených vzorků frekvencí $128$ Hz z kanálu 1 a referenčního napětí je spočítán průměr a poté je poměrová hodnota převedena na napětí. Z hodnoty napětí je poté, na základě normálového rezistoru, vypočítán odpor měřeného rezistoru.
+
+#figure(
+    placement: none,
+    caption: [Způsob výpočtu odporu],
+    supplement:[Úryvek kódu],
+    ```C
+uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
+uint32_t measured_voltage = adc_get_voltage(ref_voltage,
+                                            adc_ch->avg_voltage[1]);
+uint32_t resistance = (adc_ch->base_resistor * measured_voltage) 
+                / (ref_voltage - measured_voltage);
+    ```
+)
+
+
+#figure(
+    caption: [TUI měření odporu],
+    image("pic/tui_ohm.png")
+)<tui-ohm>
+
+
+== Implementace měření frekvence a odchytávání pulsů
+== Implementace generování pulsů
+
 
 
 
@@ -828,194 +896,6 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 = Realizace logické sondy <realizace>
 #todo[REVIZE]
 
-== Měření napětí a zjišťování logické úrovně <volt-measure>
-Pro měření napětí je využíván AD převodník. Jak již bylo uvedeno v @adc,
-převodník po realizaci měření vrátí digitální hodnotu, kterou je potřeba převést
-na napětí. Pro získání přesného napětí je žádoucí změřit a vypočítat referenční
-napětí a nepoužívat odhad. V projektech, které se nezakládají na přesnosti je
-časté používat hodnotu `3.3 V`, což je idealizované napájecí napětí. Ve
-skutečnosti, je ale běžné, že napětí kolísá, popř. napětí může poklesnout, pokud
-je mikrořadič vytížen. Pokud je nutné, aby napětí bylo, co nepřesnější, musí být
-vypočteno realné referenční napětí.
-
-Podstatné je, aby byl inicializován AD převodník. Pomocí HALu je to možné
-následovně:
-#v(10pt)
-```C
-static void MX_ADC1_Init(void) {
-    ADC_ChannelConfTypeDef sConfig = {0};
-
-    hadc1.Instance = ADC1;
-    hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1; // předdělička
-    hadc1.Init.Resolution = ADC_RESOLUTION_12B; // rozlišení 12 bitů
-    hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-    hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-    hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-    hadc1.Init.LowPowerAutoWait = DISABLE;
-    hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-    hadc1.Init.ContinuousConvMode = ENABLE; // pokračuje i po konci cyklu
-    hadc1.Init.NbrOfConversion = 1; // počet kanálů
-    hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-    hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc1.Init.DMAContinuousRequests = ENABLE;
-    hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-    hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_160CYCLES_5;
-    hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
-    hadc1.Init.OversamplingMode = DISABLE;
-    hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
-    if (HAL_ADC_Init(&hadc1) != HAL_OK) {
-        Error_Handler();
-    }
-    sConfig.Channel = ADC_CHANNEL_1;
-    sConfig.Rank = ADC_REGULAR_RANK_1;
-    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
-    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
-        Error_Handler();
-    }
-    adc1_ch = create_adc_channels(&hadc1);
-    realloc_v_measures(adc1_ch, &v_measures);
-    setup_adc_channels(&hadc1, adc1_ch, true);
-}
-```
-#v(10pt)
-kde je spousta nastavení, které pro tento projekt nejsou úplně podstatné nicméně
-některá konfigurace je stěžejní.
-
-Parametr `hadc1.Init.NbrOfConversion` určuje, kolik měření bude provedeno, než
-se AD převodník zastaví. Měření může probíhat na více kanálech (V tomto případě
-až na 4 kanálech) ale jeden převodník nemůže měřit všechny kanály najednou. Je
-nutné určit pořadí v jakém bude měřit.
-
-#import fletcher.shapes: diamond
-#align(
-  center, grid(
-    columns: 2, gutter: 5pt, text(
-      size: 7pt, diagram(
-        label-size: 7pt, node-stroke: 1pt, node((0, 0), align(center)[
-          Init
-        ], corner-radius: 10pt), edge("=>", `HAL_ADC_Start`), node((0, 1), align(center)[
-          Kanál 1
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 2), align(center)[
-          Kanál 2
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 3), align(center)[
-          Kanál 3
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 4), align(center)[
-          Kanál 4
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 5), [Stop], corner-radius: 10pt), edge("r,uuuu,l", "=>", `HAL_ADC_Start`),
-      ),
-    ), text(
-      size: 7pt, diagram(
-        label-size: 7pt, node-stroke: 1pt, node((0, 0), align(center)[
-          Init
-        ], corner-radius: 10pt), edge("=>", `HAL_ADC_Start`), node((0, 1), align(center)[
-          Kanál 1
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 2), align(center)[
-          Kanál 2
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 3), align(center)[
-          Kanál 3
-        ], shape: diamond), edge("=>", `HAL_ADC_PollForConversion`), node((0, 4), align(center)[
-          Kanál 4
-        ], shape: diamond), edge("r,uuu,l", "=>", `HAL_ADC_PollForConversion`),
-      ),
-    ),
-  ),
-)
-V levém diagramu je možno vidět, jakým způsobem funguje převodník, pokud *není* `hadc1.Init.ContinuousConvMode` nastaven
-na `ENABLE`. Při každém zahájení měření kanálu pomocí `HAL_ADC_PollForConversion`,
-převodník udělá `x` vzorků během 160,5 cyklů#footnote[Tato hodnota je v STM32G0 nejvyšší a zaručuje nám tu největší možnou přesnost.
-  Některé mikrořadiče nabízí i vyšší počet odběrů.]. Po dokončení vzorkování lze
-zjistit hodnotu funkcí `HAL_ADC_GetValue`. Jakmile AD převodník dokončí
-konverzi, kanál se nastaví na 2. Při zavolání konverze znovu se již měří na
-druhém kanálu. Takto sekvenčně převodník pokračuje dokud nedojde k~poslednímu
-kanálu. Pokud už další kanál nenásleduje, ad převodník zastaví svou činnost a
-potřeba ho znovu zapnout aby pokračoval.
-
-V pravém diagramu již kontinuální mód zapnutý a měření probíhá neustále dokola.
-Pokud AD převodník dojde k poslednímu kanálu, začne měřit opět první. K
-zastavení dojde pouze v případě, že je zavolána funkce `HAL_ADC_Stop`.
-
-Logická sonda pracuje ve smyčce, kdy jednou za určitý krátký úsek zastaví
-klasické měření kanálů a změří referenční napětí. Tento způsob zajišťuje
-neustále validní referenci.
-
-Během měření kanálů je nutné, aby nebyl zbytečně zatěžován procesor. Procesor v
-hlavní smyčce pracuje na vykreslování dat do terminálu a pokud by prováděl
-měření, mohlo by to ovlivnit rychlost měření napětí a nemuselo by být dosaženo
-dostatečnému sebrání vzorků pro plovoucí průměr. Toto je vyřešeno pomocí DMA#footnote[DMA je metoda, kdy periferie umí přímo zapisovat nebo číst z paměti. Vyhoda je,
-  že procesor nemusí zasahovat a šetří se zdroje, které můžou být využity jinde.].
-HAL aktivuje DMA pro AD převodník pomocí `hadc1.Init.DMAContinuousRequests` nastavené
-na `ENABLE`. Parametry DMA lze nastavit pomocí STM32CubeMX. DMA je nastaveno
-jako cirkularní buffer, do kterého se zapisují hodnoty z AD převodníku. Procesor
-k těmto datům přistoupí, až bude potřebovat.
-
-Logická sonda umí počet kanálů nastavovat dynamicky, tzn. může měřit pouze 1
-kanál a nebo během běhu programu zapnout další dva. Možnost změny počtu kanálů
-během chodu je problém, jelikož pokud pro DMA je alokována pamět na zásobníku,
-velikost musí být ideálně statická.
-
-Mějme alokovanou paměť na zásobníku, která bude 8 integerů, tzn. 2 integery pro
-každý kanál. Pokud jsou zapnuty 1, 2 nebo 4 kanály nenastává žádný problém,
-protože nakonci se začnou hodnoty ukládat opět od začátku. Takže při opakovaném
-zápisu nedojde k~"rozjetí" indexů. A jednodušše můžeme říct, že na indexu 6, je
-vždy kanál 2.
-#align(
-  center,
-)[
-  #diagram(
-    $ 1 edge("rrr", ->, #[Zápis 4 kanálů], bend: #30deg) & 2 & 3 & 4 edge("r", ->) & edge("rrr", ->, #[Zápis 4 kanálů], bend: #30deg)5 & 6 & 7 & 8 edge("d,l,l,l,l,l,l,l,u", ->)$,
-  )
-]
-Pokud ale budeme mít aktivovány 3 kanály dojde k problému. Už při první iteraci
-se nám indexy posunou, což je nežádoucí.
-#align(
-  center,
-)[
-  #diagram(
-    $ 1 edge("rr", ->, #[Zápis 3 kanálů], bend: #30deg) & 2 &edge("r", ->) 3 & edge("rr", ->, #[Zápis 3 kanálů], bend: #30deg)4 & 5 & 6edge("r", ->) & 7edge("rr", ->, #[Zápis 3 kanálů], bend: #30deg) & 8 & 1 edge("d,l,l,l,l,l,l,l,u", ->)$,
-  )
-]
-Existuje možnost toto vyřešit pomocí nalezení nejmenšího společného násobku.
-Pokud, ale hledáme násobek pro 100, 200, 300, 400, tak dojdeme k tomu, že je to
-naprosté plýtvání pamětí, které si na STM32G0 nemůžeme dovolit.
-
-Tento problém byl vyřešen tak, že paměť je alokována na haldě, takže je
-dynamicky vytvořená, a realokuje se při změně, tak aby stále odpovídal počet
-vzorků a nedocházelo k posunu.
-
-Po určitém časovém úseku, procesor zpracuje data z DMA a zprůměruje hodnoty z AD
-převodníku, následně hodnoty převede dle metodity v @adc a vykreslí na seriovou
-linku pomocí ANSI sekvencí zmíněné v
-
-TUI vykresluje hodnoty na každém kanálu a poté vykresluje, zda je logická úroveň
-vysoká, nízká a nebo je nejasná  ukazuje vizuál stránky pro měření. Je
-možné pozorovat, že kanál 1 na pinu `A0` měří `0,0 V` a `L` znázorňuje nízkou
-úroveň. Kanál 2 ukazuje napětí `3,3V` a je to vysoká úroveň. Kanál 3 je plovoucí
-a není připojený. Proto úroveň je nejasná a měří pouze parazitní napětí. Kanál 4
-je vypnutý.
-
-Kanály je možné zapínat a vypínat pomocí stránky `Channels`  ukazuje
-vzhled této stránky. Uživatel pomocí klávesových zkratek 1 až 4 volí jaké kanaly
-aktivovat, s tím, že po zvolení kanálů je nutné nastavení uložit stisknutím
-klávesy S.
-
-Všechny data ohledně kanálů AD převodníku jsou uloženy ve struktuře zvané `adc_channels`.
-Tato struktura drží, jaké kanály jsou aktivovány, jaké kanály jsou označeny
-uživatelem, ale ještě nebyly uloženy a tím pádem aplikovány, jaká byla poslední
-průměrná hodnota měření, jaká čísla pinů kanály osidlují a nakonec instance `ADC_HandleTypeDef`,
-což je HAL struktura, která je abstrakce ovládání převodníku, ukládání
-konfigurací apod.
-
-```C
-typedef struct {
-    _Bool channel[NUM_CHANNELS]; // aktivované kanály
-    _Bool channel_unapplied[NUM_CHANNELS]; // kanály neaktivované
-    _Bool applied; // bylo nastavení uživatele aplikováno?
-    uint32_t avg_last_measure[NUM_CHANNELS]; // poslední průměr hodnot
-    unsigned int pin[NUM_CHANNELS]; // čísla pinů
-    unsigned int count_active; // počet aktivních pinů
-    ADC_HandleTypeDef* hadc; // instance adc pro danou strukturu
-} adc_channels;```
-#v(10pt)
 == Odchytání pulzů a frekvence
 Pro měření frekvence hraje stěžejní roli časovač. Jak bylo zmíněno v @timery,
 časovače umí tzv. input capture. Input capture poskytuje možnost měření časových
@@ -1026,7 +906,6 @@ uloží do speciálního registru @TIMERS.
 
 Pro přesné zjistění frekvence musí být kladen důraz na režii. Při odběru dat by
 nesměl procesor provádět jakoukoliv. Toto se dá realizovat pomocí DMA podobně
-jako v @volt-measure.
 
 K zjištění frekvence je použita tzv. metoda hradlování. Metoda hradlování
 využívá periodu vzorkování, která je využita pro spočítání finální frekvence.
@@ -1327,6 +1206,25 @@ void get_current_control(void) {
 }
 ```
 )<code-uart-parse-menu>
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Využití HAL maker pro převod poměrových hodnot na napětí],
+    placement: none,
+
+```C
+uint32_t adc_get_voltage(const uint32_t v_ref,
+                         const uint32_t measure) {
+    return __HAL_ADC_CALC_DATA_TO_VOLTAGE(v_ref, measure,
+                                          ADC_RESOLUTION_12B);
+}
+
+uint32_t adc_get_v_ref( const uint32_t raw_voltage_value) {
+    return __HAL_ADC_CALC_VREFANALOG_VOLTAGE(raw_voltage_value,
+                                             ADC_RESOLUTION_12B);
+}
+```
+)<code-calc-voltage>
 
 #figure(
     supplement: [Úryvek kódu],
