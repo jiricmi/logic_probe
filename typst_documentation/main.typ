@@ -149,7 +149,7 @@ nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které j
 energeticky efektivní a nabízí dostatečný výkon pro běžné vestavné aplikace.
 Obsahuje 64 KiB flash paměť a 8 KiB SRAM @STM32G0-REF. Pro řadu G031 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněná pouzdra jsou použity pro implementaci logické sondy, o které pojednává #todo[doplnit kapitolu].
+integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněná pouzdra jsou použita pro implementaci logické sondy, o které pojednává #ref(<kap-hw>, supplement: [kapitola]).
 ==== Analogo-digitální převodník <adc>
 Mikrokontrolér STM32G031 je vybaven analogo-digitálním převodníkem#footnote[Neboli ADC], který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence převodníku je 2 MSPS. Při měření kanálů se postupuje sekvenčně, která je určená pomocí tzv. ranků#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při požadavku o měření převodník nejprve změří první nastavený kanál, při dalším požadavku druhý a až změří všechny, tak pokračuje opět od počátku.
@@ -195,7 +195,7 @@ je na tomto mikrokontroleru 32bitový a poskytuje více kanálů. Tyto časovač
 podporují nejen generování signálů na výstup, ale také zachytávání signálů a
 měření délky pulzů externího signálu. Pokročilý časovač nabízí řadu nastavení
 např. nastavování mezi normálním a inverzním výstupem PWM, generovat přerušení
-při dosažení specifické hodnoty časovače apod @TIMERS.
+při dosažení specifické hodnoty časovače apod. @TIMERS.
 #figure(
     placement: top,
   caption: [Blokové schéma STM32G031 časovače @STM32G0-REF],
@@ -214,7 +214,7 @@ Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16 bit
 souvisí s jeho tzv. periodou. Perioda určuje hodnotu, při jejímž dosažení se
 čítač automaticky resetuje na 0. Tuto hodnotu lze nastavit podle potřeby
 vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interval,
-který je požadován. Časový interval lze vypočítat @timer-int.
+který je požadován. Časový interval lze vypočítat pomocí #ref(<timer-int>, supplement: [rovnice]).
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
 
 === Knihovna STM HAL
@@ -462,7 +462,7 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
 )<neopixel_bit_time>
 
 
-= HW návrh logické sondy STM32
+= HW návrh logické sondy STM32 <kap-hw>
  Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost a pravidla pro sestavení byla co nejvíce podobná.
 == Sdílené vlastnosti mezi návrhy pouzder<komp>
 Sonda je napájena skrze UART/USB převodník. Jelikož USB pracuje s napětím $5$ V ale STM32G030 vyžaduje napájecí napětí  $1.7 ~ 3.6$~V @STM32G0-REF je nutné napětí snížit. Proto byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3$~$plus.minus$~$0.1$~V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F @HT7533.
@@ -524,7 +524,7 @@ Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný n
 
 = Návrh terminál režimu STM32
 == Princip oblužní smyčky
-Terminálový režim využívá rozhraní UART, pro sériovou komunikaci s PC. Způsob vstoupení do terminálového režimu rozebírá #ref(<kap-log-rezim>, supplement: [kapitola]). Základ terminálového režimu běží v nekonečné smyčce, která je na konci oddělena čekáním #footnote[Toto čekání se mění na základě zvolené funkce.]. Smyčka slouží jako obsluha akcí, které jsou vyvolány, jak uživatelem prostřednictví TUI, tak periferiemi, které momentálně běží. Obsluha při každé iteraci provede jednotlivé úkony, pokud příznaky v globální struktuře (@code-global_vars_t) jsou nastaveny. Příznaky jsou běžně nastavovány skrze přerušení, například vyvolané uživatelem skrze odeslání symbolu seriovou komunikací. Obsluha v každé iteraci zkontroluje, zda příznak `need_frontend_update` vyžaduje vykreslit grafiku TUI (#todo[kapitola ansi]), zda příznak `need_perif_update` vyžaduje změnit periferii (#todo[kapitola periferii]), poté vykreslí data, které periferie získala a nakonec čeká na další smyčku. Sonda vykresluje data na základě `device_state` promněné, která určuje, jakou funkci uživatel momentálně používá.
+Terminálový režim využívá rozhraní UART, pro sériovou komunikaci s PC. Způsob vstoupení do terminálového režimu rozebírá #ref(<kap-log-rezim>, supplement: [kapitola]). Základ terminálového režimu běží v nekonečné smyčce, která je na konci oddělena čekáním #footnote[Toto čekání se mění na základě zvolené funkce.]. Smyčka slouží jako obsluha akcí, které jsou vyvolány, jak uživatelem prostřednictví TUI, tak periferiemi, které momentálně běží. Obsluha při každé iteraci provede jednotlivé úkony, pokud příznaky v globální struktuře (@code-global_vars_t) jsou nastaveny. Příznaky jsou běžně nastavovány skrze přerušení, například vyvolané uživatelem skrze odeslání symbolu seriovou komunikací. Obsluha v každé iteraci zkontroluje, zda příznak `need_frontend_update` vyžaduje vykreslit grafiku TUI (@kap-tui), zda příznak `need_perif_update` vyžaduje změnit periferii (#todo[kapitola periferii]), poté vykreslí data, které periferie získala a nakonec čeká na další smyčku. Sonda vykresluje data na základě `device_state` promněné, která určuje, jakou funkci uživatel momentálně používá.
 #v(10pt)
 #figure(
 caption:[Diagram smyčky terminálového módu],
@@ -554,10 +554,9 @@ caption:[Diagram smyčky terminálového módu],
 )<diagram-terminal-mod>
 
 Metoda periodické obsluhy nastavování periferií a vykreslování TUI, oproti okamžité reakci přímo v přerušení, má výhodu v tom, že nemůže dojít k překrytí činností mezi hlavní smyčkou a přerušeními. Např. pokud bude stránka periodicky vykreslována, a stisk tlačítka by vyvolal přerušení k překreslení programu, může se přerušit smyčka v momentě, kdy už k překreslení dochází. V tomto případě poté dojde k rozbití obrazu vykresleného na terminál. Obdobná věc hrozí při vypínání a zapínání periferií. Kdy průběh deinicializace periferie přerušen a nastane inicializace, může dojít k nepredikovatelnému chování. Metodou obsluhy jsou definovány posloupnosti úkonů, které se nemohou překrývat.
-#todo[pokračovat]
 
-== Grafické řešení TUI
-@rozbor-vyuka zmiňuje důraz na jednoduchou přístupnost ve výuce, což zahrnuje i jednoduché zobrazení informací, které uživatel potřebuje. Proto aby byla sonda jednoduše použitelná bez nutnosti instalace specialního softwaru byla zvolena metoda generování TUI v terminálové aplikaci #footnote[Například program PuTTY...]. Ke generaci rozhraní bude docházet na straně mikrokontroleru a posíláno UART periferií do PC.
+== Grafické řešení TUI <kap-tui>
+@rozbor-vyuka zmiňuje důraz na jednoduchou přístupnost ve výuce, což zahrnuje i jednoduché zobrazení informací, které uživatel potřebuje. Aby zprovoznění sondy bylo co nejvíce jednoduché, nebyla zvolena cesta ovládání skrze specialní aplikaci nebo specialní ovladač, ale byla zvolena cesta ovládání sondy skrze libovolnou terminálovou aplikaci podporující ANSI escape sekvence #footnote[Například program PuTTY...]. ANSI escape sekvence zajistí možnost grafického prostředí skrze terminál. Ke generaci rozhraní bude docházet na straně mikrokontroleru a posíláno UART periferií do PC. Tento způsob navíc zajistí nezávislost na operačním systému a je možné komunikovat se sondou na jakémkoliv populárním operačním systému.
 
 === Ansi sekvence
 ANSI escape kódy představují standardizovanou sadu řídicích sekvencí pro manipulaci s textovým rozhraním v terminálech podporujících ANSI/X3.64 standard. Tyto kódy umožňují dynamickou úpravu vizuálních vlastností textu (barva, styl), pozicování kurzoru a další efekty, čímž tvoří základ pro tvorbu pokročilých terminálových aplikací @Grainger.
@@ -614,8 +613,35 @@ ANSI escape kódy umožňují kromě formátování textu také dynamické mazá
     \033[2K // Smazání celého řádku
     \033[2KProgress: 75% // Smazání řádku a vypsání nového textu
 ```
+=== Nastavení periferie pro zobrazování TUI
+Pro komunikaci s PC je využito periferie `USART1`, která se nachází na pinech `PA11` a `PA12` respektivě `PA9` a `PA10`. Periferii je možné inicializovat pomocí programu STM32CubeMX, který po nastavení parametrů vygeneruje příslušné inicializační a deinicializační funkce. Pro komunikaci byl zvolen baudrate `115200` a 8 bitové slovo s jedním stop bitem bez parity, což například u programu PuTTY je základní nastavení, takže není nutné aby uživatel něco dalšího nastavoval.
+
+#figure(
+    caption: [Inicializace UART periferie],
+    supplement:[Úryvek kódu],
+    ```C
+static void MX_USART1_UART_Init(void) {
+    huart1.Instance = USART1;
+    huart1.Init.BaudRate = 115200;
+    huart1.Init.WordLength = UART_WORDLENGTH_8B; // velikost dat
+    huart1.Init.StopBits = UART_STOPBITS_1; // počet stop bitů
+    huart1.Init.Parity = UART_PARITY_NONE; // bez parity
+    huart1.Init.Mode = UART_MODE_TX_RX; // Zapnut full duplex
+    huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+    huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+    if (HAL_UART_Init(&huart1) != HAL_OK) {
+        Error_Handler();
+    }
+}
+```
+)<code-uart1-init>
+
 === Vykreslování stránek
-Stránky jsou grafická reprezentace zvolené funkce. Tyto stránky vykreslují ovládací prvky, data získané periferiemi či varovné zprávy. Každá stránka je vykreslována skrze USART1 periferii skrze jednoduchou funkci (@code-send_str), která pošle string skrze periferii o dané velikosti. Na této funkci poté staví další funkce, které dokážou sestavovat větší celky. Funkce z #ref(<code-set_cursor>, supplement: [úryvku kódu]) nastavuje, dle pravidel zmíněných výše, kurzor na příslušné souřadnice. Ve funkci se také nachází kontrola, zda se kurzor nachází v rámci rozměrů stránky, které jsou fixně nastavené na $80 times 24$. Tyto rozměry jsou v terminálové aplikaci ohraničeny ASCII symboly. Pro vykreslení textu je využita funkce z #ref(<code-uart_text>, supplement: [úryvku kódu]), kde k danému textovému řetězci jsou před odesláním přidány ANSI sekvence pro podbarvení pozadí, textu a nebo ztučnění symbolů. Aplikace těchto všech funkcí lze vidět na #ref(<tui-menu>, supplement:[obrázku]), kde je vygenerována hlavní stránka sondy. 
+Stránky jsou grafická reprezentace zvolené funkce. Tyto stránky vykreslují ovládací prvky, data získané periferiemi či varovné zprávy. Každá stránka je vykreslována skrze USART1 periferii skrze jednoduchou funkci (@code-send_str), která pošle string skrze periferii o dané velikosti. Na této funkci poté staví další funkce, které dokážou sestavovat větší celky. Funkce z #ref(<code-set_cursor>, supplement: [úryvku kódu]) nastavuje, dle pravidel zmíněných výše, kurzor na příslušné souřadnice. Ve funkci se také nachází kontrola, zda se kurzor nachází v rámci rozměrů stránky, které jsou fixně nastavené na $80 times 24$. Tyto rozměry jsou v terminálové aplikaci ohraničeny ASCII symboly. Pro vykreslení textu je využita funkce z #ref(<code-uart_text>, supplement: [úryvku kódu]), kde k danému textovému řetězci jsou před odesláním přidány ANSI sekvence pro podbarvení pozadí, textu a nebo ztučnění symbolů. Aplikace těchto všech funkcí lze vidět na //#ref(<tui-menu>, supplement:[obrázku]), kde je vygenerována hlavní stránka sondy. Stránky jsou vykreslovány dvěma způsoby.
+
 #figure(
     caption: [Způsob odeslání stringu UART periferií],
     supplement:[Úryvek kódu],
@@ -627,7 +653,7 @@ void ansi_send_string(const char* str) {
 )<code-send_str>
 
 #figure(
-    caption: [Způsob odeslání stringu UART periferií],
+    caption: [Nastavení pozice kurzoru pomocí ANSI escape sekvencí],
     supplement:[Úryvek kódu],
     ```C
 void ansi_set_cursor(const uint8_t row, const uint8_t col) {
@@ -647,11 +673,40 @@ void ansi_set_cursor(const uint8_t row, const uint8_t col) {
 ```
 )<code-set_cursor>
 
+Každá stránka má tzv. statickou část, která se po celou dobu nemění. Statická část je vždy vykreslena na začátku vstupu stránky a poté je vždy vykreslena oblužní smyčkou v momentě, kdy příznak `need_frontend_update` je nastaven. V případě nastavení příznaku obslužní smyčka odešle ANSI sekvenci `\033[2J`, která smaže celou stránku a poté vykreslí stránku odpovídající aktualně zvolené funkci. Příznak lze taky manuálně nastavit odesláním symbolu `R`, který je užitečný v případě, kdy se například vlivem špatného kontaktu vodiče mohou generovat náhodné symboly. Pokud by statická část vykreslovala periodicky, může nastat ke zbytečnému odesílání velkého množství dat skrze UART a to může spomalovat vykreslování. Také může dojít k rychlému blikání kurzoru v terminálové aplikaci, což je nežádoucí.
+
+Tzv. dynamická část stránky se vykresluje každý cyklus oblužné smyčky. Do dynamické části spadá vykreslování varovných zpráv, naměřených hodnot a nebo výstupy z periferií. Hodnoty jsou vždy vykresleny s definovaným počtem číslic. Např. napětí ve voltech je vykresleno jako `printf("%4d")`, což vykreslí 4 číslice čísla a pokud má číslo méně než 4 číslice, je jsou pozice nahrazeny mezerou. Při generování upozornění, je řádek, na kterém se text vykresluje, smazán ANSI sekvencí `\033[2K` a v případě potřeby je vykreslen nový text. #ref(<tui-ohm-static>, supplement: [Na obrázku]) je znázorněno na příkladu stránky pro měření odporu, že je ASCII ART zapojení, popisky a ohraničení vykresleno staticky a hodnoty, které jsou naměřeny jsou vykreslovány dynamicky.
 
 #figure(
-    caption: [TUI stránka hlavního menu],
-    image("pic/tui_main.png")
-)<tui-menu>
+    caption: [Ukázka vykreslování statické a dynamické části stránky],
+    image("pic/tui_ohm_static.png")
+)<tui-ohm-static>
+
+=== Ovládání
+Ovládat sondu lze pomocí symbolů, odesílané na rozhraní UART skrze terminálovou aplikaci. Na straně MCU jsou symboly přijímány na periferii UART, která při obdržení symbolu vyvolá přerušení. Pro implementaci zpracování symbolu je použit callback `HAL_UART_RxCpltCallback`, který je zavolán při vyvolání přerušení. Callback přečte symbol, který byl přijmut a zkontroluje, zda to není symbol, který je obecný pro všechny stránky#footnote[Obecně je to symbol `R`, který slouží znovu vykreslení.]. V případě jiných symbolů je nahlédnuto do globální promněné `current_page` (viz. @code-global_vars_t), která uchovává informaci, na které stránce se momentálně uživatel nachází a v závislosti na tom, je zvolena funkce pro provedení akce na základě přijatého symbolu. Po provedení příslušné akce je opět zapnuto přerušení pro přijetí znaku na UART periferii (viz. @code-UART-get). Způsob přepínání ovládání v závislosti na stránce ukazuje #ref(<code-uart-parse-page>, supplement: [úryvek kódu]). Způsob převedení symbolu na akci na dané stránce ukazuje příklad ovládání hlavního menu v #ref(<code-uart-parse-menu>, supplement: [úryvku]). V tomto úryvku lze vidět, že pomocí přepínače je ovládání nezávislé na tom, zda uživatel posílá velká nebo malá písmena. Samotný callback nevykresluje stránku nicméně pouze nastavuje příznak `need_frontend_update` aby v dalším obslužním cyklu byla stránka vykreslena.
+#figure(
+    caption: [Způsob odeslání stringu UART periferií],
+    supplement:[Úryvek kódu],
+    ```C
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
+    if (huart->Instance == UART_INST) {
+        if (global_var.received_char == 'r' ||
+            global_var.received_char == 'R') {  // reload
+            ansi_clear_terminal();
+            ansi_render_current_page();
+            global_var.booted = true;
+        } else {
+            get_current_control();
+        }
+
+        HAL_UART_Receive_IT(&UART, &global_var.received_char, 1);
+    }
+}
+```
+)<code-UART-get>
+
+
+
 
 = Návrh lokálního režimu STM32
 == Logika nastavení režimů<kap-log-rezim>
@@ -772,201 +827,6 @@ Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživa
 
 = Realizace logické sondy <realizace>
 #todo[REVIZE]
-== Grafické rozhraní
-#todo[REVIZE]
-Pro snadné pochopení ovládání i jedincem, který se zabývá podobným tématem
-poprvé, je podstatné, aby logická sonda byla jednoduše ovladatelná, přenositelná
-a obecně aby zprovoznění sondy nebylo náročné. Pro spoustu začátečníků může být
-obtížné zjistit, jak mikrokontrolér připojit k PC, jaký program nainstalovat,
-jaké ovladače nainstalovat a~podobně.
-
-Proto v případě logické sondy bylo zvoleno řešení, kde uživatel pouze připojí
-logickou sondu k PC a nainstaluje si známý terminál pro seriovou komunikaci, a
-může sondu používat. Je to z důvodu, že logická sonda využívá ANSI escape
-sekvence pro generování terminálového uživatelského rozhraní. Tento přístup
-nevyžaduje instalaci ovladačů pro specifický software a hlavně není závislý na
-operačním systému. Tzn. podpora této logické sondy je na všechny standartní
-operační systémy. V @uart bylo zmíněno, že UART umí full duplex komunikaci,
-díky tomu počítač může posílat zprávy i do mikrokontroleru. Tuto vlastnost
-logická sonda použije pro ovládání rozhraní uživatelem.
-
-V rámci této práce byl využíván software *PuTTY*. FOSS#footnote[Free open source software],
-který má podporu různých komunikačních protokolů, jako je SSH, Telnet, SCP a
-další. PuTTY podporuje také ANSI escape sekvence a je možné upravit velké
-množství nastavení. 
-
-=== Odesílání zpráv <ansi-send>
-
-Před odesláním první zprávy přes seriovou komunikaci je žádoucí inicializovat
-UART periferii. To je možné přes STM32CubeMX#footnote[STM32CubeMX je grafický program, který dává jednodušší možnost úpravy periferií.],
-kde vývojář nastaví potřebné parametry a je mu vygenerován základní kód. Pro
-potřeby projektu bylo zvoleno následující nastavení:
-#v(10pt)
-#figure(
-    caption: [test],
-    supplement: "Úryvek kódu",
-```C
-static void MX_USART1_UART_Init(void) {
-    huart2.Instance = USART1;
-    huart2.Init.BaudRate = 115200;
-    huart2.Init.WordLength = UART_WORDLENGTH_8B; // velikost dat
-    huart2.Init.StopBits = UART_STOPBITS_1; // počet stop bitů
-    huart2.Init.Parity = UART_PARITY_NONE;
-    huart2.Init.Mode = UART_MODE_TX_RX; // Zapnut full duplex
-    huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-    huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-    huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-    huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart1) != HAL_OK) {
-        Error_Handler();
-    }
-}```
-)
-#v(10pt)
-Po inicializaci je možné poslat zprávu pomocí například následovně:
-#v(10pt)
-```C
-void ansi_send_string(const char* str) {
-    HAL_UART_Transmit(&huart1, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
-}
-```
-#v(10pt)
-kde reference na `huart1` je inicializovaná struktura. Pro jednodušší generování
-rozhraní byla vytvořena abstrakce zvaná `ansi abstraction layer` (dále jen AAL).
-Tato abstrakce umí potřebné ansi senkvence generovat. Zde je příklad funkce,
-která odesílá text, který již má speciální efekty:
-#v(10pt)
-```C
-// Odesílání textu s efekty
-void ansi_send_text(const char* str,
-                    const char* color,
-                    const char* bg_color,
-                    const _Bool bold) {
-    if (bg_color != NULL && strlen(bg_color) != 0) {
-        ansi_send_string(bg_color);
-    }
-    if (color != NULL && strlen(color) != 0) {
-        ansi_send_string(color);
-    }
-    if (bold) {
-        ansi_send_string("\033[1m"); // Tučné písmo
-    }
-    ansi_send_string(str);
-    ansi_send_string("\033[0m"); // Reset formátování
-}
-
-```
-#v(10pt)
-Nebo například funkce, která nastavuje kurzor na specifickou pozici:
-#v(10pt)
-```C
-void ansi_set_cursor(const uint8_t row, const uint8_t col) {
-    if (row > TERMINAL_HEIGHT || col > TERMINAL_WIDTH) {
-        Error_Handler();
-    }
-
-    char result[BUFF_SIZE];
-
-    size_t ret = snprintf(result, BUFF_SIZE, "\033[%u;%uH", row, col);
-
-    if (ret >= sizeof(result) || ret < 0) {
-        Error_Handler(); // kontrola zda se text vešel do bufferu
-    }
-
-    ansi_send_string(result);
-}```
-#v(10pt)
-Další funkce, které zjednodušují ovládání jsou k nalezení v souboru `ansi_abstraction_layer.c`.
-Pro další kontext budou postačovat hlavně tyto dvě funkce.
-
-Pomocí AAL je možné vykreslovat efektivně větší celky. Zde je příklad z TUI, kdy
-jedna funkce pomocí instrukcí sestaví větší celek, v tomto případě nápovědu pro
-odchytávání signálu:
-#v(10pt)
-```C
-void ansi_frequency_reader_generate_hint(void) {
-    ansi_set_cursor(TERMINAL_HEIGHT - 2, 4);
-    ansi_send_text("m - change mode ", RED_TEXT, "", false);
-    ansi_set_cursor(TERMINAL_HEIGHT - 2, 21);
-    ansi_send_text("t - change gate time ", BLUE_TEXT, "", false);
-    ansi_set_cursor(TERMINAL_HEIGHT - 2, 45);
-    ansi_send_text("d - delete flag ", GREEN_TEXT, "", false);
-}
-
-```
-#v(10pt)
-
-Tyto větší celky ulehčili tvorbu tzv. `ASCII ART`#footnote[ASCII ART je termín pro obrázek, který je vytvořen pomocí symbolů ASCII.],
-ohraničení nebo tvorby menu, což vylepší vizuál stránky @ANSI-PAGE-MAIN
-ukazuje, jak vypadá hlavní stránka logické sondy realizované skrze AAL.
-#figure(
-  caption: "TUI hlavní stránky logické sondy", image("pic/ANSI_PAGE_MAIN.png"),
-)<ANSI-PAGE-MAIN>
-#pagebreak()
-=== Přijimání zpráv
-Pro zajištění komunikace mezi sondou a zařízením je nutné také zpracovávat
-vstupy od uživatele, které jsou přijímány na rozhraní UART. K tomuto účelu sonda
-využívá přerušení, které je vyvolané při přijetí znaku na UART. Pro implementaci
-je použit callback `HAL_UART_RxCpltCallback`, který je již deklarován v knihovně
-HAL, tzn. stačí ho definovat pro správnou funkcionalitu.
-#v(10pt)
-```C
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
-    if (huart->Instance == USART1) {
-        HAL_UART_Receive_IT(&huart1, &received_char, 1);
-        if (received_char == 'r' || received_char == 'R') {  // reload
-            ansi_clear_terminal();
-            render_current_page();
-        } else {
-            get_current_control();
-        }
-    }
-}
-```
-#v(10pt)
-Callback se skládá ze dvou částí, jedna je samotný callback, který zjistí, jaký
-UART přijmul znak a zkontroluje, zda to není znak, který je obecný pro všechny
-okna TUI. Pokud ne, zavolá `get_current_control`. Kde se nachází switch, který
-podle stránky, na které se uživatel nachází, zvolí ovládací funkci.
-#v(10pt)
-```C
-void control_main_page(void) {
-    switch (received_char) {
-        case 'v':
-        case 'V':
-            ansi_clear_terminal();
-            ansi_voltage_page();
-            break;
-        case 'c':
-        case 'C':
-            ansi_clear_terminal();
-            ansi_channel_set_page();
-            break;
-        case 'f':
-        case 'F':
-            ansi_clear_terminal();
-            ansi_frequency_reader_page();
-            break;
-        case 'g':
-        case 'G':
-            ansi_clear_terminal();
-            ansi_impulse_generator_page();
-    }
-}
-```
-#v(10pt)
-Zde je možné například vidět funkci, která slouží pro ovládání hlavní stránky.
-Jak je vidět, funkce podporuje velké i malé písmo. Po zjištění znaku spustí
-určitou akci. Například při stisku `V`, vyčistí terminalové okno a přenastaví
-stránku na voltmetr.
-
-Zde je podstatné, že samotný interupt nenastavuje okno, ale pouze přenastaví
-flag a ke změně dojde v hlavní smyčce. Pokud by to tak nebylo, mohlo by dojít ke
-kolizi akcí. Například hlavní smyčka by byla v průběhu překreslování a v ten
-moment, by bylo vyvoláno přerušení UARTem. Přerušení by překreslilo stránku a
-program by po přerušení pokračoval ve stejném bodě. Zde by se mohlo stát, že by
-se polovina stránky překreslila a polovina ne.
 
 == Měření napětí a zjišťování logické úrovně <volt-measure>
 Pro měření napětí je využíván AD převodník. Jak již bylo uvedeno v @adc,
@@ -1124,16 +984,16 @@ vzorků a nedocházelo k posunu.
 
 Po určitém časovém úseku, procesor zpracuje data z DMA a zprůměruje hodnoty z AD
 převodníku, následně hodnoty převede dle metodity v @adc a vykreslí na seriovou
-linku pomocí ANSI sekvencí zmíněné v @ansi-send.
+linku pomocí ANSI sekvencí zmíněné v
 
 TUI vykresluje hodnoty na každém kanálu a poté vykresluje, zda je logická úroveň
-vysoká, nízká a nebo je nejasná @voltmetr ukazuje vizuál stránky pro měření. Je
+vysoká, nízká a nebo je nejasná  ukazuje vizuál stránky pro měření. Je
 možné pozorovat, že kanál 1 na pinu `A0` měří `0,0 V` a `L` znázorňuje nízkou
 úroveň. Kanál 2 ukazuje napětí `3,3V` a je to vysoká úroveň. Kanál 3 je plovoucí
 a není připojený. Proto úroveň je nejasná a měří pouze parazitní napětí. Kanál 4
 je vypnutý.
 
-Kanály je možné zapínat a vypínat pomocí stránky `Channels` @channel ukazuje
+Kanály je možné zapínat a vypínat pomocí stránky `Channels`  ukazuje
 vzhled této stránky. Uživatel pomocí klávesových zkratek 1 až 4 volí jaké kanaly
 aktivovat, s tím, že po zvolení kanálů je nutné nastavení uložit stisknutím
 klávesy S.
@@ -1145,13 +1005,6 @@ průměrná hodnota měření, jaká čísla pinů kanály osidlují a nakonec i
 což je HAL struktura, která je abstrakce ovládání převodníku, ukládání
 konfigurací apod.
 
-#figure(
-  caption: [Stránka pro měření napětí a logických úrovní], image("pic/voltmetr-page.png"),
-) <voltmetr>
-#figure(
-  caption: [Stránka pro nastavení jednotlivých kanálů], image("pic/channel_page.png"),
-) <channel>
-#v(10pt)
 ```C
 typedef struct {
     _Bool channel[NUM_CHANNELS]; // aktivované kanály
@@ -1384,6 +1237,96 @@ void ansi_send_text(const char* str,
 }
 ```
 )<code-uart_text>
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Ovládání sondy skrze symboly],
+    placement: none,
+
+```C
+void get_current_control(void) {
+    char received_char = global_var.received_char;
+    switch (global_var.current_page) {
+        case ANSI_PAGE_MAIN:
+            control_main_page();
+            break;
+        case ANSI_PAGE_MAIN_ADVANCED:
+            control_advanced_main_page();
+            break;
+        case ANSI_PAGE_VOLTAGE_MEASURE:
+            control_voltage_page(received_char);
+            break;
+        case ANSI_PAGE_FREQUENCY_READER:
+            control_frequency_reader_page(received_char, global_var.signal_detector);
+            break;
+        case ANSI_PAGE_IMPULSE_GENERATOR:
+            control_impulse_generator_page(received_char);
+            break;
+        case ANSI_PAGE_LEVELS:
+            control_levels_page(received_char);
+            break;
+        case ANSI_PAGE_NEOPIXEL_MEASURE:
+            control_neopixel_measure_page(received_char);
+            break;
+        case ANSI_PAGE_SHIFT_REGISTER:
+            control_shift_register_page(received_char);
+            break;
+        case ANSI_PAGE_UART:
+            control_uart_page(received_char);
+            break;
+        case ANSI_PAGE_I2C:
+            control_i2c_page(received_char);
+            break;
+        case ANSI_PAGE_SPI:
+            control_spi_page(received_char);
+            break;
+        default:
+            control_main_page();
+    }
+}
+```
+)<code-uart-parse-page>
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Ovládání menu],
+    placement: none,
+
+```C
+    void control_main_page(void) {
+    switch (global_var.received_char) {
+        case 'v':
+        case 'V':
+            ansi_set_current_page(ANSI_PAGE_VOLTAGE_MEASURE);
+            dev_mode_change_mode(DEV_STATE_VOLTMETER);
+            break;
+        case 'f':
+        case 'F':
+            ansi_set_current_page(ANSI_PAGE_FREQUENCY_READER);
+            dev_mode_change_mode(DEV_STATE_FREQUENCY_READ);
+            break;
+        case 'g':
+        case 'G':
+            ansi_set_current_page(ANSI_PAGE_IMPULSE_GENERATOR);
+            dev_mode_change_mode(DEV_STATE_PULSE_GEN);
+            break;
+        case 'l':
+        case 'L':
+            if (NOT_SOP) {
+                ansi_set_current_page(ANSI_PAGE_LEVELS);
+                dev_mode_change_mode(DEV_STATE_LEVEL);
+            }
+            break;
+        case 'a':
+        case 'A':
+            if (NOT_SOP) {
+                ansi_set_current_page(ANSI_PAGE_MAIN_ADVANCED);
+                dev_mode_change_mode(DEV_STATE_NONE);
+            }
+            break;
+    }
+}
+```
+)<code-uart-parse-menu>
 
 #figure(
     supplement: [Úryvek kódu],
