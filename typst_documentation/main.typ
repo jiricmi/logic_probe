@@ -705,6 +705,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
 ```
 )<code-UART-get>
 == Princip nastavení periferií<kap-perif>
+Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. 
 
 == Implementace měření s ADC
 === Měření napětí a logických úrovní <kap-volt>
@@ -768,17 +769,21 @@ uint32_t resistance = (adc_ch->base_resistor * measured_voltage)
     image("pic/tui_ohm.png")
 )<tui-ohm>
 
-
 == Implementace měření frekvence a odchytávání pulsů
 == Implementace generování pulsů
-
+== Implementace nastavování úrovní
+== Implementace diagnostiky posuvného registru
+== Implementace diagnostiky Neopixelu <kap-neopixel>
+== Implementace diagnostiky UART
+== Implementace diagnostiky I2C
+== Implementace diagnostiky SPI
 
 
 
 
 = Návrh lokálního režimu STM32
 == Logika nastavení režimů<kap-log-rezim>
-Při připojení MCU k napájení, dojde k bootování a pokud na pinu `PA14-BOOT0` je nízká logická úroveň, MCU načte program uložený ve FLASH paměti, který poté spustí. Při spuštění firmwaru sondy, proběhne inicializace globalních struktur, které jsou nezbytné pro chod celé sondy. Globální struktura poskytuje potřebná data různým periferiím, které například periferie využívají při přerušeních. Po inicializaci struktury, která je deklarována #ref(<code-global_vars_t>, supplement:[v úryvku kódu]), dojde k inicializaci všech potřebných periferií, které dále budou rozebrány v #todo[add kapitolu].
+Při připojení MCU k napájení, dojde k bootování a pokud na pinu `PA14-BOOT0` je nízká logická úroveň, MCU načte program uložený ve FLASH paměti, který poté spustí. Při spuštění firmwaru sondy, proběhne inicializace globalních struktur, které jsou nezbytné pro chod celé sondy. Globální struktura poskytuje potřebná data různým periferiím, které například periferie využívají při přerušeních. Po inicializaci struktury, která je deklarována #ref(<code-global_vars_t>, supplement:[v úryvku kódu]), dojde k inicializaci všech potřebných periferií, které dále jsou rozebrány v #ref(<kap-perif>, supplement: [kapitole]).
 
 Po inicializaci periferií, sonda zkontroluje stav pinu `PA10` na kterém se nachází *Rx* USART1 periferie. Jak bylo zmíněno v #ref(<uart>, supplement:[kapitole]), pokud jsou dvě zařízení propojeny a neprobíhá žádná komunikace, tak se na vodičích od `Tx` do `Rx` nachází logicky vysoká úroveň. Takto snda dokáže určit, zda je sonda připojena UART/USB převodníkem k PC, nebo je sonda pouze napájena např. skrze jiné MCU.
 @sop8-hw a @tssop20-hw má v zapojení, na pinu `PA10`, rezistor o velikosti $10$ $K Omega$, který při nepřipojeném vodiči uzemní `Rx`. @dia-init prezentuje způsob inicializace. Po zvolení režimu, zařízení přejde do různého nastavení, které jsou nutné pro fungování režimu. Opětovné nastavení režimu opět dojde při dalším bootu sondy, protože jednotlivé režimy běží v nekonečném cyklu dokud je zařízení napájeno.
@@ -810,11 +815,42 @@ Po inicializaci periferií, sonda zkontroluje stav pinu `PA10` na kterém se nac
 #v(10pt)
 
 == Ovládání lokálního režimu
-Jak #ref(<cil>, supplement: [kapitola]) zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je vhodný pro prvotní rychlou diagnostiku logického obvodu. Režim se ovládá skrze tlačítko a informace jsou zobrazovány prostřednictvím RGB LED WS2812. Lokální režim běží ve smyčce, kdy se periodicky kontrolují změny a uživatelské vstupy. Způsob zobrazování barev na WS2812 bude popsán v #todo[dodat kapitolu].
+Jak #ref(<cil>, supplement: [kapitola]) zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je vhodný pro prvotní rychlou diagnostiku logického obvodu. Režim se ovládá skrze tlačítko a informace jsou zobrazovány prostřednictvím RGB LED WS2812. Lokální režim běží ve smyčce, kdy se periodicky kontrolují změny a uživatelské vstupy. Způsob zobrazování barev na WS2812 je popsán v #ref(<kap-neopixel>, supplement: [kapitole]).
+
+#v(10pt)
+#figure(
+    caption: [Diagram způsobu reakce na vstupy uživatele v lokálním módu],
+    placement: none,
+    diagram(
+        cell-size: (8mm, 10mm),
+        edge-stroke: 1pt,
+        edge-corner-radius: 5pt,
+        mark-scale: 70%,
+        blob((0,0), [Start], tint: yellow, extrude: (0, 3)),
+        edge("-|>"),
+        blob((0,1), [Jak bylo\ stisknuto\ tlačítko?], shape: shapes.hexagon, tint: red),
+        edge((0,2), "=>", [Krátce]),
+        edge((-1,2),"=>", [Dlouze]),
+        edge((1,2),"=>", [Dvojitě]),
+
+        blob((-1,2), [Přepnout\ aktuální stav], tint: yellow),
+        edge((0,3), "-|>"),
+        blob((0,2), [Reagovat\ na krátký stisk], tint: yellow),
+        edge((0,3), "-|>"),
+        blob((1,2), [Reagovat\ na dvojitý stisk], tint: yellow),
+        edge((0,3), "-|>"),
+        blob((0,3), [Rozsviť LED \dle výsledků periferie], tint: yellow),
+        edge((1,3), "-|>"),
+        blob((1,3), [Čekej], tint: orange, extrude: (2,4)),
+        edge((1,3), (1.7,3), (1.7,2), (1.7, 1), "ll", "--|>"),
+    )
+)
+#v(10pt)
 
 Při zmáčknutí tlačítka dojde k přerušení a je zavolána funkce z #ref(<code-exti_fall>, supplement:[úryvku kódu]), kde je zaznamenán čas zmáčknutí. Po uvolnění tlačítka dojde k přerušení náběžné hrany, a je zavolána funkce z #ref(<code-exti_raise>, supplement: [úryvku kódu]), kde je zaznamenán čas uvolnění a následně funkce `extern_button_check_press`, z #ref(<code-extern_button>, supplement:[úryvku kódu]), porovná časy s referencí a určí, o který stisk se jedná. Funkce nastaví příznak v globální struktuře a v hlavní smyčce se poté provede příslušná akce. Tato metoda dokáže eliminovat nechtěné kmity tlačítka při stisku a uvolnění, kdy MCU zaznamenává velký počet hran v krátký moment (bouncing tlačítka).
 
-Zařízení skrze tlačítko rozpozná tři interakce: _krátký stisk_ slouží k přepínání logických úrovních na určitém kanálu, _dvojitý stisk_ umožňuje cyklické přepínání mezi měřícími kanály, zatímco _dlouhý stisk_ (nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. Stavy logické sondy jsou celkově čtyři.
+Zařízení skrze tlačítko rozpozná tři interakce: _krátký stisk_ slouží k přepínání logických úrovních na určitém kanálu, _dvojitý stisk_ umožňuje cyklické přepínání mezi měřícími kanály, zatímco _dlouhý stisk_ (nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. 
+
 
 
 #figure(
@@ -854,44 +890,72 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
 }
     ```
 )<code-exti_raise>
-== Možné stavy lokálního režimu
-#todo[dopsat tuto kapitolu]
-=== Stav logické sondy
-
-Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá CMOS logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály.
-
-==== Stav logických úrovní
-Další stav, který se po dlouhém stisku nastaví je *nastavování logických úrovní*. Stav při stisku tlačítka změní logickou úroveň na opačnou, tzn. pin je nastaven jako push-pull a pokud je na pinu nízká úroveň, změní se na vysokou a naopak. Tato úroveň lze nezávisle měnit na všech kanálech, který má řadič v návrhu k dispozici.
-
-=== Stav detekce pulzů
-Detekování pulzů probíhá za pomocí input capture kanálu časovače. Při detekci hrany, je stav časovače uložen do registru a je vyvoláno přerušení. Přerušení poté nastaví pomocný flag, který bude zpracován při dalším cyklu smyčky. Smyčka poté na 1 sekundu rozsvítí LED jako detekci náběhové resp. sestupné hrany.
-
-Lokální mód běží ve smyčce, kde se periodicky kontrolují změny a uživatelské vstupy. Důvod pro zvolení této metody je ten, že takto je zaručeno, že se vždy splní úkony ve správném pořadí. V #todo[neco neco] je vysvětlen důvod podrobněji. Při začátku každého cyklu proběhne kontrola, zda uživatel dlouze podržel tlačítko. Pokud ano, přepne se stav. Poté program zkontroluje, zda bylo tlačítko zmáčknuto krátkou dobu, pokud ano, reaguje na tento úkon uživatele v závislosti na aktuálním stavu, stejně jako u dvojstisku. Je důležité podotknout, že stav tlačítka je vždy pouze jeden a nikdy se tlačítko nenachází ve více stavech zároveň. Následně po kontrole vstupní periferie proběhne kontrola hodnot a flagů aby smyčka zobrazila výstupní periferií informaci uživateli. Např. pokud je stav nastavení pulzů a flag, který symbolizuje nalezenou hranu, rozsvítí smyčka LED příslušné barvy. Po dokončení úkonů smyčka čeká určitou dobu, než zopakuje celý cyklus znovu. Doba se mění v závislosti na zvoleném stavu, tzn. detekce pulzů probíhá rychleji, než nastavování logických úrovní.
 
 
-#diagram(
-    cell-size: (8mm, 10mm),
-	edge-stroke: 1pt,
-	edge-corner-radius: 5pt,
-	mark-scale: 70%,
-	blob((0,0), [Start], tint: yellow, extrude: (0, 3)),
-    edge("-|>"),
-    blob((0,1), [Jak bylo\ stisknuto\ tlačítko?], shape: shapes.hexagon, tint: red),
-    edge((0,2), "=>", [Krátce]),
-    edge((-1,2),"=>", [Dlouze]),
-    edge((1,2),"=>", [Dvojitě]),
 
-    blob((-1,2), [Přepnout\ aktuální stav], tint: yellow),
-    edge((0,3), "-|>"),
-    blob((0,2), [Reagovat\ na krátký stisk], tint: yellow),
-    edge((0,3), "-|>"),
-    blob((1,2), [Reagovat\ na dvojitý stisk], tint: yellow),
-    edge((0,3), "-|>"),
-    blob((0,3), [Rozsviť LED \dle výsledků periferie], tint: yellow),
-    edge((1,3), "-|>"),
-    blob((1,3), [Čekej], tint: orange, extrude: (2,4)),
-    edge((1,3), (1.7,3), (1.7,2), (1.7, 1), "ll", "--|>"),
+== Funkce lokálního režimu
+Lokální režim má celkově 4 různé stavy, pro rychlou diagnostiku logického obvodu. Tyto funkce vychází ze standartních schopností komerečních logických sond. Stavy jsou přepínány dlouhým stiskem. 
+
+=== Funkce logické sondy
+Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Jsou využity piny `PB7` a `PA0`. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá CMOS logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály. Tento stav vychází z terminálové funkce pro měření napětí a následné zjistění logiky. Tento stav je vhodný pro rychlé zjistění úrovně na vodiči při diagnostice obvodu.
+
+=== Funkce logických úrovní
+Funkce logických úrovní je stav, který po stisku tlačítka změní logickou úroveň na opačnou, tzn. pin je nastaven jako push-pull a pokud je na pinu nízká úroveň, změní se na vysokou a naopak. Tato úroveň lze nezávisle měnit na pinech `PB7` a `PA0`. RGB led poté barvou reprezentuje, v jakém stavu je pin nastaven. Při vstoupení do tohoto stavu uživatelem, jsou piny inicializovány funkcí z #ref(<code-local-levels>, supplement: [úryvku kódu]). Tento stav je vhodný pro diagnostiku obvodu čítače, nebo klopných obvodů.
+
+=== Funkce pulzování
+Funkce pulzování je stav, kdy po stisku tlačíka je zapnuto na pinu `PA0` signál o frekvenci 1 Hz. Při zapnutí signálu na výstupu se rozsvítí RGB LED, aby si uživatel byl vědom aktivace. Po opětovném stisku tlačítka je vysílání signálu vypnuto. Takto nízká frekvence poskytuje možnost debugovat obvod, kde se například nachází posuvné registry nebo čítače. Uživatel například může vyzkoušet čítač, který zobrazuje čísla na sedmisegmentovém displeji a kontrolovat, zda se číslice mění korektně. Při vyšších frekvencích by toto znamenalo problém pro uživatele.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Lokální režim pulzování ukázka obslužné smyčky],
+    supplement: [Úryvek kódu],
+    ```C
+void local_mode_pulse(void) {
+    if (global_var.signal_generator->local_pulsing) {
+        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
+    } else {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+        neopixel_send_color(global_var.visual_output, NEOPIXEL_NONE);
+    }
+}
+
+    ```
 )
+
+#v(10pt)
+
+=== Funkce detekce pulzů
+Detekce pulzu je stav, kdy je sledován pin `PA0` a detekována náběžná nebo sestupná hrana (detekce náběžné nebo sestupné hrany lze nastavit pomocí tlačítka). Pokud sonda detekuje hranu, rozsvítí RGB LED na 1 sekundu. Tento stav je vhodný pro detekci rychlého pulzu bez nutnosti použití osciloskopu. Sonda totiž detekuje velice krátkou hranu, ale uživatel ví, že pulz v obvodu byl, protože LED tento signál prodloužila.
+
+Detekce funguje za pomocí časovače TIM2, který má nastavený kanál na režim input capture. Tento řežim při detekci hrany, uloží stav časovače do registru a je vyvoláno přerušení. Přerušení poté nastaví pomocný příznak, který bude zpracován při dalším cyklu smyčky. Obslužní smyčka poté rozsvítí LED. Důvod zvolení časovače místo přerušení EXTI, které vyvolá přerušení při hraně na vstupu, je ten, že tato metoda vychází z měření frekvencí v terminálovém režimu a tento způsob šetří paměťové zdroje, které jsou na tomto MCU velice omezené.
+#figure(
+    caption: [Zachytávání pulzů v lokálním režimu],
+    supplement: [Úryvek kódu],
+```C
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
+    if (htim->Instance != TIM2) {
+        return;
+    }
+
+    _Bool is_channel_1 = htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1;
+    _Bool is_channel_2 = htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2;
+    _Bool is_rise_edge_mode =
+        global_var.detector->mode == DETECTOR_MODE_RISE_EDGE
+    _Bool is_rise_edge_mode =
+        global_var.detector->mode == DETECTOR_MODE_FALL_EDGE;
+
+    if ((is_channel_1 && is_rise_edge_mode) ||
+        (is_channel_2 && is_fall_edge_mode)) {
+        detector->one_pulse_found = true;
+    }
+}
+```
+)
+
+
+
+= Návrh omezené verze na RPI Pico
+
 
 = Realizace logické sondy <realizace>
 #todo[REVIZE]
@@ -1258,4 +1322,32 @@ void extern_button_check_press(button_data_t* data) {
 }
 ```
 )<code-extern_button>
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Inicializace pinů lokálního režimu pro stav logických úrovní],
+    placement: none,
+
+```C
+void gpio_init_push_pull(void) {
+    gpio_deinit_pins();
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_7;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+}
+```
+)<code-local-levels>
+= Uživatelská příručka
 ]
