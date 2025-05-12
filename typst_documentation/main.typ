@@ -697,14 +697,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
 }
 ```
 )<code-UART-get>
+
+=== Struktura TUI
+Po připojení sondy je uživatel přivítán stránkou hlavního menu (#ref(<tui-menu>, supplement: [obrázek])). Tato stránka je hlavní rozbočka mezi funkcemi. Po stisknutí příslušné klávesy u funkce, je uživatel přesměrovaný na konkrétní stránku s funkcí. Hlavní menu je rozbočka pro tzv. základní módy, které jsou k dispozici, jak na SOP8 tak na TSSOP20. Při stisku písmene `A`, se uživatel v případě pouzdra TSSOP20 dostane do pokročilých funkcí, kde se nachází monitorování periferií. Univerzálně platí, že symbolem `Q` se uživatel dostane vždy to tohoto menu, ze kterého poté může zvolit jinou funkci.
+
+#grid(
+    columns: 2,
+    [#figure(
+        caption: [TUI hlavní menu základních funkcí],
+        image("pic/tui_main.png")
+    )<tui-menu>],
+    [#figure(
+        caption: [TUI hlavní menu pokročilých funkcí],
+        image("pic/tui_main_advanced.png")
+)]
+)
 == Princip nastavení periferií<kap-perif>
-Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. #todo[domyslet]
+Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. Další důvod je například využití časovače TIM2, který je jako jediný 32 bitový a je nutný k více funkcím. Jeden z příkladů je využití časovače TIM2 na `PA0`, ke čtení frekvence a zároveň využití TIM2 na generování pulzů. Další příklad je kolize periferie USART2 a kanálu `PB7`, kde je potřeba jiné nastavení pinů.
+
+Sonda obsahuje velké množství nastavení periferií a je velice snadné, ztratit přehled, která periferie je, a která není inicializovaná. Pro vyhnutí se tomuto problému během vývoje bylo zvoleno řešení, kdy při každém přepnutí funkce uživatelem jsou všechny periferie uvedeny do základního stavu a poté podle zvolené funkce jsou nastaveny pouze konkrétní periferie nutné pro danou funkci. Tento zpusob minimalizuje výskyt nedefinovaných chování, které během vývoje mohou nastat. Inicializace a deinicialiace periferií se řeší během obslužní smyčky, která při nastaveném příznaku `need_perif_update`, nastaví všechny periferie do původního stavu a následně dle zvolené funkce uživatelem je nastavena periferie. Nastavení příznaku je provedeno v případě, že sonda potřebuje po uběhnutém čase změnit nastavení, nebo pokud uživatel pomocí vstupu z UARTu vyvolá žádost o přepnutí funkce.
 
 == Implementace měření s ADC
 === Měření napětí a logických úrovní <kap-volt>
 Napětí je měřeno pomocí AD převodníku na dvou kanálech v případě SOP8 a na třech v případě TSSOP20 (+ kanál s referenčním napětím). Uživatel skrze TUI může vypnout či zapnout měření na určitém kanále. Jak bylo zmíněno v #ref(<kap-mereni>, supplement: [kapitole]), ADC průběžně měří $32$ vzorků za $250$~ms ($128$ Hz). Každé měření kanálu je nastaveno na 160 cyklů, což je maximální přesnost měření.
 
-K časování měření je využito časovače TIM3, který po uplynutí času vyvolá přerušení a je naměřena hodnota ADC. Časovač má nastavenou předděličku na $64-1$, což nastaví frekvenci časovače z $64$ MHz na $1$ Mhz (neboli časovač inkrementuje hodnotu každou 1~$mu$s). Jelikož ADC běží na frekvenci $32$ MHz a změření jednoho kanálu trvá $160$ cyklů, změření jednoho kanálu trvá $~5$ $mu$s. Protože frekvence měření je $128$ Hz, můžeme tuto hodnotu zanedbat a nastavit periodu časovače na $7000 - 1$.
+K časování měření je využito časovače TIM3, který po uplynutí času vyvolá přerušení a je naměřena hodnota ADC. Časovač má nastavenou předděličku na $64000-1$, což nastaví frekvenci časovače z $64$ MHz na $1$ KHz (neboli časovač inkrementuje hodnotu každou 1~ms). Jelikož ADC běží na frekvenci $32$ MHz a změření jednoho kanálu trvá $160$ cyklů, změření jednoho kanálu trvá $~5$ $mu$s. Protože frekvence měření je $128$ Hz, můžeme tuto hodnotu zanedbat a nastavit periodu časovače na $7 - 1$.
 
 Při přetečení časovače je vyvoláno přerušení, které zavolá callback z #ref(<code-adc-callback>, supplement: [ukázky kódu]). Funkce zastaví časovač, a sekvenčně začne měřit poměrnou hodnotu mezi napětím na kanálu a $V_"dd"$. Po dokončení konverze je tato hodnota uložena do dynamicky alokovaného pole `voltage_measures` o velikosti $64 times "počet aktivních kanálů"$ #footnote[ADC při nastavení více kanálu sekvenčně prochází všechny kanály dokola.]. Toto pole se chová cyklicky, tzn. při překročení počtu prvků se začne plnit od začátku. Po změření všech kanálů je resetován a nastartován časovač.
 #v(10pt)
@@ -738,32 +755,100 @@ Každých $250$ ms obslužní smyčka vezme naměřené vzorky z `voltage_measur
 
 #figure(
     caption:[TUI měření napětí],
-    image("pic/tui_voltmetr.png")
+    image("pic/tui_voltmetr.png", width: 85%)
 )<tui-voltmetr>
 === Měření odporu
-Měření odporu vychází z principů měření z #ref(<kap-volt>, supplement:[kapitoly]). Pro změření odporu daných rezistorů, je změřeno napětí stejným způsobem jako v předchozí kapitole, ale pouze na prvním kanále obou pouzder. Z naměřených vzorků frekvencí $128$ Hz z kanálu 1 a referenčního napětí je spočítán průměr a poté je poměrová hodnota převedena na napětí. Z hodnoty napětí je poté, na základě normálového rezistoru, vypočítán odpor měřeného rezistoru.
+Měření odporu vychází z principů měření z #ref(<kap-volt>, supplement:[kapitoly]). Pro změření odporu daných rezistorů, je změřeno napětí stejným způsobem jako v předchozí kapitole, ale pouze na prvním kanále obou pouzder. Z naměřených vzorků frekvencí $128$ Hz z kanálu 1 a referenčního napětí je spočítán průměr a poté je poměrová hodnota převedena na napětí. Z hodnoty napětí je poté, na základě normálového rezistoru, vypočítán odpor měřeného rezistoru (@code-getmeasure).
 
-#figure(
-    placement: none,
-    caption: [Způsob výpočtu odporu],
-    supplement:[Úryvek kódu],
-    ```C
-uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
-uint32_t measured_voltage = adc_get_voltage(ref_voltage,
-                                            adc_ch->avg_voltage[1]);
-uint32_t resistance = (adc_ch->base_resistor * measured_voltage) 
-                / (ref_voltage - measured_voltage);
-    ```
-)
+
 
 
 #figure(
     caption: [TUI měření odporu],
-    image("pic/tui_ohm.png")
+    image("pic/tui_ohm.png", width: 85%)
 )<tui-ohm>
 
-== Implementace měření frekvence a odchytávání pulsů
-== Implementace generování pulsů
+== Implementace měření frekvence a odchytávání pulzů
+#figure(
+    caption: [TUI měření frekvence],
+    image("pic/tui_freq.png", width: 85%)
+)<tui-freq>
+
+Stránka měření frekvence (@tui-freq) zobrazuje `Frequency`, což je měření metodou hradlování, `Reciprocial frequency`, což je frekvence naměřená skrze šířky pulzu, `High pulse width`/`Low pulse width`, což je spočítaná šířka nízkého a vysokého pulzu a `Duty` neboli střída v případě, že by to byl signál PWM. Pro výpočet těchto hodnot, se periodicky střídá měření hradlováním a reciproční měření. Hradlovací čas je možné nastavovat z předvybraných časů.
+
+=== Měření frekvence hradlováním
+Při měření frekvence metodou hradlováním, jsou využity dva čítače. První časovač, TIM3, je zvolen, aby byl změřen čas hradlování. Tento čítač je nastavený předdeličkou na $1$ KHz (incrementace každou milisekundu) a poté podle nastavené periody bude nastaven hradlovací čas. Za hradlovací čas lze volit hodnoty 50, 100, 200, 500 a 1000 milisekund. Jelikož TIM3 má promněnlivou periodu, tak je nastaven příznak `AutoReloadPreload`, který při změně periody za běhu časovače, je perioda aplikována až po přetečení časovače. Pokud by časovač měl hodnotu např. 500, a perioda by byla nastavena na 200, časovač by nemohl přetéct na stal by problém. TIM3 je také nastaven jako One Pulse, což znamená, že při přetečení bude vypnut. Nastavení periferie je ukázáno v #ref(<code-tim3>, supplement: [úryvku kódu]).
+
+Na počítání hran je využit 32 bitový TIM2, který z důvodu své velikosti může napočítat velké množství pulsů i s poměrně dlouhým hradlovacím časem. Aby TIM2 počítal hrany, lze nastavit pro časovač tzv. ETR, neboli externí trigger. Tento trigger inkrementuje časovač pokaždé, když na ETR pinu (`PA0`) bude hrana (v tomto nastavení náběžná). Časovač v podstatě ignoruje interní hodiny, které inkrementují každý cyklus časovač, ale řídí se podle externích hodin na pinu `PA0`, které jsou v případě sondy měřená frekvence @STM32G0-REF. @signal-freq-measure ukazuje způsob spolupráce TIM2 a TIM3.
+
+Při vysokých frekvencích může nastat problém, kdy bude záležet i na rozdílu mezi zapnutím TIM2 a TIM3. Tyto dva časovače za normálních okolností musí být zahájeny sekvenčně a to vede k tomu, že buď bude nepatrně delší hradlovací čas a bude napočítáno více pulsů než by mělo. Design časovačů nicméně poskytuje řešení, kdy časovač může vyvolávat triggery a jiný časovač může na tyto triggery reagovat. V případě sondy byl TIM3 nastaven jako master timer, který při spuštění vyvolá trigger. TIM3 byl nastaven jako slave timer. Slave timer čeká, až dostane trigger a v momentě, kdy trigger dostane, začne počítat. Toto nastavení je ukázáno v #ref(<code-tim3>, supplement: [úryvku kódu]) a #ref(<code-tim2-freq>, supplement:[]).
+
+Po změření pulsů se provede výpočet frekvence. Zde nastavá problém, pro získání frekvence je nutné dělit počet pulzů, hradlovým časem. Nicméně pro MCU je operace dělení poměrně drahá. Jelikož všechny hradlovací časy (kromě 1000 ms), jsou pod 1 sekundu, dojde k dělení desetiným číslem. Toto desetiné číslo je ale možné převést na zlomek a po úpravě vznikne vztah, ve kterém eliminujeme dělení. @n-t demostruje příklad na $500$ ms.
+#v(10pt)
+$ f_"gate" = N / T_"gate" = N / 0.5 = N / (1/2) = N / 1 times 2/1  = 2N $ <n-t>
+#v(10pt)
+Měření touto metodou bylo otestováno měření nižších desítek MHz a naměřená odchylka od původní hodnoty byla $~0.16$ $%$. Což pravděpodobně bude způsobeno tím, že sonda nevyužívá externího krystalu ale interního oscilačního obvodu @STM32G0-REF, tak může být lehká odchylka od reference. Při vyšších frekvencích zde můžou hrát roli i režie implementovaná pro časovače.
+
+
+#figure(
+    placement: none,
+    caption: [Signály při měření frekvence hradlováním],
+    image("pic/freq_etr.png")
+)<signal-freq-measure>
+
+=== Měření reciproční frekvence
+Při měření pomocí reciproční frekvence je využito časovače TIM2. Časovač má nastaveny celkově 2 kanály do módu input capture. Input capture kanálu, který při hraně na vstupu uloží aktuální hodnotu časovače do registru a následně metodou DMA do paměti. Důvod inicializace dvou kanálů místo jednoho je ten, že každý kanál sice monitoruje stejný pin, ale jeden reaguje na náběžnou a druhá na sestupnou. Kanál sice umí detekovat obě najednou, nicméně pro funkci měření je nutné rozpoznat, která hrana je náběžná a která je sestupná. U frekvence je vždy změřena náběžná hrana, poté sestupná hrana a poté opět náběžná. Důvod proč jsou měřena i sestupná hrana je určení střídy v případě PWM signálu. Pokud je naměřena tato posloupnost, je možné vypočítat reciproční frekvenci, střídu a šířku pulzů.
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Funkce pro výpočet veličin na základě recipročního měření],
+    placement: none,
+```C
+void detector_compute_freq_measures(sig_detector_t* detector) {
+    uint32_t* edge_times = detector->edge_times;
+    
+    // Získání rozdílu mezi hranami
+    uint32_t high_delta =
+        edge_times[DET_EDGE2_FALL] - edge_times[DET_EDGE1_RISE];
+
+    uint32_t low_delta =
+        edge_times[DET_EDGE3_RISE] - edge_times[DET_EDGE2_FALL];
+    
+    // Výpočet času pulzu
+    detector->widths[DET_LOW_WIDTH] = (low_delta) / PROCESSOR_FREQ_IN_MHZ;
+    detector->widths[DET_HIGH_WIDTH] = (high_delta) / PROCESSOR_FREQ_IN_MHZ;
+    
+
+    uint64_t period =
+        (detector->widths[DET_LOW_WIDTH] + detector->widths[DET_HIGH_WIDTH]);
+    
+    // ochrana před dělením nulou
+    if (period > 0) {
+        detector->rec_frequency = 1000000 / period; // v ms
+        detector->pwm_duty =
+            ((uint64_t)detector->widths[DET_HIGH_WIDTH] * 100) / period;
+    } else {
+        detector->rec_frequency = 0;
+        detector->pwm_duty = 0;
+    }
+}
+```
+)
+#v(10pt)
+
+
+=== Odchytávání pulzů
+
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Signály při měření frekvence hradlováním],
+    image("pic/tui_pulse.png")
+)<tui-pulse>
+#v(10pt)
+Odchytávání pulzů je podfunkce na stránce měření frekvence. Při detekci náběžné nebo sestupné hrany (dle nastavení uživatele) je nastaven příznak, který je následně vykreslen na terminál. Uživatel tento příznak poté může smazat. K detekci pulzů je využito nastavení periferií jako při recipročním měření frekvence. Časovač, který je na vstupu nastaven jako input capture ukládá do registru hodnotu a je vyvoláno přerušení. Během přerušení je zavolána funkce, která zkontroluje, zda je to odpovídající hrana a pokud ano, je nastaven příznak. K odchytávání pulzů by mohlo být využito EXTI callbacku, nicméně to by znamenalo jiné nastavení periferií a zkomplikování sondy z hlediska vývoje.
+
+== Implementace generování pulzů
 == Implementace nastavování úrovní
 == Implementace diagnostiky posuvného registru
 == Implementace diagnostiky Neopixelu <kap-neopixel>
@@ -950,145 +1035,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
 = Návrh omezené verze na RPI Pico
 
 
-= Realizace logické sondy <realizace>
-#todo[REVIZE]
-
-== Odchytání pulzů a frekvence
-Pro měření frekvence hraje stěžejní roli časovač. Jak bylo zmíněno v @timery,
-časovače umí tzv. input capture. Input capture poskytuje možnost měření časových
-parametrů vstupního signálu, jako například perioda nebo šířka signálu. Časovač
-inkrementuje hodnotu o dané frekvenci a v momentě kdy na vstupu je objeví
-náběžná nebo sestupná hrana, dojde k přerušení a aktuální hodnota čítače se
-uloží do speciálního registru @TIMERS.
-
-Pro přesné zjistění frekvence musí být kladen důraz na režii. Při odběru dat by
-nesměl procesor provádět jakoukoliv. Toto se dá realizovat pomocí DMA podobně
-
-K zjištění frekvence je použita tzv. metoda hradlování. Metoda hradlování
-využívá periodu vzorkování, která je využita pro spočítání finální frekvence.
-@frequency_eq uvádí způsob, jak spočítat frekvenci pomocí metody hradlování.
-Frekvence lze spočítat jako polovinu napočítaných pulzů za časový úsek#footnote[Z důvodu, že časovač v tomto případě měří náběžný i sestupný pulz, je vždy počet
-  pulzů v periodě signálu dvojnásobný, proto je zapotřebí počítat pouze s
-  polovinou.]. K tomuto účelu je použit 32 bitový časovač, aby bylo možné měřit,
-co největší frekvence.
-$ F = (N/2)/T $ <frequency_eq>
-Pro měření časového úseku je využit druhý časovač. Tento časovač je nastaven
-předděličkou tak, aby hodnotu inkrementoval za 1 ms. Uživatel poté pomocí TUI
-nastavuje periodu na požadovaný úsek.
-#v(10pt)
-```C
-signal_detector.frequency =
-  (signal_detector.pulse_count / 2) / (signal_detector.sample_times[signal_detector.sample_time_index] / 1000);
-```
-#v(10pt)
-
-Po spuštění časovač začne inkrementovat hodnotu a v momentě, kdy časovač přeteče
-tzn. dosáhne poslední hodnoty periody, časovač vyvolá přerušení. Při přerušení
-se zastaví časovač pro čítání pulzů a spočítají se potřebné hodnoty.
-
-Logická sonda dle @frequency_eq vypočítá frekvenci. Důvod, proč logická sonda
-počítá oba pulzy a ne pouze nástupnou nebo sestupnou hranu je ten, že při
-detekci obou hran dokáž sonda spočítat, jak široké pulzy jsou. Tuto skutečnost
-je možné využít například pro počítání Duty u PWM signálů.
-
-Níže je možné vidět logiku, která počítá šířku pulzu pro vysokou úroveň. Pokud
-je čas sestupu signálu větší než vzestupu, není potřeba nic přepočítávat. Pokud
-čas sestupu je nižší než čas vzestupu, znamená to, že časovač přetekl a je nutné
-od `0xFFFFFFFF` odečíst čas vzestupu. Nakonec sonda přepočítá hodnotu časovače
-na čas, tzn. vynásobí konstantou, aby byl vzat potaz na frekvenci procesoru.
-#v(10pt)
-```C
-uint32_t rise_pulse_ticks;
-if (sig_high_end > sig_high_start) {
-    rise_pulse_ticks = sig_high_end - sig_high_start;
-} else if (sig_high_end < sig_high_start) {
-    rise_pulse_ticks = (0xFFFFFFFF - sig_high_start) + sig_high_end;
-} else {
-    rise_pulse_ticks = 0;
-}
-float high_width = (rise_pulse_ticks * CONST_FREQ) / 1000;
-```
-#v(10pt)
-#figure(
-  caption: [Stránka pro měření frekvence a PWM], image("pic/detector_freq.png"),
-)
-Duty time je poté spočítaný jako poměr času vysokého signálu a nízkého signálu
-uvedený v procentech.
-
-Kromě frekvence, umí sonda odchytávat pulzy, jak nízké, tak vysoké. Mezi módy je
-možné přepínat klávesou. Pro zachytávání signálu je časovač opět nastaven v
-režimu input capture. Časovač je spuštěn a nyní není využito DMA, ale časovač
-vyvolává přerušení, pokud dojde k zachycení signálu, toto přerušení zkontroluje,
-zda hrana signálu je nástupná nebo sestupná. Poté rozhodne podle módu uživatele,
-kterou hranu má ignorovat a kterou má detekovat.
-#figure(caption: [Stránka pro hledání pulzů], image("pic/detector_pulse.png"))
-Když časovač odchytí správnou hranu, přerušení nastaví flag, který reprezentuje
-nalezený pulz. Tento pulz se poté promítne uživateli do TUI. Flag je možné
-smazat a čekat na další vyvolání přerušení. Do budoucna je plán, přidat
-automatické smazání flagu po určité době, aby této funkcionality mohlo být
-využíváno i bez nutnosti připojení na seriovou linku. Po nalezení pulzu se
-rozsvítí led, která po například 1 sekundě opět zhasne.
-#pagebreak()
-== Generování pulzů
-Při generování pulzu má uživatel možnost nastavit konkrétní délku pulzi
-prostřednictvím TUI. Nastavená délka určuje, jak dlouho bude pulz trvat. Po
-nastavení délky může uživatel stisknout příslušnou klávesu, která spustí proces
-generování pulzu.
-
-Časovač v tomto případě má nastaven prescaler tak, aby se jednodušše počítal čas
-v~periodě. Poté, co je nastavený časovač, spustí se. Po přetečení časovače se
-vyvolá přerušení, které značí, že časovač odměřil příslušnou dobu. Přerušení
-následně časovač zastaví.
-
-Sonda umožňuje generovat pulzy dvou typů. První možností je generace nízké
-úrovně signálu během trvání vysoké úrovně. Druhou možností je naopak generace
-vysoké úrovně signálu během nízké úrovně. Uživatel si tedy může zvolit, kterou
-úroveň chce jako výchozí stav.
-
-Díky těmto režimům je možné i nastavit úrovně, které uživatel nemusí nutně
-používat jako generování pulzů, ale jako přepínání úrovní dle potřeby. #todo("ještě se na to kouknout znovu a upravit to neaktualni")
-
-#v(10pt)
-```C
-static void MX_TIM16_Init(void) {
-    htim16.Instance = TIM16;
-    htim16.Init.Prescaler = 63999; // předdělička
-    htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim16.Init.Period = 999; // výchozí hodnota periody
-    htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim16.Init.RepetitionCounter = 0;
-    htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
-        Error_Handler();
-    }
-    HAL_TIM_Base_Start_IT(&htim16);
-    sig_gen_init(&signal_generator);
-}```
-#v(10pt)
-@generator-page ukazuje, jak vypadá prozatimní zhotovení rozhraní pro ovládání
-generátoru pulzů. Pomocí kláves uvedené v nápovědě je možné měnit šířku pulzu a
-nebo měnit, jaký mód použít.
-#v(10pt)
-```C
-void sig_gen_toggle_pulse(sig_gen_t* generator, const _Bool con) {
-    generator->start = false;
-
-    // nastavení periody, která byla nastavena uživatelem
-    __HAL_TIM_SET_AUTORELOAD(&htim16, generator->period - 1);
-
-    if (con && generator->con) {
-        HAL_TIM_Base_Stop_IT(&htim16);
-        generator->con = false;
-    } else {
-        generator->con = con;
-        HAL_TIM_Base_Start_IT(&htim16);
-    }
-}```
-#v(10pt)
-
-#figure(
-  caption: [Stránka pro generování signálu], image("pic/generator-pulse.png"),
-) <generator-page>
 
 = Závěr a zhodnocení
 
@@ -1266,6 +1212,42 @@ void get_current_control(void) {
 
 #figure(
     supplement: [Úryvek kódu],
+    caption: [Inicializace TIM3 jako časovač],
+    placement: none,
+
+```C
+static void MX_TIM3_Init(void) {
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    htim3.Instance = TIM3;
+    htim3.Init.Prescaler = 64000 - 1;
+    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim3.Init.Period = 1000 - 1; // základní nastavení které bude změněno
+    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
+        Error_Handler();
+    }
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_OnePulse_Init(&htim3, TIM_OPMODE_SINGLE) != HAL_OK) {
+        Error_Handler(); // Časovač se sám zastaví po přetečení
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_ENABLE; // trigger pro slave časovač
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+}
+```
+)<code-tim3>
+
+#figure(
+    supplement: [Úryvek kódu],
     caption: [Využití HAL maker pro převod poměrových hodnot na napětí],
     placement: none,
 
@@ -1284,8 +1266,66 @@ uint32_t adc_get_v_ref( const uint32_t raw_voltage_value) {
 )<code-calc-voltage>
 
 #figure(
+    placement: none,
+    caption: [Způsob výpočtu odporu],
+    supplement:[Úryvek kódu],
+    ```C
+uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
+uint32_t measured_voltage = adc_get_voltage(ref_voltage,
+                                            adc_ch->avg_voltage[1]);
+uint32_t resistance = (adc_ch->base_resistor * measured_voltage) 
+                / (ref_voltage - measured_voltage);
+    ```
+)<code-getmeasure>
+
+#figure(
     supplement: [Úryvek kódu],
-    caption: [Struktura globálních promněných],
+    caption: [Inicializace TIM2 jako čítač hran],
+    placement: none,
+
+```C
+void timer_setup_slave_freq(void) {
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    slave_tim->Instance = TIM2;
+    slave_tim->Init.Prescaler = 0; // nastaven na maximum
+    slave_tim->Init.CounterMode = TIM_COUNTERMODE_UP;
+    slave_tim->Init.Period = 4294967295;
+    slave_tim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    slave_tim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(slave_tim) != HAL_OK) {
+        Error_Handler();
+    }
+    // inicializace externího clocku
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
+    sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
+    sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
+    sClockSourceConfig.ClockFilter = 0;
+    if (HAL_TIM_ConfigClockSource(slave_tim, &sClockSourceConfig) != HAL_OK) {
+        Error_Handler();
+    }
+
+    // nastavení závislosti spuštění na TIM3
+    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_TRIGGER;
+    sSlaveConfig.InputTrigger = TIM_TS_ITR2;
+    if (HAL_TIM_SlaveConfigSynchro(slave_tim, &sSlaveConfig) != HAL_OK) {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(slave_tim, &sMasterConfig) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+}
+```
+)<code-tim2-freq>
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Způsob detekce boucingu],
     placement: none,
 
 ```C
