@@ -19,6 +19,8 @@
 
 #outline(depth: 3)
 
+#set par(first-line-indent: 0em, spacing: 2.5em, justify: true)
+
 = Build
 == STM32G030 SOP8
 #todo[doplnit podrobnosti]
@@ -55,34 +57,39 @@
 )
 #v(10pt)
 = Local mode
-This mode is used to quickly identify the problem without having to connect to a desktop computer. It allows the following actions:
-    - *analysing circuit by simple logic probe*
-    - *detecting rise or fall edge*
-    - *setting logic levels on channels*
-By holding the button for a long time (approx. 500 ms) it is possible to switch between modes. The modes are differentiated by RGB LEDs, where the colour of the mode is displayed when the button is released.
-
-=== How to enable
-Local mode is enabled by the user connecting the assembled circuit only to the power supply. This means that the mode is activated when after switching on the device it detects a *logic zero* on the *recieve pin*, which is intended for communication with the computer. When the communication with the computer is connected, the default is logic one. 
-
-The activation of the mode can be detected so that when switched on, a sequence of colours on the RGB LEDs is triggered.
+This mode enables quick circuit diagnostics without requiring a computer connection. It offers the following features:
+- *Logic Probe*: Instant visualization of signal states (HIGH/LOW) on connected channels.
+- *Edge Detection*: Recognition of both rising edge and falling edge signal transitions.
+- *Pulse Generation*: Continuous pulsing
+- *Manual Logic Level Control*: Set fixed HIGH/LOW levels on selected channels.
+To switch between modes, hold the button for approximately 500 ms. The RGB LEDs indicate the active mode by displaying its assigned color when the button is released.
+=== Activation
+Local mode is enabled when the device is powered without UART computer connection. To activate it:
+1. Connect only the power supply to the assembled circuit (no data/USB connection).
+2. Upon startup, the device detects a logic LOW (0) on the receive (RX) pin, which is reserved for computer communication.
+    - _Note_: When connected to a computer, the RX pin defaults to logic HIGH (1), disabling Local mode.
+3. A startup RGB LED color sequence (e.g., alternating green-blue-red) will play to visually confirm Local mode is active.
 
 == Logic probe mode
-- LED Color: #highlight(fill: aqua)[AQUA]
-- Channels are switched with *button press*. After press, LED shows color of the selected channel.
-    - Channel 1: #highlight(fill:purple)[PURPLE]
-    - Channel 2: #highlight()[YELLOW]
-- LED indicates if state is HIGH by #highlight(fill: green)[GREEN] color, LOW state by #highlight(fill: red)[RED] color, and interstate by led turned off. 
-- *SOP8* - logic probe can be use on PB7(CH1) and PA0(CH2) pins.
-== Logic levels
-- LED Color: #highlight(fill: orange)[ORANGE]
-- Channels are switched with *button double press*. After double press, LED shows color of the selected channel.
-    - Channel 1: #highlight(fill:purple)[PURPLE]
-    - Channel 2: #highlight()[YELLOW]
-- Logic levels are changed with *button press*. After press, level on channel is toggled. State of the channel is indicated by LED.
-
-- *SOP8* - logic levels can be toggled on PB7(CH1) and PA0(CH2) pins.
-
-#pagebreak(weak: true)
+This mode is designed for diagnosing logic circuits. It enables real-time monitoring of logic states (HIGH/LOW) across two independent channels via color-coded LED indicators. The channels are assigned to pins PB7 (Channel 1) and PA0 (Channel 2). Ideal for quick signal verification.
+===== LED Behavior:
+- Mode indicator: #highlight(fill: aqua)[AQUA]
+- *Channel Selection*: 
+    - Toggle Channel 1 and Channel 2 by _pressing_ the button.
+    - Selected channel is confirmed by the LED color:
+        - *Channel 1*: #highlight(fill:purple)[PURPLE]
+        - *Channel 2*: #highlight(fill:yellow)[YELLOW]
+- *State Detection*:
+    - *HIGH (Logic 1)*: #highlight(fill: green)[GREEN]
+    - *LOW (Logic 0)*: #highlight(fill: red)[RED]
+    - Floating/Intermediate State: LED turns OFF
+===== PIN Assignments:
+- *Channel 1*: `PB7`
+    - _SOP8_ package: Pin 1
+    - _TSSOP20_ package: Pin 1
+- *Channel 2*: `PA0`
+    - _SOP8_ package: Pin 4
+    - _TSSOP20_ package: Pin 7
 
 == Generating periodic pulses
 - LED Color: #highlight(fill: white)[WHITE]
