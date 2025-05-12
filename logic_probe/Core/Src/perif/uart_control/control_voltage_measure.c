@@ -9,7 +9,7 @@ extern global_vars_t global_var;
 extern _Bool ansi_page_voltage_edit_resistance;
 
 void control_voltage_page(const unsigned char received_char) {
-    if (global_var.adc_vars->resistance_mode) {
+    if (global_var.device_state == DEV_STATE_OHMMETER) {
         control_voltage_resistance(received_char);
     } else {
         control_voltage_measures(received_char);
@@ -25,10 +25,7 @@ void control_voltage_base(const unsigned char received_char) {
             break;
         case 'm':
         case 'M':
-            global_var.adc_vars->resistance_mode =
-                !global_var.adc_vars->resistance_mode;
-
-            if (global_var.adc_vars->resistance_mode) {
+            if (global_var.device_state == DEV_STATE_VOLTMETER) {
                 global_var.adc_vars->channel_state_unapplied[1] = true;
                 adc_apply_channels(global_var.adc_vars);
                 adc_setup_channel_struct(global_var.adc_vars);

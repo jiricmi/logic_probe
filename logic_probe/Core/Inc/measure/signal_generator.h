@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "main.h"
 
-#define MIN_PERIOD_VALUE 1
+#define MIN_PERIOD_VALUE 2
 #define N_OF_OUTPUTS 3
 
 #define GEN_PINS_ARRAY {GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3}

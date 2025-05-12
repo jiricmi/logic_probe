@@ -34,7 +34,7 @@
 #define RANK_MAP                                                 \
     {ADC_REGULAR_RANK_1, ADC_REGULAR_RANK_2, ADC_REGULAR_RANK_3, \
      ADC_REGULAR_RANK_4}
-#define CHANNEL_MAP                                                     \
+#define CHANNEL_MAP \
     {ADC_CHANNEL_VREFINT, ADC_CHANNEL_11, ADC_CHANNEL_0, ADC_CHANNEL_1}
 #define PIN_VALS {0, 7, 0, 1};
 #define PIN_GPIO {'A', 'B', 'A', 'A'}
@@ -53,7 +53,6 @@ typedef struct {
     _Bool channel_state[ADC_NUM_CHANNELS];
     _Bool channel_state_unapplied[ADC_NUM_CHANNELS];
     _Bool applied;
-    _Bool resistance_mode;
     uint32_t base_resistor;
     uint32_t avg_voltage[ADC_NUM_CHANNELS];
     uint8_t pin[ADC_NUM_CHANNELS];

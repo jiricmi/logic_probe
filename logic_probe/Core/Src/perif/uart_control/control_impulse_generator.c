@@ -60,6 +60,7 @@ void control_impulse_generator_page(unsigned char received_char) {
                 generator->permanent_send = !generator->permanent_send;
                 generator_send_permanent(generator);
             }
+            dev_mode_request_frontend_change();
             break;
 
         case '1':

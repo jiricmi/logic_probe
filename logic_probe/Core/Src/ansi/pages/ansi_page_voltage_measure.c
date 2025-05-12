@@ -18,7 +18,7 @@ _Bool ansi_page_voltage_edit_resistance = false;
 void ansi_render_voltage_page(void) {
     global_var.current_page = ANSI_PAGE_VOLTAGE_MEASURE;
     ansi_render_border('@', "@", "");
-    if (global_var.adc_vars->resistance_mode) {
+    if (global_var.device_state == DEV_STATE_OHMMETER) {
         ansi_render_resistance_circuit(8, ADC_MEASURE_CENTER);
         ansi_render_resistance_measure(global_var.adc_vars);
         help_resistance();

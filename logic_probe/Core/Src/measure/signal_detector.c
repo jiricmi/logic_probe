@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "global_vars.h"
+#include "loop.h"
 #include "main.h"
 #include "tim_setup.h"
 extern TIM_HandleTypeDef htim2;
@@ -24,7 +25,9 @@ void detector_change_sample_time(sig_detector_t* detector) {
     } else {
         --detector->gate_time_index;
     }
-    __HAL_TIM_SET_AUTORELOAD(&htim3, GATE_TIMES[detector->gate_time_index] - 1);
+    __HAL_TIM_SET_AUTORELOAD(detector->master_tim,
+                             GATE_TIMES[detector->gate_time_index] - 1);
+    dev_mode_request_perif_change();
 }
 
 void detector_frequency_normalize_widths(sig_detector_t* detector) {
@@ -47,7 +50,8 @@ void detector_setup_timers(sig_detector_t* detector, _Bool stop_timers) {
         HAL_TIM_IC_Stop_IT(detector->slave_tim, TIM_CHANNEL_2);
         __HAL_TIM_SET_COUNTER(detector->master_tim, 0);
         __HAL_TIM_SET_COUNTER(detector->slave_tim, 0);
-        __HAL_TIM_SET_AUTORELOAD(detector->master_tim, 999);
+        __HAL_TIM_SET_AUTORELOAD(detector->master_tim,
+                                 GATE_TIMES[detector->gate_time_index] - 1);
     }
     switch (detector->mode) {
         case (DETECTOR_MODE_FREQUENCY):
@@ -79,6 +83,8 @@ uint32_t detector_get_gated_value(uint32_t n_pulses, uint8_t index) {
 
     if (GATE_TIMES[index] < 1000) {
         frequency = n_pulses * SAMPLE_TIMES_1000[index];
+    } else if (GATE_TIMES[index] == 1000) {
+        frequency = n_pulses;
     } else {
         frequency = n_pulses / SAMPLE_TIMES_1000[index];
     }

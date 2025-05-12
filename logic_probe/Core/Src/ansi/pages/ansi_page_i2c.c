@@ -240,8 +240,8 @@ void ansi_render_i2c_monitor(i2c_perif_t* perif) {
              (perif->monitor_data[0] & 0x02) ? "R" : "W",
              (perif->monitor_data[0] & 0x01) ? "NACK" : "ACK");
     ansi_send_text(buff, &ansi_default_conf);
+
     for (uint8_t i = 1; i < I2C_ARRAY_SIZE; ++i) {
-        ansi_set_cursor(row++, TERMINAL_CENTER - 4);
         if (i == 2 && (perif->monitor_data[i] & 0x100) == 0 &&
             (perif->monitor_data[i] & 0x1) == 1) {
             ansi_set_cursor(row++, TERMINAL_CENTER - 10);
@@ -249,12 +249,14 @@ void ansi_render_i2c_monitor(i2c_perif_t* perif) {
                      perif->monitor_data[i] >> 1);
         } else if (i >= 2 && (perif->monitor_data[2] & 0x100) == 0 &&
                    (perif->monitor_data[2] & 0x1) == 1) {
+            ansi_set_cursor(row++, TERMINAL_CENTER - 4);
             uint16_t n = perif->monitor_data[i];
 
             snprintf(buff, 50, "0x%02X %s", n,
                      (perif->monitor_data[i + 1] == 0) ? "NACK" : "ACK");
 
         } else {
+            ansi_set_cursor(row++, TERMINAL_CENTER - 4);
             snprintf(buff, 50, "0x%02X %s", perif->monitor_data[i] >> 1,
                      (perif->monitor_data[i] & 0x01) ? "NACK" : "ACK");
         }

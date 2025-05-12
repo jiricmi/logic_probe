@@ -45,6 +45,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
             HAL_TIM_Base_Stop_IT(sig_det->master_tim);
             detector_slave_init_pulse_width(sig_det);
+            __HAL_TIM_SET_AUTORELOAD(global_var.signal_detector->master_tim,
+                                     999);
             HAL_TIM_IC_Start_IT(sig_det->slave_tim, TIM_CHANNEL_1);
             HAL_TIM_IC_Start_IT(sig_det->slave_tim, TIM_CHANNEL_2);
 
@@ -52,6 +54,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
             HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_1);
             HAL_TIM_IC_Stop_IT(sig_det->slave_tim, TIM_CHANNEL_2);
             HAL_TIM_Base_Stop_IT(sig_det->master_tim);
+            __HAL_TIM_SET_AUTORELOAD(
+                global_var.signal_detector->master_tim,
+                GATE_TIMES[global_var.signal_detector->gate_time_index] - 1);
             detector_slave_init_frequency(sig_det);
         }
 

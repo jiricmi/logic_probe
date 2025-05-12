@@ -31,15 +31,26 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
     snprintf(buff, 50, "Pulse width (PA0/" FREQUENCY_PIN "): %9.9s us",
              number_buff);
     ansi_send_text(buff, &ansi_default_conf);
-    GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+
+    uint64_t freq = (generator->period_us_temp != 0)
+                        ? 1000000 / (2 * generator->period_us_temp)
+                        : 0;
+
     ansi_set_cursor(11, 10);
+    format_number_with_spaces((uint32_t)freq, number_buff);
+    snprintf(buff, 50, "Frequency in permament sending: %7.7s Hz",
+             number_buff);
+    ansi_send_text(buff, &ansi_default_conf);
+
+    GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+    ansi_set_cursor(12, 10);
     if (state == GPIO_PIN_SET) {
         snprintf(buff, 50, "INPUT: HIGH");
     } else {
         snprintf(buff, 50, "INPUT: LOW ");
     }
     ansi_send_text(buff, &ansi_default_conf);
-    ansi_set_cursor(12, 10);
+    ansi_set_cursor(13, 10);
     snprintf(buff, 50, "Repeats: %2ux", generator->repeat);
     ansi_send_text(buff, &ansi_default_conf);
 

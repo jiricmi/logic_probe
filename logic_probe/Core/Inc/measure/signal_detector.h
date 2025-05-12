@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "main.h"
 
-#define DETECTOR_SAMPLE_TIMES_COUNT 8
+#define DETECTOR_SAMPLE_TIMES_COUNT 5
 #define DETECTOR_BASE_SAMPLE_TIME 4
 #define DETECTOR_N_OF_EDGES 3
 #define DETECTOR_N_OF_WIDTHS 2
@@ -27,10 +27,9 @@ typedef enum {
 
 typedef enum { SLAVE_MODE_FREQUENCY, SLAVE_MODE_WIDTH } detector_slave_mode_t;
 
-static const uint16_t GATE_TIMES[] = {50,   100,  200,  500,
-                                      1000, 2000, 5000, 10000};
+static const uint16_t GATE_TIMES[] = {50, 100, 200, 500, 1000};
 
-static const uint16_t SAMPLE_TIMES_1000[] = {20, 10, 5, 2, 1, 2, 5, 10};
+static const uint16_t SAMPLE_TIMES_1000[] = {20, 10, 5, 2, 1};
 
 typedef struct {
     TIM_HandleTypeDef* slave_tim;

@@ -28,12 +28,12 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
         format_number_with_spaces(detector->frequency, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
         snprintf(buff, BASE_TEXT_BUFF_LEN,
-                 "Frequency (PA0/" FREQUENCY_PIN "): %9.9s Hz ", number_buff);
+                 "Frequency (PA0/" FREQUENCY_PIN "): %12.12s Hz ", number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         format_number_with_spaces(detector->rec_frequency, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        snprintf(buff, BASE_TEXT_BUFF_LEN, "Reciprocial frequency: %9.9s Hz",
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Reciprocial frequency: %12.12s Hz",
                  number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
