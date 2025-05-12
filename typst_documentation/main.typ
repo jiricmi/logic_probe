@@ -61,23 +61,14 @@
 )
   ), print: false, lang: "cs",
   abstract-en: [
-    Teaching the fundamentals of electronics requires tools that allow students to experiment with real circuits and understand their principles of operation. Traditional conventional tools lack flexibility for teaching purposes and may be too complicated for a person who is just discovering the properties of electronic circuits. This work addresses this need by designing a multifunctional logic probe that combines the functions of a logic analyzer, signal generator, and communication interface tester. Its key advantage is the possibility to be assembled simply using available microcontrollers, which makes it suitable for use in teaching.
-
-    The probe exists in two variants: a full-featured STM32-based and a limited Raspberry Pi Pico-based. In basic mode, it provides logic level detection, frequency measurement, pulse generation and voltage measurement. The extended version provides diagnostics of known serial interfaces (UART, I2C, SPI, Neopixel). Integration with a PC terminal allows the use of advanced functions, while local mode is used for fast analysis without the need for a PC.
-
-    The hardware design is optimized to minimize external components with an emphasis on the use of internal microcontroller peripherals, allowing the device to be assembled on a non-soldering contact array. The thesis includes firmware, documentation and student tutorials that cover the probe build and examples of its use. The result is an open-source solution that can be further extended and adapted to specific educational needs.
-
+    
     *Keywords:* STM32, Raspberry Pi Pico, logic probe, measurement tools, ...
     
     *Title translation:* Multifunctional Diagnostic Logic Probe
   ],
   abstract-cz: [
-    Výuka základů elektroniky vyžaduje nástroje, které studentům umožní experimentovat s realnými obvody a pochopit principy jejich fungování. Tradiční konvenční nástroje postrádají flexibilitu pro výukové účely a mohou být příliš komplikované pro osobu, která teprve objevuje vlastnosti elektronických obvodů. Tato práce reaguje na tuto potřebu návrhem multifunkční logické sondy, která kombinujee funkce logického analyzátoru, generátoru signálů a testeru komunikačních rozhraní. Její klíčovou výhodou je možnost jednoduchého sestavení s využitím dostupných mikrořadičů, což ji předurčuje pro využití ve výuce.
-
-    Sonda existuje ve dvou variantách: plnohodnotné na bázi STM32 a omezené na bázi Raspberry Pi Pico. V základním řežimu poskytuje detekci logických úrovní, měření frekvence, generaci impulsů a~měření napětí. Rozšířená verze poskytuje diagnostiku známých seriových rozhraní (UART, I2C, SPI, Neopixel). Integrace s~PC terminálem umožňuje používání pokročilých funkcí, zatímco lokální režim slouží pro rychlou analýzu bez nutnosti PC.
-
-    Hardwarový návrh je optimalizován pro minimalizaci externích komponent s důrazem na využití interních periferií mikrořadičů, což umožňuje sestavení zařízení na nepájivém kontaktním poli.  Součástí práce je firmware, dokumentace a návody pro studenty, které pokrývají sestavení sondy i příklady jejího využití. Výsledkem je open-source řešení, které lze dále rozšiřovat a přizpůsobovat specifickým vzdělávacím potřebám.  
-    
+    Tato bakalářská práce se zabývá návrhem a realizací multifunkční diagnostické logické sondy (dále jen sonda) určené pro výuku základů logických obvodů a vestavných systémů. Hlavním cílem je poskytnout studentům dostupný a uživatelsky přívětivý nástroj, který nahrazuje složité a finančně náročné přístroje (jako osciloskopy či logické analyzátory) a umožňuje rychlou diagnostiku logických obvodů, měření základních veličin (napětí, odpor, frekvence) a analýzou komunikačních rozhraní (UART, I2C, SPI, Neopixel). Sonda je založená #todo[doladit]
+            
     *Klíčová slova:* STM32, Raspberry Pi Pico, logická sonda, 
   ],
   acknowledgement: [
@@ -94,30 +85,14 @@
 #show raw.where(block: true): set raw(lang: "powershell")
 
 = Úvod
-#todo("ROZPRACOVÁNO, PŘEDELAT")
-Vzdělávání v oblasti elektrotechniky a elektroniky vyžaduje nejen hluboké
-teoretické znalosti, ale také praktické dovednosti a umění si poradit s
-naskytnutým problémem. Pro řešení nejrůznějších překážek při navrhování
-elektronických obvodů je podstatné vědět, jak používat specializované nástroje,
-které umožňují chybu odhalit. Nástroje jsou také důležité ve školách, kde
-student může pomocí praktických příkladů zjistit teoretické zákonitosti.
-Nástroje studentům pomáhají pochopit chování a vlastnosti elektronických obvodů
-v realném světě. Jedním z těchto nástrojů je logická sonda, zařízení používané k
-analýze digitálních signálů a diagnostice obvodů. Aby nástroj přispěl ke
-vzdělávání, je žádoucí aby takové zařízení bylo intuitivní, multifunkční a
-přizpůsobené náležitostem laboratorní výuky.
+Výuka základů elektroniky vyžaduje nástroje, které studentům umožní experimentovat s realnými logickými obvody a prakticky ověřovat teoretické znalosti. Tradiční diagnostické přístroje, jako osciloskopy nebo logické analyzátory, jsou však pro začínající studenty složité, finančně náročné a nabízejí funkce nad rámec základních výukových potřeb. Během praktických cvičení se studenti často dostávají do situací, kdy například čítač pulzů s výstupem na 7-segmentový displej přestane fungovat, aniž je zřejmá příčina. Mohou váhat, zda chyba spočívá v softwaru (nesprávně naprogramovaném časovači), hardwaru (spálené LED, vadném senzoru) nebo třeba v prohození vodičů UART (Tx/Rx). Bez vhodného nástroje pak tráví hodiny hledáním závady, což demotivuje a zpomaluje výuku. Tento problém vede k potřebě vytvořit jednoduché, multifunkční a dostupné řešení, které by usnadnilo osvojení principů práce s logickými a komunikačními obvody.
 
-Tato bakalářská práce se zaměřuje na návrh a realizaci logické sondy,
-která bude navržena a optimalizována pro využití ve výuce středoškolských oborů
-či ve výuce vysokoškolských oborů. Cílem je vytvořit zařízení, které umožní méně
-zkušeným studentům provádět klíčové diagnostické úkony, jako například,
-nastavování úrovní signálů, odchytávání signálů, měření frekvence, měření
-napětí, generování signálů a další. Sonda bude navržena s důrazem na jednoduché
-ovládání a to prostřednictvím UART, aby byla snadno použitelná i pro studenty,
-kteří se s elektronikou setkávají poprvé.
+Cílem této bakalářské práce je návrh a realizace multifunkční diagnostické logické sondy, která kombinuje funkce logického analyzátoru, generátoru signálů a testeru komunikačních rozhraní typické pro výuku (UART, I2C, SPI, Neopixel). Hlavní inovací řešení je integrace vzdělávacího aspektu do samotného návrhu zařízení - sonda je navržena ve dvou variantách: plnohodnotná verze založená na mikrokontroleru STM32 a omezená verze využívající Raspberry Pi Pico pro naplnění potřeby středních škol, které nejsou specializováné na výuku elektroniky. Hlavní výhodou řešení je minimalizace externích komponent, které umožňují sestavení zařízení na nepájivém kontaktním poli studentem a integrace s PC terminálovou aplikací pro pokročilé funkce bez nutnosti instalace specialních aplikací a ovladačů.
 
-V této práci budou představeny požadavky na zařízení a realizace této logické
-sondy.
+Klíčovými prvky návrhu jsou jednoduché ovládání (lokální režim s RGB LED a tlačítkem, terminálový režim ovládaný skrze terminálovou aplikaci), měření napětí, odporu, frekvence a střídy PWM signálů, generování pulsů a diagnostika komunikačních periferií. Důraz je kladen na open-source přístup, který umožní další rozšiřování a přizpůsobení vzdělávacím potřebám.
+
+Text práce je strukturován do osmi kapitol. Po úvodu a rozboru problematiky následuje popis hardwarového návrhu sondy, implementace terminálového a lokálního režimu na základu STM32 a realizace omezené verze na Raspberry Pi Pico. Závěr shrnuje dosažené výsledky práce. Součástí práce jsou také přílohy s ukázkami kódu a uživatelská příručka.
+
 = Rozbor problematiky
 == Motivace <rozbor-vyuka>
 Během laboratorních cvičení zaměřených na logické obvody a vestavné systémy studenti navrhují digitální obvody a programují mikrokontroléry (MCU). Při vývoji však mohou narazit na situaci, kdy jejich řešení úlohy náhle přestane fungovat podle očekávání, aniž by byla zjevná příčina problému. Najít závadu může být velice časově náročné jak pro studenta, tak pro vyučujícího.
@@ -705,7 +680,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart) {
 ```
 )<code-UART-get>
 == Princip nastavení periferií<kap-perif>
-Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. 
+Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. #todo[domyslet]
 
 == Implementace měření s ADC
 === Měření napětí a logických úrovní <kap-volt>
