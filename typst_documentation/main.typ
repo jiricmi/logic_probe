@@ -32,6 +32,7 @@
     abbrs: (
         "SOP": "Small Outline Package",
         "TSSOP": "Thin Shrink Small Outline Package",
+        "PLL": "Phase Locked Loop",
         "POF": "Point Of Failure",
         "FPGA": "Field-Programmable Gate Array",
         "SRAM": "Static Random Access Memory",
@@ -61,15 +62,20 @@
 )
   ), print: false, lang: "cs",
   abstract-en: [
-    
-    *Keywords:* STM32, Raspberry Pi Pico, logic probe, measurement tools, ...
-    
-    *Title translation:* Multifunctional Diagnostic Logic Probe
+    This work presents the design and implementation of a multifunctional diagnostic logic probe for teaching logic circuit and embedded system applications. The device replaces complex and costly commercial laboratory instruments, enabling students to measure basic parameters (voltage, resistance, frequency), generate pulses, and diagnose communication interfaces (UART, I2C, SPI, Neopixel). The probe is implemented in two variants: an STM32-based version and a simplified version for Raspberry Pi Pico. A local mode with an RGB LED and button provides quick diagnostics, while a terminal mode with an ANSI-based text user interface (TUI) offers advanced functions, including control and data visualization via UART. The design leverages the STM32 HAL and Raspberry Pi C SDK for code portability and minimizes external components, allowing students to assemble the probe easily on a breadboard. The primary contribution lies in accelerating error identification during practical exercises, such as detecting faulty components or incorrect peripheral wiring.
+    #par(first-line-indent: 0em, spacing: 2em)[
+        *Keywords:* logic probe, STM32, STM32G0, Raspberry Pi Pico, error diagnostics, UART, I2C, SPI, embedded systems, educational tools, ANSI escape sequences
+    ]
+    #par(first-line-indent: 0em, spacing: 2em)[
+        *Title translation:* Multifunctional Diagnostic Logic Probe
+    ]
+  
   ],
   abstract-cz: [
-    Tato bakalářská práce se zabývá návrhem a realizací multifunkční diagnostické logické sondy (dále jen sonda) určené pro výuku základů logických obvodů a vestavných systémů. Hlavním cílem je poskytnout studentům dostupný a uživatelsky přívětivý nástroj, který nahrazuje složité a finančně náročné přístroje (jako osciloskopy či logické analyzátory) a umožňuje rychlou diagnostiku logických obvodů, měření základních veličin (napětí, odpor, frekvence) a analýzou komunikačních rozhraní (UART, I2C, SPI, Neopixel). Sonda je založená #todo[doladit]
-            
-    *Klíčová slova:* STM32, Raspberry Pi Pico, logická sonda, 
+    Tato práce představuje návrh a realizaci multifunkční diagnostické logické sondy pro výuku práce s logickými obvody a vestavnými systémy. Zařízení nahrazuje komereční laboratorní přístroje, které jsou složité a finančně náročné, a umožňuje studentům měřit základní veličiny (napětí, odpor, frekvenci), generovat pulzy a diagnostikovat komunikační rozhraní (UART, I2C SPI, Neopixel). Sonda je realizována ve dvou variantách: verze na bázi STM32 a zjednodušená pro Raspberry Pi Pico. Lokální režim s RGB LED a tlačítkem slouží pro rychlou diagnostiku, zatímco terminálový režim s ANSI TUI poskytuje pokročilé funkce včetně ovládání a zobrazování hodnot skrze UART periferii. Návrh využívá STM HAL a Raspberry Pi Pico C SDK pro prenositelnost kódu a minimalizuje externí komponenty, aby studenti mohli sondu snadno sestavit na nepájivém kontaktním poli. Hlavním přínosem je urychlení identifikace chyb při praktických cvičeních, jako jsou odhalení vadné součástky nebo nesprávné zapojení periferií.
+    #par(first-line-indent: 0em, spacing: 2em)[
+        *Klíčová slova:* STM32, STM32G0, Raspberry Pi Pico, logická sonda, UART, I2C, SPI, vzdělávací nástroje, diagnostika chyb, C/C++, ANSI escape sekvence
+    ]
   ],
   acknowledgement: [
     Rád bych tímto poděkoval panu doc. Ing. Janu Fischerovi, CSc., mému vedoucímu práce, za jeho cenné rady, odbornou pomoc a ochotu sdílet své znalosti. Děkuji mu také za věnovaný čas, podnětné připomínky a trpělivost, které mi poskytoval během celého procesu tvorby této práce.
@@ -122,9 +128,9 @@ Pro návrh v této bakalářské práci byl zvolen mikrořadič STM32G031 od fir
 STMicroelectronics @STM32G0-Series. Tento mikrořadič je vhodný pro aplikace s
 nízkou spotřebou. Je postavený na 32bitovém jádře ARM Cortex-M0+, které je
 energeticky efektivní a nabízí dostatečný výkon pro běžné vestavné aplikace.
-Obsahuje 64 KiB flash paměť a 8 KiB SRAM @STM32G0-REF. Pro řadu G031 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
+Obsahuje 64 KiB flash paměť a 8 KiB SRAM @STM32G0-REF. MCU umožňuje frekvenci až 64 MHz, kterou je možné měnit pomocí PLL @STM32G0-REF @NI_2024. Mikrokontroler nabízí i periferie jako USART, I2C nebo SPI pro rychlou seriovou komunikaci s dalším zařízením nebo senzory. Pro řadu G031 jsou typické kompaktní rozměry ať už vývojové Nucleo desky, tak
 typové pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
-integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněná pouzdra jsou použita pro implementaci logické sondy, o které pojednává #ref(<kap-hw>, supplement: [kapitola]).
+integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněná pouzdra jsou použita pro implementaci logické sondy, o které pojednává #ref(<kap-hw>, supplement: [kapitola]). V rámci realizace je použité MCU *STM32G030*, které je s kompatibilní s návrhem logické sondy.
 ==== Analogo-digitální převodník <adc>
 Mikrokontrolér STM32G031 je vybaven analogo-digitálním převodníkem#footnote[Neboli ADC], který obsahuje 8~analogových kanálů
 o~rozlišení 12 bitů. Maximální vzorkovací frekvence převodníku je 2 MSPS. Při měření kanálů se postupuje sekvenčně, která je určená pomocí tzv. ranků#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při požadavku o měření převodník nejprve změří první nastavený kanál, při dalším požadavku druhý a až změří všechny, tak pokračuje opět od počátku.
@@ -214,6 +220,18 @@ procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
   caption: [STM32CubeMX HAL architektura @HAL-DIAGRAM],
     image("pic/hal-architecture.png"),
 ) <stm32cubemx-arch>
+
+=== Raspberry Pi Pico
+Pro omezenou verzi sondy byl zvolen mikrokontroler Raspberry Pi Pico. Tento kontroler obsahuje RP2040 s flash pamětí o velikosti 2 MiB, s celkem 40 piny @rpi_datashet. RP2040 čip je navržen nadací Raspberry Pi Foundation a je postaven na Dual-core ARM cortex M0+, které dosahují frekvencí až 133 MHz, kterou je možné, stejně jako u STM32G031, měnit pomocí PLL @NI_2024 @rpi_datashet. Tento mikrokontroler je poměrně populární mezi skupinou lidí, která tvoří projekty volnočasově zejména díky ceně, jednoduchého nahrávání programů do mikrokontroleru a komunitní podpoře.
+
+Mikrokontrolér disponuje 26 GPIO piny s napětím 3,3 V (ne 5 V tolerantními), které podporují funkce jako pull-up/pull-down rezistory, hardwarová přerušení, PWM či komunikaci přes UART, SPI nebo I2C. Vestavěný 12-bitový ADC umožňuje měření napětí na třech analogových pinech s volitelnou referencí (interní 3,3 V nebo externí). Raspberry Pi Pico je navržené tak, aby bylo možné jej napájet z USB nebo i z externích zdrojů jako baterie.
+#figure(
+    caption: [Raspberry Pi Pico vývojová deska],
+    image("pic/rpi_device.jpg.png")
+)
+==== PIO
+Programmable Input/Output blok je unikátní funkcí MCU RP2040, která poskytuje implementaci vlastního rozhraní. RP2040 má tzv. 2 PIO bloky, kde každý blok se dá přirovnat k nezávislému malému procesoru, kde můžou běžet instrukce nezávisle na Cortex-M0+ jádře. Tyto bloky umožňují spravovat vstupy a výstupy pinů s velice přesným časováním nezávisle na zátěži CPU. Každý blok má 4 stavové automaty, které mohou nezávisle na sobě spouštět instrukce, které jsou uloženy ve sdílené instrukční paměti. Každý stavový automat může manipulovat s GPIO a přenášet data do CPU a číst data poslané z CPU. PIO blok má speciální assembler, který obsahuje celkem 9 instrukcí (JMP, WAIT, SET atd.).
+
 
 == Měření veličin testovaného obvodu <kap-mereni>
 === Měření napětí a logických úrovní
