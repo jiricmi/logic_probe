@@ -842,21 +842,46 @@ void detector_compute_freq_measures(sig_detector_t* detector) {
 #v(10pt)
 #figure(
     placement: none,
-    caption: [Signály při měření frekvence hradlováním],
+    caption: [TUI odchytávání pulzů],
     image("pic/tui_pulse.png")
 )<tui-pulse>
 #v(10pt)
 Odchytávání pulzů je podfunkce na stránce měření frekvence. Při detekci náběžné nebo sestupné hrany (dle nastavení uživatele) je nastaven příznak, který je následně vykreslen na terminál. Uživatel tento příznak poté může smazat. K detekci pulzů je využito nastavení periferií jako při recipročním měření frekvence. Časovač, který je na vstupu nastaven jako input capture ukládá do registru hodnotu a je vyvoláno přerušení. Během přerušení je zavolána funkce, která zkontroluje, zda je to odpovídající hrana a pokud ano, je nastaven příznak. K odchytávání pulzů by mohlo být využito EXTI callbacku, nicméně to by znamenalo jiné nastavení periferií a zkomplikování sondy z hlediska vývoje.
 
 == Implementace generování pulzů
+Generování pulzů #todo[dodelat]
+
 == Implementace nastavování úrovní
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [TUI nastavování úrovní],
+    image("pic/tui_levels.png")
+)<tui-levels>
+#v(10pt)
+
+Nastavování logických úrovní funguje celkem na 4 kanálech, které je možné skrze uživatelské rozhraní vypnou nebo zapnout dle potřeby. Každý pin je inicializován skrze STM32 HAL strukturu `GPIO_InitTypeDef`, kde je nastaven `GPIO_MODE_OUTPUT_PP`. Tento mód nastaví push pull na pin a lze ho tak ovládat skrze stisk tlačítka. @tui-levels ukazuje vizualizaci stránky pro funkci nastavování úrovní.
+
 == Implementace diagnostiky posuvného registru
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [Signály při měření frekvence hradlováním],
+    image("pic/tui_register.png")
+)<tui-register>
+#v(10pt)
+
+Funkce diagnostiky posuvného registru nabízí možnost nastavení jednotlivých bitů a následné odesílání dat do registru. Pro naplnění dat do posuvného registru je `PA7` připojen na jako hodinový signál registru a `PA0` jako datový pin do posuvného registru. Sonda umí posílat všech 8 bitů najednou a nebo je možné posílat bity postupně manuálně. Doba odesílání jednoho bitu je 200 ms. Tento čas nabízí možnost vizuální kontroly diagnostikovaného obvodu během odesílání. @code-shift ukazuje způsob odeslání jednoho bitu do posuvného registru.
+Funkce nabízí i kompatibilitu s posuvnými registry `SNx4HC595`, která na základě signálu `RCLK` převede data z registru na paralelní výstupy @snx4hc595.
+
 == Implementace diagnostiky Neopixelu <kap-neopixel>
+#todo[dopsat]
 == Implementace diagnostiky UART
+#todo[dopsat]
 == Implementace diagnostiky I2C
+#todo[dopsat]
 == Implementace diagnostiky SPI
-
-
+#todo[dopsat]
 
 
 = Návrh lokálního režimu STM32
@@ -1033,6 +1058,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
 
 
 = Návrh omezené verze na RPI Pico
+Návrh omezené verze na Rasberry Pi Pico #todo[dopsat]
 
 
 
@@ -1322,6 +1348,27 @@ void timer_setup_slave_freq(void) {
 }
 ```
 )<code-tim2-freq>
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Způsob zápisu jednoho bitu do posuvného registru],
+    placement: none,
+```C
+void shift_register_send_one_signal(shift_register_t* shift_register,
+                                    const uint8_t index) {
+    if (shift_register->bits[index]) {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+    } else {
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+    }
+    HAL_Delay(SHIFT_REGISTER_LATCH);
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+    HAL_Delay(SHIFT_REGISTER_LATCH);
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+    HAL_Delay(SHIFT_REGISTER_LATCH);
+}
+```
+)<code-shift>
 
 #figure(
     supplement: [Úryvek kódu],
