@@ -241,7 +241,7 @@ $ V = (sum_(i=0)^(2^5)(V_"staré i") + sum_(i=0)^(2^5)(V_"nové j")) / 2^6 $
 #v(10pt)
 
 Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
-Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření s frekvencí vyšší než 100 Hz zajistí, že dojde k potlačení rušení 50 Hz, které se může na vstupu vyskytnout #footnote[Dojde k eliminaci aliasingu.] @Nazeran2004-io.
+Po aktualizaci okna, které probíhá každých 250 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření s frekvencí vyšší než 100 Hz zajistí, že dojde k potlačení rušení 50 Hz, které se může na vstupu vyskytnout #footnote[Dojde k eliminaci aliasingu.].
 #v(10pt)
 #figure(
     caption: [Diagram způsobu sbírání vzorků z ADC],
