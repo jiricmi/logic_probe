@@ -713,7 +713,7 @@ Po připojení sondy je uživatel přivítán stránkou hlavního menu (#ref(<tu
 )]
 )
 == Princip nastavení periferií<kap-perif>
-Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. Další důvod je například využití časovače TIM2, který je jako jediný 32 bitový a je nutný k více funkcím. Jeden z příkladů je využití časovače TIM2 na `PA0`, ke čtení frekvence a zároveň využití TIM2 na generování pulzů. Další příklad je kolize periferie USART2 a kanálu `PB7`, kde je potřeba jiné nastavení pinů.
+Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. Další důvod je například využití časovače TIM2, který je jako jediný 32 bitový a je nutný k více funkcím. Jeden z příkladů je využití časovače TIM2 na `PA0`, ke čtení frekvence a zároveň využití TIM2 na generování pulzů. Další příklad je kolize periferie USART2 a kanálu `PB7`, kde je potřeba jiné nastavení pinů. Jeden z velkých problémů můžou činit DMA kanály, kterých je na STM32G030 pouze 5, což vyžaduje častou reinicializaci kvůli změně funkce @STM32G0-REF.
 
 Sonda obsahuje velké množství nastavení periferií a je velice snadné, ztratit přehled, která periferie je, a která není inicializovaná. Pro vyhnutí se tomuto problému během vývoje bylo zvoleno řešení, kdy při každém přepnutí funkce uživatelem jsou všechny periferie uvedeny do základního stavu a poté podle zvolené funkce jsou nastaveny pouze konkrétní periferie nutné pro danou funkci. Tento zpusob minimalizuje výskyt nedefinovaných chování, které během vývoje mohou nastat. Inicializace a deinicialiace periferií se řeší během obslužní smyčky, která při nastaveném příznaku `need_perif_update`, nastaví všechny periferie do původního stavu a následně dle zvolené funkce uživatelem je nastavena periferie. Nastavení příznaku je provedeno v případě, že sonda potřebuje po uběhnutém čase změnit nastavení, nebo pokud uživatel pomocí vstupu z UARTu vyvolá žádost o přepnutí funkce.
 
@@ -787,18 +787,18 @@ Po změření pulsů se provede výpočet frekvence. Zde nastavá problém, pro 
 #v(10pt)
 $ f_"gate" = N / T_"gate" = N / 0.5 = N / (1/2) = N / 1 times 2/1  = 2N $ <n-t>
 #v(10pt)
-Měření touto metodou bylo otestováno měření nižších desítek MHz a naměřená odchylka od původní hodnoty byla $~0.16$ $%$. Což pravděpodobně bude způsobeno tím, že sonda nevyužívá externího krystalu ale interního oscilačního obvodu @STM32G0-REF, tak může být lehká odchylka od reference. Při vyšších frekvencích zde můžou hrát roli i režie implementovaná pro časovače.
-
 
 #figure(
-    placement: none,
     caption: [Signály při měření frekvence hradlováním],
     image("pic/freq_etr.png")
 )<signal-freq-measure>
+Měření touto metodou bylo otestováno měření nižších desítek MHz a naměřená odchylka od původní hodnoty byla $~0.16$ $%$. Což pravděpodobně bude způsobeno tím, že sonda nevyužívá externího krystalu ale interního oscilačního obvodu @STM32G0-REF, tak může být lehká odchylka od reference. Při vyšších frekvencích zde můžou hrát roli i režie implementovaná pro časovače.
+
+
+
 
 === Měření reciproční frekvence
 Při měření pomocí reciproční frekvence je využito časovače TIM2. Časovač má nastaveny celkově 2 kanály do módu input capture. Input capture kanálu, který při hraně na vstupu uloží aktuální hodnotu časovače do registru a následně metodou DMA do paměti. Důvod inicializace dvou kanálů místo jednoho je ten, že každý kanál sice monitoruje stejný pin, ale jeden reaguje na náběžnou a druhá na sestupnou. Kanál sice umí detekovat obě najednou, nicméně pro funkci měření je nutné rozpoznat, která hrana je náběžná a která je sestupná. U frekvence je vždy změřena náběžná hrana, poté sestupná hrana a poté opět náběžná. Důvod proč jsou měřena i sestupná hrana je určení střídy v případě PWM signálu. Pokud je naměřena tato posloupnost, je možné vypočítat reciproční frekvenci, střídu a šířku pulzů.
-#v(10pt)
 #figure(
     supplement: [Úryvek kódu],
     caption: [Funkce pro výpočet veličin na základě recipročního měření],
@@ -806,19 +806,15 @@ Při měření pomocí reciproční frekvence je využito časovače TIM2. Časo
 ```C
 void detector_compute_freq_measures(sig_detector_t* detector) {
     uint32_t* edge_times = detector->edge_times;
-    
     // Získání rozdílu mezi hranami
     uint32_t high_delta =
         edge_times[DET_EDGE2_FALL] - edge_times[DET_EDGE1_RISE];
 
     uint32_t low_delta =
         edge_times[DET_EDGE3_RISE] - edge_times[DET_EDGE2_FALL];
-    
     // Výpočet času pulzu
     detector->widths[DET_LOW_WIDTH] = (low_delta) / PROCESSOR_FREQ_IN_MHZ;
     detector->widths[DET_HIGH_WIDTH] = (high_delta) / PROCESSOR_FREQ_IN_MHZ;
-    
-
     uint64_t period =
         (detector->widths[DET_LOW_WIDTH] + detector->widths[DET_HIGH_WIDTH]);
     
@@ -893,7 +889,7 @@ Pro monitorování barvy odeslané přes seriovou komunikaci je využit časova�
     caption: [Funkce pro nalezení začátku komunikace neopixel],
     placement: none,
 ```C
-int8_t neopixel_find start(neopixel_measure_t* data) {
+int8_t neopixel_find_start(neopixel_measure_t* data) {
     int8_t start_index = -1;
     uint8_t prev_measure = NEOPIXEL_DATA_LEN - 1;
     for (uint8_t i = 0; i < NEOPIXEL_DATA_LEN; ++i) {
@@ -1029,7 +1025,6 @@ Pokud uživatel nastaví read, může odeslat na slave zařízení 1 bajt (vět�
 #figure(
     supplement: [Úryvek kódu],
     caption: [I2C master read funkce],
-    placement: none,
 ```C
 void i2c_read_data_master(i2c_perif_t* perif) {
     if (perif->send_data) {
@@ -1077,14 +1072,75 @@ Po propojení hodinových signálů je nastaveno SPI rozhraní na 9 bitovová sl
 
 #figure(
     caption:[TUI I2C monitoring],
-    image("pic/tui_i2c_monitor.png")
+    image("pic/tui_i2c_monitor.png", width: 80%)
 )<tui-i2c-monitor>
 == Implementace diagnostiky SPI
+Diagnostika SPI je, podobně jako u I2C, velice podstatný nástroj pro debugování komunikace mezi komponenty a MCU jako například paměti, senzory atd. STM32 má integrovanou periferii pro komunikaci SPI. SPI diagnostika obsahuje funkce jako čtení komunikace, aktivní odesílání testovacích dat a testování SSD1306 displeje. Uživatelské ovládání je co nejvíce přiblíženo k ovládání I2C diagnostiky aby uživatel se jednodušše naučil používat sondu. Pro SPI je možné nastavit jakou fázi nebo jakou polaritu má `SCK` využívat při zpracování dat.
 === Master mód
-Master mód je vhodný pro odesílání testovacích sekvencí senzoru. Tento 
+SPI periferie je konfigurována jako master, což umožňuje uživateli plně řídit komunikaci se slave zařízením. V tomto režimu může uživatel jak zapisovat data do slave zařízení, tak z něj číst odpovědi. Při zápisu sonda podporuje odeslání až 10 bajtů dat zadaných uživatelem v hexadecimalním formátu. Data jsou poté odeslány pomocí blokovací funkce `HAL_SPI_Transmit`. Ta zajistí, že mikrokontrolér čeká na dokončení celého přenosu před dalším krokem. Pro čtení dat sonda nejprve odešle jeden bajt dat a následně pomocí blokovací funkce `HAL_SPI_Receive` zachytí odpověď slave zařízení. @code-spi-transmit ilustruje klíčové části této logiky a také způsob detekování chyb v průběhu odesílání. Blokovací funkce zjednodušují implementaci, ale vyžadují pečlivé časování, aby nedošlo k zablokování systému při delších operacích.
+
+
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [SPI transmit funkce],
+    placement: none,
+```C
+void spi_transmit(spi_perif_t* perif) {
+    if (!perif->send_data) {
+        return;
+    }
+
+    perif->error = SPI_ERROR_SUCCESS;
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // NSS
+    if (!perif->read_bit) {
+        // only write
+        if (HAL_SPI_Transmit(perif->hspi,
+                             (uint8_t*)perif->data,
+                             perif->bytes_count,
+                             PERIF_DELAY) != HAL_OK) {
+            perif->error = SPI_ERROR_SEND;
+        }
+
+    } else {
+        // write
+        if (HAL_SPI_Transmit(perif->hspi,
+                             perif->master_send_data,
+                             1,
+                             PERIF_DELAY) != HAL_OK) {
+            perif->error = SPI_ERROR_SEND;
+        }
+        //read
+        if (HAL_SPI_Receive(perif->hspi,
+                            perif->data,
+                            perif->bytes_count,
+                            100) != HAL_OK) {
+            perif->error = SPI_ERROR_RECEIVE;
+        }
+    }
+
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // NSS
+}
+```
+)<code-spi-transmit>
+
+#v(10pt)
+#figure(
+    placement: none,
+    caption:[TUI SPI master mód],
+    image("pic/tui_spi_master.png", width: 78%)
+)<tui-spi-master>
+#v(10pt)
 
 === Monitoring
-#todo[dopsat]
+Sonda využívá SPI periferii konfigurovanou v slave režimu pro pasivní zachytávání dat z externího master zařízení. Uživatel může (podobně jako v master módu) nastavovat parametry hodinového signálu SCK (polaritu a fázi), aby sladil časování s požadavky systému. Pro zachycení dat, i při vysokých hodinových frekvencích, je implementováno DMA, které průběžně ukládá přijaté bajty přímo do vyhrazeného bufferu v paměti, aniž by zatěžoval jádro procesoru. Obslužná smyčka následně v pravidelných intervalech načte tato data z bufferu, převede je do hexadecimálního formátu a zobrazí na terminálovou aplikaci.  Tento přístup minimalizuje riziko ztráty bajtů i při maximální rychlosti SPI komunikace a zároveň udržuje responzivitu uživatelského rozhraní.
+
+#v(10pt)
+#figure(
+    placement: none,
+    caption:[TUI SPI monitor mód],
+    image("pic/tui_spi_monitor.png", width: 78%)
+)<tui-spi-slave>
 
 
 = Návrh lokálního režimu STM32
