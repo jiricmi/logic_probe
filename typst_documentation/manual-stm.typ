@@ -74,12 +74,12 @@ Local mode is enabled when the device is powered without UART computer connectio
 This mode is designed for diagnosing logic circuits. It enables real-time monitoring of logic states (HIGH/LOW) across two independent channels via color-coded LED indicators. The channels are assigned to pins PB7 (Channel 1) and PA0 (Channel 2). Ideal for quick signal verification.
 ===== LED Behavior:
 - Mode indicator: #highlight(fill: aqua)[AQUA]
-- *Channel Selection*: 
+===== Channel Selection: 
     - Toggle Channel 1 and Channel 2 by _pressing_ the button.
     - Selected channel is confirmed by the LED color:
         - *Channel 1*: #highlight(fill:purple)[PURPLE]
         - *Channel 2*: #highlight(fill:yellow)[YELLOW]
-- *State Detection*:
+===== State Detection:
     - *HIGH (Logic 1)*: #highlight(fill: green)[GREEN]
     - *LOW (Logic 0)*: #highlight(fill: red)[RED]
     - Floating/Intermediate State: LED turns OFF
@@ -92,19 +92,58 @@ This mode is designed for diagnosing logic circuits. It enables real-time monito
     - _TSSOP20_ package: Pin 7
 
 == Generating periodic pulses
-- LED Color: #highlight(fill: white)[WHITE]
-- PA0 is used for generating pulses 
-- after *button press* generation is turned on, another press generation is turned off. While on LED is WHITE.
+This mode produces periodic pulses with button-controlled activation. Output state visualized through persistent LED feedback.
+
+===== LED Behavior:
+- Mode indicator: #highlight(fill: white)[WHITE]
+- Active state: Maintains #highlight(fill: white)[WHITE] continuously
+
+===== Operation:
+- Press button to toggle between:
+    - ON: Signal generation active
+    - OFF: Output disabled
+
+===== PIN Assignment:
+- Signal output: `PA0`
+    - _SOP8_ package: Pin 4
+    - _TSSOP20_ package: Pin 7
 
 == Rise edge detection
-- LED Color: #highlight(fill: blue)[BLUE]
-- PA0 is used for detection of rising edge
-- if edge is detected, #highlight(fill: green)[Green] color is indicated. After one second led is turned off.
+This mode detects raising edge on input pin. Time-limited visual confirmation provided upon detection.
+
+===== LED Behavior:
+- Mode indicator: #highlight(fill: blue)[BLUE]
+- Detection confirmation: #highlight(fill: green)[GREEN] (1 second)
+
+===== Operation:
+- Continuous monitoring of PA0 pin for raise edge
+- When pulse detected, #highlight(fill: green)[GREEN] LED color is on for 1 second
+
+===== PIN Assignment:
+- Signal input: `PA0`
+    - _SOP8_ package: Pin 4
+    - _TSSOP20_ package: Pin 7
 
 == Falling edge detection
-- LED Color: #highlight(fill: purple)[Purple]
-- PA0 is used for detection of falling edge
-- if edge is detected, #highlight(fill: green)[Green] color is indicated. After one second led is turned off.
+This mode detects falling edge on input pin. Time-limited visual confirmation provided upon detection.
+
+===== LED Behavior:
+- Mode indicator: #highlight(fill: purple)[PURPLE]
+- Detection confirmation: #highlight(fill: green)[GREEN] (1 second)
+
+===== Operation:
+- Continuous monitoring of PA0 pin for raise edge
+- When pulse detected, #highlight(fill: green)[GREEN] LED color is on for 1 second
+
+===== PIN Assignment:
+- Signal input: `PA0`
+    - _SOP8_ package: Pin 4
+    - _TSSOP20_ package: Pin 7
+
+
+
+
+
 
 = Terminal mode
 This mode is used for deeper identification of the problem.
