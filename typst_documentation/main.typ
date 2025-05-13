@@ -408,7 +408,7 @@ Zjištění logické 0 a 1 vychází z přečtení logické úrovně v momentě 
 
 
 
-=== Neopixel
+=== Neopixel<kap-neopixel-ter>
 Neopixel je název pro kategorii adresovatelných RGB LED. Dioda má celkem 4 vodiče: ground, Vcc, DIn a DOut. LED má vlastní řídící obvod, který ovládá barvy diody na základě signálu z vodiče DIn. Výhoda LED je možnost připojit diody do serie, a jedním vodičem ovládat všechny LED v sérii @NEOPIXEL-REF. @label-neopixel znázorňuje zapojení více LED do série a~schopnost ovládání jedním vodičem.
 
 Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje jednu barevnou složku. Parametry pořadí složek, časování apod. se může lišit v závislosti na konkrétním verzi a provedení LED. V této práci je vycházeno z WS2812D. První bit složky je, v případě WS2812, MSB#footnote[Most significant bit]. 
@@ -437,8 +437,8 @@ Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje
 )<neopixel-bits>
 #v(5pt)
 
-Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpoznávat logickou jedničku a nulu jiným způsobem. Na pin DIn je přivedena vysoká úroveň na~určitou dobu, poté je na určitou dobu přivedena nízká úroveň. Kombinace těchto časů dává řídícímu obvodu v LED možnost rozpoznat, jaký bit byl poslán diodě. Pro ovládání `n`~LED, na DIn první LED je zasláno $n × 24$ bitů. Dioda zpracuje prvních 24 bitů, a na Dout odešle $(n-1)×24$ bitů. Tento proces se opakuje pro každou LED v sérii a tím je dosaženo rozsvícení všech diod na požadovanou barvu. Aby řídící obvod rozpoznal, které data má poslat dále a která jsou už nová iterace barev pro LED, je nutné dodržet tzn.~RESET time, kdy po uplynutí tohoto času, řídící obvod, už neposílá data dále, ale zpracuje je @neopixel_bit_time ukazuje časování pro WS2812D.
-
+Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpoznávat logickou jedničku a nulu jiným způsobem. Na pin DIn je přivedena vysoká úroveň na~určitou dobu, poté je na určitou dobu přivedena nízká úroveň. Kombinace těchto časů dává řídícímu obvodu v LED možnost rozpoznat, jaký bit byl poslán diodě. Pro ovládání `n`~LED, na DIn první LED je zasláno $n × 24$ bitů. Dioda zpracuje prvních 24 bitů, a na Dout odešle $(n-1)×24$ bitů. Tento proces se opakuje pro každou LED v sérii a tím je dosaženo rozsvícení všech diod na požadovanou barvu. Aby řídící obvod rozpoznal, které data má poslat dále a která jsou už nová iterace barev pro LED, je nutné dodržet tzn.~RESET time, kdy po uplynutí tohoto času, řídící obvod, už neposílá data dále, ale zpracuje je @neopixel_bit_time ukazuje časování pro WS2812D. Po testování odesílání dat do RGB LED bylo zjištěno, pro LED jsou stěžejní časy vysokých úrovní, nicméně časy nízkých úrovní jsou více benevolentní a bylo například zjištěno, že nízká úroveň u log. 1 je možné zkrátit i na čas $330$ ns.
+#v(10pt)
 #figure(
     placement: none,
     caption: [Časování logických úrovní pro zaslání bitů WS2812D @NEOPIXEL-REF],
@@ -450,7 +450,7 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
         [0], [nízká úroveň napětí], [$580~1000$],
         [1], [vysoká úroveň napětí], [$580~1000$],
         [1], [nízká úroveň napětí], [$580~1000$],
-        [RESET], [nízká úroveň napětí], [$>280 000$],
+        [RESET], [nízká úroveň napětí], [$>280$ $000$],
     )
 )<neopixel_bit_time>
 
@@ -843,20 +843,27 @@ void detector_compute_freq_measures(sig_detector_t* detector) {
 #figure(
     placement: none,
     caption: [TUI odchytávání pulzů],
-    image("pic/tui_pulse.png")
+    image("pic/tui_pulse.png", width: 80%)
 )<tui-pulse>
 #v(10pt)
 Odchytávání pulzů je podfunkce na stránce měření frekvence. Při detekci náběžné nebo sestupné hrany (dle nastavení uživatele) je nastaven příznak, který je následně vykreslen na terminál. Uživatel tento příznak poté může smazat. K detekci pulzů je využito nastavení periferií jako při recipročním měření frekvence. Časovač, který je na vstupu nastaven jako input capture ukládá do registru hodnotu a je vyvoláno přerušení. Během přerušení je zavolána funkce, která zkontroluje, zda je to odpovídající hrana a pokud ano, je nastaven příznak. K odchytávání pulzů by mohlo být využito EXTI callbacku, nicméně to by znamenalo jiné nastavení periferií a zkomplikování sondy z hlediska vývoje.
 
 == Implementace generování pulzů
-Generování pulzů #todo[dodelat]
+Generování pulzů je realizováno za pomocí časovače TIM2, který má kanál 1 nastaven na PWM o střídě $50$ %. Předdělička časovače je nastavena na $64-1$, což znamená, že časovač běží na frekvenci $1$ MHz (inkrementace každou $1$ $mu$s). Poté pomocí periody čítače na uživatelem nastavována šířka pulzu, kdy zvolená šírka je vynásobena dvěma, protože při nastavení tomto nastavení dojde k přerušení pulzu v polovině periody. Aby časovač vyslal pouze jeden pulz, tak je inicializován tzv. One pulse, což způsobí zastavení časovače po jednom přetečení. Využití One pulse a časovače pro generaci je zajištěna velice přesná šířka jednoho pulzu.
+$ f_"send" = 1/(2 times "perioda") $ <freq_pulse>
+Funkce umí generovat jeden pulz, více pulzů a generovat neustále. Generace `X` pulzů funguje na principu One Pulse, kdy po dokončení jednoho pulzu je ihned zaslán další. Takto je možné poslat přesný počet pulzů za pomocí PWM. V případě neustále generace, je One Pulse deinicializován, a je vysílána frekvence odpovídající #ref(<freq_pulse>, supplement: [vztahu]). Pulz může být poslán jako pulz úrovně $3.3$ V a nebo jako pulz $0$ V. Nastavení časovače umožňuje nastavit pulz o šírky o řádech až mikrosekund. @gprah-pulse demonstruje přesnost, která byla naměřena pomocí osciloskopu. Generování pulzů může být vhodné pro testování čítačů, posuvných registrů a obvodů, kde je potřeba generovat hodinový signál.
+
+#figure(
+    caption: [Demonstrace pulzů],
+    image("pic/pulse_graph.svg", width: 80%)
+)<gprah-pulse>
 
 == Implementace nastavování úrovní
 #v(10pt)
 #figure(
     placement: none,
     caption: [TUI nastavování úrovní],
-    image("pic/tui_levels.png")
+    image("pic/tui_levels.png", width: 80%)
 )<tui-levels>
 #v(10pt)
 
@@ -867,20 +874,216 @@ Nastavování logických úrovní funguje celkem na 4 kanálech, které je možn
 #figure(
     placement: none,
     caption: [Signály při měření frekvence hradlováním],
-    image("pic/tui_register.png")
+    image("pic/tui_register.png", width: 85%)
 )<tui-register>
 #v(10pt)
 
 Funkce diagnostiky posuvného registru nabízí možnost nastavení jednotlivých bitů a následné odesílání dat do registru. Pro naplnění dat do posuvného registru je `PA7` připojen na jako hodinový signál registru a `PA0` jako datový pin do posuvného registru. Sonda umí posílat všech 8 bitů najednou a nebo je možné posílat bity postupně manuálně. Doba odesílání jednoho bitu je 200 ms. Tento čas nabízí možnost vizuální kontroly diagnostikovaného obvodu během odesílání. @code-shift ukazuje způsob odeslání jednoho bitu do posuvného registru.
 Funkce nabízí i kompatibilitu s posuvnými registry `SNx4HC595`, která na základě signálu `RCLK` převede data z registru na paralelní výstupy @snx4hc595.
 
-== Implementace diagnostiky Neopixelu <kap-neopixel>
-#todo[dopsat]
+== Implementace diagnostiky Neopixel <kap-neopixel>
+Neopixel je speciální způsob komunikace, které využívají RGB LED. Tato komunikace má svá specifika, rozebrána v #ref(<kap-neopixel-ter>, supplement: [kapitole]), která jsou nutná implementovat do sondy. Uživatel díky této funkci může odesílat barvy, která otestují funkčnost RGB LED, a pasivně monitorovat barvu, která se odesílá do RGB LED. Možností je také testování LED v serii, kde uživatel může odeslat barvu, dle pravidel komunikace, na všechny LED najednou. To je užitečné v případě, kdy již jsou LED zapojeny v serii a je nutné otestovat, zda není chyba u nějaké konkrétní LED.
+=== Monitorování
+Pro monitorování barvy odeslané přes seriovou komunikaci je využit časovač TIM2. Časovač má nastaveny 2 kanály v nastavení input capture, kde jeden reaguje na náběžnou hranu a druhý reaguje na sestupnou hranu. Tyto hrany jsou zaznamenávány DMA metodou do paměti, kde sonda provede analýzu dat. Jelikož DMA je nastavené jako cirkulární buffer, začátek dat nutně nemusí být jako první prvek v poli. Pokud by například bylo odesláno méně bitů nebo by se na vodiči objevila parazitní hrana, začátek se posune. Proto algoritmus začne hledat začátek tak, že prochází pole a hledá, mezi jakou sestupnou a vzestupnou hranou je větší prodleva než odpovídá `Reset` času (viz. @code-neopixel-find).
+
+
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Funkce pro nalezení začátku komunikace neopixel],
+    placement: none,
+```C
+int8_t neopixel_find start(neopixel_measure_t* data) {
+    int8_t start_index = -1;
+    uint8_t prev_measure = NEOPIXEL_DATA_LEN - 1;
+    for (uint8_t i = 0; i < NEOPIXEL_DATA_LEN; ++i) {
+        uint32_t curr_rise_edge = data->rise_edge[i];
+        uint32_t prev_fall_edge = data->fall_edge[prev_measure];
+        uint64_t width;
+        // v případě, že časovač přetekl, přičti velikost časovače
+        if (curr_rise_edge < prev_fall_edge) {
+            width = (curr_rise_edge + 0xFFFFFFFF) - prev_fall_edge;
+        } else {
+            width = curr_rise_edge - prev_fall_edge;
+        }
+        if (width > NEOPIXEL_RESET) {
+            // nalezen start
+            start_index = i;
+            break;
+        }
+    }
+    return start_index;
+}
+    ```
+)<code-neopixel-find>
+#v(10pt)
+Po nalezení začátku, je zkontrolováno následujících 24 pulzů zda jejich šířka odpovídá velikosti bitové jedničky nebo nuly. Pokud je nalezen pulz, který neodpovídá velikosti, jsou data zahozeny a dále se nepokračuje. Nakonec jsou jednotlivé bity posunuty tak, aby odpovídali 8 bitovému číslu pro každou složku.
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Způsob definování hodnoty bitu z hran neopixel],
+    placement: none,
+
+```C
+pulse_width = data->fall_edge[i] - data->rise_edge[i];
+if (pulse_width >= NEOPIXEL_MIN_LOW &&
+    pulse_width <= NEOPIXEL_MAX_LOW) {
+    bits_detected[i] = 0;
+} else if (pulse_width >= NEOPIXEL_MIN_HIGH &&
+    pulse_width <= NEOPIXEL_MAX_HIGH) {
+    bits_detected[i] = 1;
+} else {
+    return;
+}
+```
+)
+#v(10pt)
+
+=== Testovací signály
+Pro přenos testovacích dat do Neopixelů je využit časovač TIM1, konfigurovaný v režimu PWM. Časovač pracuje s předem připraveným polem hodnot (šířek pulzů), které jsou přes DMA načítány do časovače a převáděny na PWM signál s odpovídajícími střídami. Po zadání číselných hodnot pro červenou, zelenou a modrou, jako 8 bitová čísla (0-255), jsou jednotlivá čísla složek rozděleno na bity (celkem 24 bitů). Každý bit je poté převeden na střídu PWM signálu. 
+
+Pro správně široký pulz je potřeba nastavit periodu časovače a poté určit, jaká střída bude reprezentovat log. 1 a který log. 0. Po analýze bylo zvoleno periody $80-1$ což při frekvenci časovače 64 MHz, odpovídá přetečení každých $1.25$ $mu$s. To odpovídá délce doby odeslání jednoho bitu @NEOPIXEL-REF. Při testování RGB LED odesílání bylo zjištěno, že odeslání log. 1 odpovídá $2/3$ periody a log. 0 odpovídá $1/3$ periody.
+
+Po převedení čísla složky odpovídající střídy, jsou přesunuty do pole aby bylo možné zahájit činnost časovače. Během testování této metody docházelo k nepredikovatelným chování, kdy při specifických barvách, neodpovídala odeslaná data a barva LED. Příčinou byla prodleva mezi vyprázdnění dat z bufferu DMA a zastavení časovače. Časovač má v CCR registru uloženo při jaké hodnotě časovače má přepnout výstup. Po dosažení hodnoty je aktivován trigger pro DMA a je načtena nová hodnota z bufferu do CCR registru @STM32G0-REF. Po vyprázdnění bufferu již  nedojde k aktualizaci CCR registru, ale časovač neustále běží. Z tohoto důvodu jsou na začátek a na konec pole přidány nuly, který po odeslání dat nastaví do CCR registru nulu než dojde k zastavení časovače.
+
+#figure(
+    placement: none,
+    caption: [Neopixel signál bez ukončení a s ukončení nulou],
+    image("pic/neopixel_signal1.png")
+)
 == Implementace diagnostiky UART
-#todo[dopsat]
+Diagnostika UART je implementováno za pomocí vestavěné periferie USART2 a je inicializována podobným způsobem jako USART1 pro komunikaci s PC. Rozdíl je ten, že pro tuto diagnostický nástroj je nutné nastavovat baudrate, délku slova, paritu a počet stop bitů flexibilně aby uživatel mohl přizpůsobit nastavení svým potřebám. Pro nastavování uživatel využívá klávesy a po každém nastavení je periferie znovu inicializována s novým nastavením. Periferie využívá piny `PA2` a `PA3`.
+
+Pro nastavení periferie je nutné vstoupit do editačního módu, kdy je periferie zastavena. Uživatelovi vyskočí hláška "Cannot start until edit mode" (viz. @tui-uart-read) aby věděl, že se v tomto módu nachází. Na základě toho se změní i dolní lišta, na které se nachází nápověda ovládání. V tomto módu uživatel nastaví nastaví klávesama např. baudrate, kde stisknutím čísla je číslo přidáno na poslední pozici a stiskem `X` je poslední pozice smazána. Po opuštění tohoto módu je periferie nastavena a může být využita.
+
+=== Monitoring
+Monitorování UART je realizováno za pomocí DMA, kdy po obdržení slova (7, 8 nebo 9 bitového) toto slovo uloženo do pole. DMA je v tomto případě nastaveno jako cirkulární. Toto pole je poté periodicky zobrazováno na terminál. Na terminál je zobrazen jak symbol, tak jeho číselná reprezentace aby uživatel, i při symbolu jako mezera, mohl vidět zda byl daný symbol zachycen. @tui-uart-read ukazuje způsob vypisování symbolů. Uživatel může symboly vyčistit klávesou `G`.
+
+Výpis funguje způsobem scrollování, tzn. pokud se zaplní stránka, tak nejstarší symbol je smazán, jsou na stránce posunuty a nový se vykreslí jako nejnovější. Tohoto bylo dosaženo tak, že při vykreslování se zjistí DMA counter, který určuje na jakou poslední pozici periferie zapsala data. Jelikož je pole cirkulární, tak je poté iterované celé pole do doby, než se vrátí pointer na začátek. @code-uart-scroll ukazuje implementaci této vlastnosti.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [TUI UART monitorování],
+    image("pic/tui_uart_read.png", width: 80%)
+)<tui-uart-read>
+#v(10pt)
+=== Posílání testovacích symbolů
+Diagnostika UARTu také odesílá testovací symboly, které si uživatel navolí. Celkově lze odeslat až 10 symbolů najednou. Tyto symboly jsou poté odeslány pomocí tlačítka `S` skze blokovací funkci `HAL_UART_Transmit`. Odesílaná data lze modifikovat v tzv. "Data edit mode", který dává možnost zapisovat konkrétní symboly klávesnicí jako data a poté přepnout kurzor na další. Takto je možné upravit všechny symboly sekvenčně. Kurzor je reprezentován jako text, který je podbarven zeleně. Uživatel si může zvolit, jaké množství symbolů chce celkově odeslat.
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [TUI UART odesílání testovacích symbolů],
+    image("pic/tui_uart_write.png", width: 80%)
+)<tui-uart-write>
+#v(10pt)
+
 == Implementace diagnostiky I2C
-#todo[dopsat]
+Diagnostika I2C je funkce, která pomáhá k analýze komunikace mezi MCU a senzory. Funkce umí, detekovat slave zařízení na sběrnici, chovat se jako slave, chovat se jako master, umí bez zásahu monitorovat komunikaci mezi masterem a slavem a umí testování OLED displeje na bázi SSD1306. Tyto funkce ulehčují diagnostiku při práci se senzory a zkracují čas hledání problému, pokud například senzor posílá nekorektní data apod. Pro implementaci bylo využito zabudované I2C periferie, která je runtime přenastavována podle potřeby.
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [I2C inicializace periferie],
+    placement: none,
+```C
+void i2c_init_perif(i2c_perif_t* i2c_perif) {
+    i2c_perif->hi2c->Instance = I2C1;
+    i2c_perif->hi2c->Init.Timing = 0x10B17DB5; // normal mode
+    i2c_perif->hi2c->Init.OwnAddress1 = 
+        (global_var.device_state == DEV_STATE_ADV_I2C_SLAVE)
+            ? i2c_perif->slave_address << 1
+            : i2c_perif->slave_address;
+    i2c_perif->hi2c->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2c_perif->hi2c->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    i2c_perif->hi2c->Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+    if (HAL_I2C_Init(i2c_perif->hi2c) != HAL_OK) {
+        Error_Handler();
+    }
+}
+```
+)
+=== Skener adres
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [TUI I2C skenování adres],
+    image("pic/tui_i2c_scan.png", width: 80%)
+)<tui-i2c-scan>
+#v(10pt)
+Skenování adres zobrazuje všechny adresy zařízeních, které se na sběrnici nachází. Skenování probíhá tak, že je funkcí `HAL_I2C_IsDeviceReady` zkontrolováno sekvenčně všech 127 adres a adresy, ze kterých je odpověď `ACK` jsou poté vykresleny do terminálu.
+=== Master mód
+#v(10pt)
+#figure(
+    placement: none,
+    caption: [TUI UART odesílání testovacích symbolů],
+    image("pic/tui_i2c_write_d.png", width: 80%)
+)<tui-i2c-master>
+#v(10pt)
+
+Master mód je vhodný pro odesílání testovacích sekvencí senzoru. Uživatel může nastavit adresu slave zařízení na které chce odeslat data a také může nastavit read/write bit. V případě write uživatel může poslat až 10 bajtů dat najednou. Periferie nejprve odešle první rámec, který obsahuje adresu a read/write bit na který zařízení odpoví `ACK`. Dále sonda začne odesílat data dokud všechny data úspěšně neodešle, nebo do momentu, kdy nastane error. Tento error může být například z důvodu, že zařízení neodpoví (`NACK`) nebo z jiných důvodů.
+
+Pokud uživatel nastaví read, může odeslat na slave zařízení 1 bajt (většinou adresu paměti, ze které chce master číst) a přijme data, která mu slave pošle. Tyto data jsou reprezentovány na displeji terminálu jako hexadecimalní hodnoty. @tui-i2c-master ukazuje stránku I2C diagnostiky s read master módem. Červený čtvereček ohraničuje bajt, který je poslán senzoru a zelený rámeček ohraničuje bajt, který byl přijat od slave zařízení. Pod hodnotami je zobrazené `I2C OK`, což značí, že komunikace proběhla v pořádku. Počet bajtů, které budou přečteny lze uživatelsky volit.
+
+@code-i2c-master-read reprezentuje funkci, která se stará I2C komunikaci, při čtení. Nejprve je zavolána funkce `HAL_I2C_Master_Transmit`, která odešle data slave zařízení ve write módu. Zde je možné si povšimnout, že adresa musí být bitově posunuta. Důvod posunutí je přítomnost read/write bitu, které je na posledním místě bajtu. Pokud pokud dojde k problému během odesílání, odesílání ukončeno a je vypsána chyba na terminál. 
+
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [I2C master read funkce],
+    placement: none,
+```C
+void i2c_read_data_master(i2c_perif_t* perif) {
+    if (perif->send_data) {
+        perif->send_data = 0;
+        HAL_StatusTypeDef ret = HAL_I2C_Master_Transmit(
+            perif->hi2c, perif->slave_address << 1,
+            perif->master_read_send_data, 1, PERIF_DELAY);
+
+        if (ret == HAL_OK) {
+            ret = HAL_I2C_Master_Receive(perif->hi2c,
+                                         perif->slave_address << 1,
+                                         perif->slave_received_data,
+                                         perif->bytes_to_catch, PERIF_DELAY);
+            if (ret == HAL_OK) {
+                perif->send_status = I2C_SEND_SUCCESS;
+            } else {
+                perif->send_status = I2C_ERROR_RECIEVE;
+            }
+        } else {
+            perif->send_status = I2C_ERROR;
+        }
+        ansi_print_i2c_error(ret, perif->hi2c);
+    }
+}
+```
+)<code-i2c-master-read>
+
+Po úspěšném odeslání je opět odeslán rámec s adresou, ale tentokrát je nastaven bit jako read. Po odeslání rámce sonda čeká na odpověď o dané velikost bajtů, definovanou dobu. Tyto data jsou poté zobrazena na terminálu. V případě chyby je chyba vyparsována a na terminál je vypsána pravděpodobná příčina. Stejný princip odesílání dat je i v případě zapisování dat, ale pouze nedochází z vyžádání čtení.
+=== Testování SSD1306
+#figure(
+    placement: none,
+    caption: [TUI I2C testování displeje SSD1306],
+    image("pic/tui_i2c_ssd1306.png", width: 80%)
+)<tui-i2c-ssd1306>
+
+Testování OLED displeje SSD1306 je funkce která, na nastavenou adresu uživatelem#footnote[Tato adresa je nastavena stejným způsobem, jako v Master a Slave módu], odešle sekvenci, která inicializuje potřebné parametry displeje a rozsvítí všechny pixely na displeji, aby uživatel mohl ověři, zda displej není poškozený. 
+
+
+=== Monitoring
+Monitoring I2C je podstatná část, která umí číst jednoduché komunikace mezi master a slave zařízením. Monitoring I2C komunikace není jednoduše realizovatelná na I2C periferii. Pokud periferie je nastavena jako slave zařízení, dojde sice ke čtení komunikace, ale také dojde k odpovídání, což je nežádaný efekt. I2C periferie STM32 nenabízí možnost monitorovat komunikaci. Aby byla komunikace I2C mohla být monitorována, bylo k tomu využito SPI rozhraní.
+
+Propojení I2C masteru s SPI slave zařízením prostřednictvím hodinového signálu vyžaduje specifické nastavení parametrů SPI, aby bylo možné sladit odlišné vlastnosti obou rozhraní. V I2C zůstává hodinový signál (SCL) v klidovém stavu na vysoké logické úrovni (HIGH), což vyžaduje nastavení polarity SPI hodin (CPOL) na hodnotu 1. Tím se zajistí, že SPI slave zařízení bude v nečinnosti očekávat vysokou úroveň hodinového signálu, což odpovídá výchozímu stavu I2C. Dále je nutné řešit počáteční fázi komunikace: I2C zahajuje přenos tzv. start podmínkou, kdy datová linka (SDA) poklesne před poklesem SCL. Tato první hrana SCL nesmí být SPI slave interpretována jako platný hodinový takt. K jejímu ignorování slouží nastavení fáze SPI hodin (CPHA) na hodnotu 1, která způsobí, že data jsou čtena až na druhé hraně hodinového signálu. Tato kombinace (CPOL=1 a CPHA=1) odpovídá SPI módu 3 a umožňuje SPI zařízení správně reagovat na hodiny generované I2C masterem. V praxi se tak SPI slave synchronizuje s I2C hodinami až po start podmínce, kdy začne zpracovávat data z následujících taktů, například při zápisu I2C adresy nebo přenosu dat.
+
+Po propojení hodinových signálů je nastaveno SPI rozhraní na 9 bitovová slova. Je to z důvodu, že I2C má slova 8 bitová, ale poté je k tomu přidán `ACK`/`NACK` bit, což je devátý. Na základě této metody je možné monitorovat I2C sběrnici za pomocí SPI rozhraní. Data jsou ukládána do pole za pomocí metody DMA. Po získání dat z rozhraní jsou data parsována a zobrazována na terminál podle kontextu dat. Monitor rozpozná, jestli se jedná o zápis nebo nebo čtení dat a podle toho přizpůsobí výpis. @tui-i2c-monitor tuto skutečnost ukazuje na výpisu z terminálové aplikace. @code-i2c-monitor-init ukazuje způsob inicializace SPI rozhraní.
+
+#figure(
+    caption:[TUI I2C monitoring],
+    image("pic/tui_i2c_monitor.png")
+)<tui-i2c-monitor>
 == Implementace diagnostiky SPI
+=== Master mód
+Master mód je vhodný pro odesílání testovacích sekvencí senzoru. Tento 
+
+=== Monitoring
 #todo[dopsat]
 
 
@@ -1059,6 +1262,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
 
 = Návrh omezené verze na RPI Pico
 Návrh omezené verze na Rasberry Pi Pico #todo[dopsat]
+== Komunikace s PC
+== Měření napětí a logických úrovní
+== Měření frekvence a detekce pulzů
+== Generování pulzů
 
 
 
@@ -1369,6 +1576,106 @@ void shift_register_send_one_signal(shift_register_t* shift_register,
 }
 ```
 )<code-shift>
+
+
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Způsob vykreslování UART symbolů scrollováním],
+    placement: none,
+```C
+
+void ansi_render_read_vals(uart_perif_t* uart) {
+    // získání pozice začátku
+    uint16_t curr_buff_index =
+        UART_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(uart->huart->hdmarx);
+
+    char buff[11];
+    uint8_t col = 0;
+    uint8_t row = 12;
+    ansi_set_cursor(row, 5);
+
+    for (size_t i = 0; i < UART_BUFFER_SIZE; ++i) {
+        if (curr_buff_index >= UART_BUFFER_SIZE) {
+            curr_buff_index = 0;
+        }
+        if (uart->received_char[curr_buff_index] == 0) {
+            ++curr_buff_index;
+            continue;
+        }
+
+        ++col;
+        snprintf(buff, 11, " %c(%3d)", uart->received_char[curr_buff_index],
+                 uart->received_char[curr_buff_index]);
+        ansi_send_text(buff, &ansi_default_conf);
+
+        if (col >= 10) {
+            col = 0;
+            ++row;
+            ansi_set_cursor(row, 5);
+        }
+        ++curr_buff_index;
+    }
+}
+```
+)<code-uart-scroll>
+
+#v(10pt)
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Inicializace SSD1306 displeje I2C],
+    placement: none,
+
+```C
+uint8_t init_sequence[] = {0xAE, 0xD5, 0x80, 0xA8, 0x3F, 0xD3,
+                           0x00, 0x40, 0x8D,0x14, 0x20, 0x02,
+                           0xA0, 0xC0, 0xDA, 0x12, 0x81, 0xCF,
+                           0xD9, 0xF1, 0xDB, 0x40, 0xA5, 0xA6, 0xAF};
+
+HAL_StatusTypeDef SSD1306_spi_init_display(SPI_HandleTypeDef* hspi) {
+    HAL_StatusTypeDef status;
+
+    for (uint8_t i = 0; i < sizeof(init_sequence); i++) {
+        if ((status = SSD1306_spi_write_command(hspi, init_sequence[i]))) {
+            return status;
+        }
+        HAL_Delay(40);
+    }
+    return HAL_OK;
+}
+```
+)<code-i2c-ssd1306>
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [I2C inicializace periferie pro monitoring],
+    placement: none,
+
+```C
+void i2c_monitor_init(i2c_perif_t* i2c_perif, const spi_perif_t* spi_perif) {
+    spi_perif->hspi->Instance = SPI1;
+    spi_perif->hspi->Init.Mode = SPI_MODE_SLAVE;
+    spi_perif->hspi->Init.Direction = SPI_DIRECTION_2LINES;
+    spi_perif->hspi->Init.DataSize = SPI_DATASIZE_9BIT;
+    spi_perif->hspi->Init.CLKPolarity = SPI_POLARITY_HIGH;
+    spi_perif->hspi->Init.CLKPhase = SPI_PHASE_2EDGE;
+    spi_perif->hspi->Init.NSS = SPI_NSS_SOFT;
+    spi_perif->hspi->Init.FirstBit = SPI_FIRSTBIT_MSB;
+    spi_perif->hspi->Init.TIMode = SPI_TIMODE_DISABLE;
+    spi_perif->hspi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    spi_perif->hspi->Init.CRCPolynomial = 7;
+    spi_perif->hspi->Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+    spi_perif->hspi->Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+    if (HAL_SPI_Init(spi_perif->hspi) != HAL_OK) {
+        Error_Handler();
+    }
+    memset(i2c_perif->monitor_data, 0, I2C_ARRAY_SIZE);
+    gpio_spi_slave_init();
+    HAL_SPI_Receive_DMA(spi_perif->hspi, (uint8_t*)i2c_perif->monitor_data,
+                        I2C_ARRAY_SIZE * 2);
+}
+```
+)<code-i2c-monitor-init>
 
 #figure(
     supplement: [Úryvek kódu],
