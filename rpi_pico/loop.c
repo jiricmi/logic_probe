@@ -119,7 +119,7 @@ void dev_mode_run(void) {
         case DEV_STATE_OHMMETER:
             adc_get_avg_voltages(adc_perif);
             ansi_render_resistance_measure(adc_perif);
-            delay = 250;
+            delay = 500;
             break;
         case DEV_STATE_FREQUENCY_READ:
             if (!global_var.sig_det_perif.is_rec) {
@@ -135,7 +135,7 @@ void dev_mode_run(void) {
                         FREQUECY_PIN, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
                         true, &sig_det_recproc_pulse_callback);
                 }
-                delay = 1;
+                delay = 250;
             }
         case DEV_STATE_DETECT_PULSE_UP:
         case DEV_STATE_DETECT_PULSE_DOWN:
