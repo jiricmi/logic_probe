@@ -5,15 +5,6 @@
 #show: codly-init.with()
 #set math.equation(numbering: "(1)")
 
-#let my_dot_list(body) = [
-  #v(5pt)
-
-  #block(breakable: false)[
-    #set text(size: 11pt, weight: "bold")
-    #set par(first-line-indent: 0pt, leading: 0.8em)
-    #body
-  ]
-]
 
 #let blob(pos, label, tint: white, ..args) = node(
 	pos, align(center, label),
@@ -72,7 +63,7 @@
   
   ],
   abstract-cz: [
-    Tato práce představuje návrh a realizaci multifunkční diagnostické logické sondy pro výuku práce s logickými obvody a vestavnými systémy. Zařízení nahrazuje komereční laboratorní přístroje, které jsou složité a finančně náročné, a umožňuje studentům měřit základní veličiny (napětí, odpor, frekvenci), generovat pulzy a diagnostikovat komunikační rozhraní (UART, I2C SPI, Neopixel). Sonda je realizována ve dvou variantách: verze na bázi STM32 a zjednodušená pro Raspberry Pi Pico. Lokální režim s RGB LED a tlačítkem slouží pro rychlou diagnostiku, zatímco terminálový režim s ANSI TUI poskytuje pokročilé funkce včetně ovládání a zobrazování hodnot skrze UART periferii. Návrh využívá STM HAL a Raspberry Pi Pico C SDK pro prenositelnost kódu a minimalizuje externí komponenty, aby studenti mohli sondu snadno sestavit na nepájivém kontaktním poli. Hlavním přínosem je urychlení identifikace chyb při praktických cvičeních, jako jsou odhalení vadné součástky nebo nesprávné zapojení periferií.
+    Tato práce představuje návrh a realizaci multifunkční diagnostické logické sondy pro výuku práce s logickými obvody a vestavnými systémy. Zařízení nahrazuje komerční laboratorní přístroje, které jsou složité a finančně náročné, a umožňuje studentům měřit základní veličiny (napětí, odpor, frekvenci), generovat pulzy a diagnostikovat komunikační rozhraní (UART, I2C, SPI, Neopixel). Sonda je realizována ve dvou variantách: verze založená na STM32 a zjednodušená pro Raspberry Pi Pico. Lokální režim s RGB LED a~tlačítkem slouží pro rychlou diagnostiku, zatímco terminálový režim s ANSI TUI poskytuje pokročilé funkce včetně ovládání a zobrazování hodnot skrze UART periferii. Návrh využívá STM HAL a Raspberry Pi Pico C SDK pro prenositelnost kódu a minimalizuje externí komponenty, aby studenti mohli sondu snadno sestavit na nepájivém kontaktním poli. Hlavním přínosem je urychlení identifikace chyb při praktických cvičeních, jako jsou odhalení vadné součástky nebo nesprávné zapojení periferií.
     #par(first-line-indent: 0em, spacing: 2em)[
         *Klíčová slova:* STM32, STM32G0, Raspberry Pi Pico, logická sonda, UART, I2C, SPI, vzdělávací nástroje, diagnostika chyb, C/C++, ANSI escape sekvence
     ]
@@ -93,7 +84,7 @@
 = Úvod
 Výuka základů elektroniky vyžaduje nástroje, které studentům umožní experimentovat s realnými logickými obvody a prakticky ověřovat teoretické znalosti. Tradiční diagnostické přístroje, jako osciloskopy nebo logické analyzátory, jsou však pro začínající studenty složité, finančně náročné a nabízejí funkce nad rámec základních výukových potřeb. Během praktických cvičení se studenti často dostávají do situací, kdy například čítač pulzů s výstupem na 7-segmentový displej přestane fungovat, aniž je zřejmá příčina. Mohou váhat, zda chyba spočívá v softwaru (nesprávně naprogramovaném časovači), hardwaru (spálené LED, vadném senzoru) nebo třeba v prohození vodičů UART (Tx/Rx). Bez vhodného nástroje pak tráví hodiny hledáním závady, což demotivuje a zpomaluje výuku. Tento problém vede k potřebě vytvořit jednoduché, multifunkční a dostupné řešení, které by usnadnilo osvojení principů práce s logickými a komunikačními obvody.
 
-Cílem této bakalářské práce je návrh a realizace multifunkční diagnostické logické sondy, která kombinuje funkce logického analyzátoru, generátoru signálů a testeru komunikačních rozhraní typické pro výuku (UART, I2C, SPI, Neopixel). Hlavní inovací řešení je integrace vzdělávacího aspektu do samotného návrhu zařízení - sonda je navržena ve dvou variantách: plnohodnotná verze založená na mikrokontroleru STM32 a omezená verze využívající Raspberry Pi Pico pro naplnění potřeby středních škol, které nejsou specializováné na výuku elektroniky. Hlavní výhodou řešení je minimalizace externích komponent, které umožňují sestavení zařízení na nepájivém kontaktním poli studentem a integrace s PC terminálovou aplikací pro pokročilé funkce bez nutnosti instalace specialních aplikací a ovladačů.
+Cílem této bakalářské práce je návrh a realizace multifunkční diagnostické logické sondy, která kombinuje funkce logického analyzátoru, generátoru signálů a testeru komunikačních rozhraní typické pro výuku (UART, I2C, SPI, Neopixel). Hlavní inovací řešení je integrace vzdělávacího aspektu do samotného návrhu zařízení - sonda je navržena ve dvou variantách: plnohodnotná verze založená na mikrokontroleru STM32 a omezená verze využívající Raspberry Pi Pico pro naplnění potřeby středních škol, které nejsou specializované na výuku elektroniky. Hlavní výhodou řešení je minimalizace externích komponent, které umožňují sestavení zařízení na nepájivém kontaktním poli studentem a integrace s PC terminálovou aplikací pro pokročilé funkce bez nutnosti instalace specialních aplikací a ovladačů.
 
 Klíčovými prvky návrhu jsou jednoduché ovládání (lokální režim s RGB LED a tlačítkem, terminálový režim ovládaný skrze terminálovou aplikaci), měření napětí, odporu, frekvence a střídy PWM signálů, generování pulsů a diagnostika komunikačních periferií. Důraz je kladen na open-source přístup, který umožní další rozšiřování a přizpůsobení vzdělávacím potřebám.
 
@@ -101,7 +92,7 @@ Klíčovými prvky návrhu jsou jednoduché ovládání (lokální režim s RGB 
 == Motivace <rozbor-vyuka>
 Během laboratorních cvičení zaměřených na logické obvody a vestavné systémy studenti navrhují digitální obvody a programují mikrokontroléry (MCU). Při vývoji však mohou narazit na situaci, kdy jejich řešení úlohy náhle přestane fungovat podle očekávání, aniž by byla zjevná příčina problému. Najít závadu může být velice časově náročné jak pro studenta, tak pro vyučujícího.
  
-Při návrhu softwaru pro mikrokontroléry je klíčové průběžně ověřovat funkčnost pomocí pulsů. Studenti tak mohou například zjistit, zda je generován výstupní pulz požadované frekvence, zda obvod správně reaguje na vstupní impuls, nebo zda je signál přenášen přes daný vodič. Praktickým příkladem je vývoj čítače pulzů s výstupem na 7-segmentový displej – zde sonda umožňuje okamžitě validovat, zda software správně zpracovává vstupy a aktualizuje výstup. Studenti při sestavování obvodů také často čelí problémům jako nefunkční komponenty (spálené LED, vadné senzory) nebo chybám v zapojení – například prohození Tx/Rx vodičů UART, chybějící pull-up rezistory na I2C sběrnici, nebo nesoulad s referenčním schématem. Takové chyby vedou k časově náročnému hledání závad. 
+Při návrhu softwaru pro mikrokontroléry je klíčové průběžně ověřovat funkčnost pomocí pulsů. Studenti tak mohou například zjistit, zda je generován výstupní pulz požadované frekvence, zda obvod správně reaguje na vstupní impuls, nebo zda je signál přenášen přes daný vodič. Praktickým příkladem je vývoj čítače pulzů s výstupem na 7-segmentový displej – zde sonda umožňuje okamžitě validovat, zda software správně zpracovává vstupy a aktualizuje výstup. Studenti při sestavování obvodů také často čelí problémům jako nefunkční komponenty (spálené LED, vadné senzory) nebo chybám v zapojení, například prohození Tx/Rx vodičů UART, chybějící pull-up rezistory na I2C sběrnici, nebo nesoulad s referenčním schématem. Takové chyby vedou k časově náročnému hledání závad. 
 
 Standardní logická sonda je elektronické zařízení sloužící k diagnostice logických obvodů. Pomáhá určovat logické úrovně a detekovat pulsy. Je to jeden ze standardních nástrojů pro elektrotechniky pracující s FPGA, mikrokontrolery či logickými obvody. Výhoda logické sondy je cena pořízení a flexibilita použití. Logická sonda je jedním z prvních nástrojů, který dokáže najít základní problém v digitálním obvodu. Další běžné nástroje pro diagnostiku logických obvodů jsou osciloskop a logický analyzátor. Tyto nástroje jsou vhodné pro diagnostiku např. I2C sběrnice nebo SPI rozhraní, kdy uživatel může vidět konkrétní průběh signálu. Pro výukové účely však mají zásadní nevýhody: Pořizování analyzátorů a osciloskopů může být velice nákladné, jejich ovládání vyžaduje pokročilé znalosti, a student musí nejprve pochopit, jak s přístrojem zacházet. Navíc nabízejí spoustu funkcí, které jsou pro účely výuky nadbytečné a mohou začátečníky dezorientovat.
 
@@ -116,7 +107,7 @@ Firmware a hardware sondy jsou primárně navrženy pro mikrokontrolér STM32G03
 
 Lokální režim bude sloužit pro rychlou základní diagnostiku obvodů s indikací pomocí RGB LED a ovládání skrze jedno tlačítko. Bude fungovat bez nutnosti připojení zařízení k PC skrze  UART-USB převodník. Tlačítkem bude uživatel přepínat módy, kanály a úrovně. Lokální režim bude mít následující vlastnosti: nastavení úrovní kanálů, odchytávání pulsů, prověření logické úrovně a generace pravidelných pulsů.
 
-Terminálový režim bude poskytovat konkrétní měření veličin logického obvodu a diagnostiku sběrnic. Sonda bude v tomto režimu ovládána odesíláním symbolů za pomocí periferie UART skrze převodník UART-USB. Sonda takto poskytne uživatelské rozhraní, které se vygeneruje na straně mikrokontroleru a zobrazí skrze terminálovou aplikací podporující tzn. ANSI sekvence#footnote[Např. PuTTY, GTKTerm...]. Oproti ovládání prostřednictvím specializované aplikace vyvinuté namíru sondě, tento přístup zajišťuje přenositelnost napříč operačními systémy a nenutí uživatele instalovat další software, což je výhodné zejména na sdílených zařízeních, jako jsou fakultní počítače.
+Terminálový režim bude poskytovat konkrétní měření veličin logického obvodu a diagnostiku sběrnic. Sonda bude v tomto režimu ovládána odesíláním symbolů za pomocí periferie UART skrze převodník UART-USB. Sonda takto poskytne uživatelské rozhraní, které se vygeneruje na straně mikrokontroleru a zobrazí skrze terminálovou aplikaci podporující tzn. ANSI sekvence#footnote[Např. PuTTY, GTKTerm...]. Oproti ovládání prostřednictvím specializované aplikace vyvinuté namíru sondě, tento přístup zajišťuje přenositelnost napříč operačními systémy a nenutí uživatele instalovat další software, což je výhodné zejména na sdílených zařízeních, jako jsou fakultní počítače.
 
 Sonda v tomto režimu bude nabízet funkce základní a pokročilé. Mezi základní funkce patří: detekce logických úrovní, detekce impulsů, určení jejich frekvence, nastavení logických úrovní, generace impulsů, měření napětí a měření odporu. Mezi pokročilé náleží diagnostika sběrnic UART, I2C, SPI a Neopixel. Sběrnice sonda bude pasivně poslouchat nebo aktivně vysílat. Získaná data budou zobrazováná skrze terminálovou aplikaci.
 
@@ -131,21 +122,24 @@ typová pouzdra jako například *TSSOP20* nebo *SOP8*, což poskytuje snadnou
 integraci do kompatního hardwarového návrhu @STM32G030x6-tsop. Obě zmíněná pouzdra jsou použita pro implementaci logické sondy, o které pojednává #ref(<kap-hw>, supplement: [kapitola]). V rámci realizace je použité MCU *STM32G030*, které je s kompatibilní s návrhem logické sondy.
 ==== Analogo-digitální převodník <adc>
 Mikrokontrolér STM32G031 je vybaven analogo-digitálním převodníkem#footnote[Neboli ADC], který obsahuje 8~analogových kanálů
-o~rozlišení 12 bitů. Maximální vzorkovací frekvence převodníku je 2 MSPS. Při měření kanálů se postupuje v sekvenci určené tzv. ranky#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při požadavku o měření převodník nejprve změří první nastavený kanál, při dalším požadavku druhý a až změří všechny, tak pokračuje opět od počátku. Během měření je nutné zajistit, aby napětí na kanálu nepřekračovalo $3.3$ V protože AD převodník není $5$ V tolerantní.
-Ke snížení vstupního šumu během měření převodník podporuje metodu oversampling#footnote[Proběhne více měření a následně jsou výsledky např. zprůměrovány aby byla zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*, který přičítá každé měření a~poté pomocí data shifteru vydělí počtem cyklu, kde počet cyklů je vždy mocnina dvojky z důvodu složitého dělení na MCU @STM32G0-ADC. Tato metoda zamezuje rušení na kanálu.
-#figure(
-  caption: [Blokový diagram AD převodníku @STM32G0-ADC], image("pic/adc-block-diagram.png"),
-)
+o~rozlišení 12 bitů. Maximální vzorkovací frekvence převodníku je 2 MSPS. Při měření kanálů se postupuje v sekvenci určené tzv. ranky#footnote[Rank určuje v jakém pořadí je kanál změřen.]. Při požadavku o měření převodník nejprve změří první nastavený kanál, při dalším požadavku druhý a až změří všechny, tak pokračuje opět od počátku. Během měření je nutné zajistit, aby napětí na kanálu nepřekračovalo $3.3$ V, protože AD převodník není $5$ V tolerantní.
+Ke snížení vstupního šumu během měření převodník podporuje metodu oversampling#footnote[Proběhne více měření a následně jsou výsledky např. zprůměrovány aby byla zajištěna větší přesnost.]. Převodník obsahuje *accumulation data register*, který přičítá každé měření a~poté pomocí data shifteru vydělí počtem cyklů, kde počet cyklů je vždy mocnina dvojky z důvodu složitého dělení na MCU @STM32G0-ADC. Tato metoda zamezuje rušení na kanálu.
+#v(5pt)
 $ "měření" = 1/2^m × sum_(n=0)^(n=N-1) "Konverze"(t_n) $
-
-AD převodník, po dokončení měření vzorků, vrací hodnotu, která není napětí. Tato hodnota je poměrná hodnota vůči napájecímu napětí vyjádřena 12 bitově#footnote[Např. hodnota 4095 značí, že naměřené napětí je stejně velké jako napájecí napětí.]. Pro
+#v(5pt)
+AD převodník, po dokončení měření vzorků, vrací hodnotu, která není napětí. Tato hodnota je poměrná hodnota vůči napájecímu napětí vyjádřena 12bitově#footnote[Např. hodnota 4095 značí, že naměřené napětí je stejně velké jako napájecí napětí.]. Pro
 převedení hodnoty převodníku na napětí je nutné znát referenční napětí systému ($V_("REF+")$).
 Referenční napětí může být proměnlivé, hlavně pokud systém využívá $"VDDA"$#footnote[VDDA je označení pro analogové napájecí napětí v mikrokontrolérech STM32.] jako
 referenci, která může být $2$ V až $3.6$ V a také může kolísat vlivem napájení nebo zatížení. Pro výpočet $V_("REF+")$ se používá interní referenční napětí $V_("REFINT")$ kalibrační
 data uložená během výroby mikrořadiče a naměřené hodnoty z ADC @STM32G0-REF.
+#figure(
+  caption: [Blokový diagram AD převodníku @STM32G0-ADC], image("pic/adc-block-diagram.png"),
+)
 
 Vztah pro výpočet je následující:
+#v(5pt)
 $ V_("REF+") = (V_("REFINT_CAL")×3300)/V_("REFINT_ADC_DATA") $ <vref>
+#v(5pt)
 kde:
 - $V_("REFINT_CAL")$ je kalibrační hodnota interního referenčního napětí, která je
   uložená ve~flash paměti mikrořadiče během výroby. Tato hodnota představuje
@@ -159,7 +153,9 @@ Po zjištění referenčního napětí dle @vref, lze získat na základě refer
 napětí, velikosti převodníku a hodnoty naměřené převodníkem, dle @V_ch.
 Rozlišení v~případě tohoto zařízení bude 12 bitů. Počet bitů je podstatný pro
 určení, jaká hodnota je maximální, neboli referenční napětí.
+#v(5pt)
 $ V_("CH") = V_("CH_ADC_DATA")/(2^("rozlišení") - 1) × V_("REF+") $ <V_ch>
+#v(5pt)
 kde:
 - $V_("CH")$ je napětí naměřené na daném kanálu.
 - $V_("CH_ADC_DATA")$ je digitální hodnota získaná z AD převodníku.
@@ -168,7 +164,7 @@ kde:
 
 ==== Časovače <timery>
 STM32G031 obsahuje několik časovačů (timeru), které se dají využít pro logickou sondu.
-Mikrořadič má zabudovaných několik základních a jeden pokročilý časovač. Základní časovače jsou 16~bitové a jsou
+Mikrořadič má zabudovaných několik základních a jeden pokročilý časovač. Základní časovače jsou 16bitové a jsou
 vhodné pro měření doby či generování jednoduchých PWM signálů. Pokročilý časovač
 je na tomto mikrokontroleru 32bitový a poskytuje více kanálů. Tyto časovače také
 podporují nejen generování signálů na výstup, ale také zachytávání signálů a
@@ -187,14 +183,19 @@ dělí s konstantou, která je zvolena, frekvenci hodin dané periferie. Pro př
 STM32G0 je to $64$ $"MHz"$.
 Frekvence časovače určuje, jak často časovač inkrementuje svou hodnotu za jednu
 sekundu @STM32G0-REF.
+#v(5pt)
 $ F_("TIMx") = F_("clk")/"Prescaler + 1" $
+#v(5pt)
 
-Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16 bitového časovače je maximální perioda 65535, zatímco u 32 bitového časovače je to 4294967295.],
+Velikost čítače časovače, zda je 16bitový nebo 32bitový#footnote[U 16bitového časovače je maximální perioda 65535, zatímco u 32bitového časovače je to 4294967295.],
 souvisí s jeho tzv. periodou. Perioda určuje hodnotu, při jejímž dosažení se
 čítač automaticky resetuje na 0. Tuto hodnotu lze nastavit podle potřeby
 vývojáře. V kombinaci s prescalerem lze nastavit konkrétní časový interval,
 který je požadován. Časový interval lze vypočítat pomocí #ref(<timer-int>, supplement: [rovnice]).
+#v(5pt)
 $ T = (("Prescaler" + 1) × ("Perioda" + 1) )/ F_("clk") $ <timer-int>
+#v(5pt)
+
 
 === Knihovna STM HAL
 Hardware Abstraction Layer (HAL) od společnosti STMicroelectronics je knihovna určená pro mikrořadiče řady STM32, která slouží jako abstrakční vrstva mezi aplikací a hardwarem zařízení. Jejím hlavním cílem je zjednodušit vývojářům práci s periferiemi, jako jsou GPIO piny, komunikační rozhraní USART, SPI nebo I2C, a to bez nutnosti přímého zápisu do hardwarových registrů procesoru. HAL je součástí širšího ekosystému STM32Cube, který zahrnuje také nástroje pro konfiguraci mikrokontrolérů (např. STM32CubeMX) a generování kódu @STM-CUBE.
@@ -202,7 +203,10 @@ Hardware Abstraction Layer (HAL) od společnosti STMicroelectronics je knihovna 
 Mezi klíčové vlastnosti HAL patří přenositelnost kódu. Protože různé modely MCU STM32 mohou mít odlišné mapování paměti nebo specifické hardwarové vlastnosti, HAL tyto rozdíly abstrahuje. Pokud vývojář potřebuje převést aplikaci na jiný čip z řady STM32, nemusí ručně upravovat adresy registrů a měnit logiku ovládání periferií, ale stačí využít nástroje na konfiguraci jako STM32CubeMX zatímco aplikační kód zůstává nezměněn. Tento přístup šetří čas a snižuje riziko chyb při portování projektů.
 @stm32cubemx-arch znázorňuje diagram, který znázorňuje
 architekturu HAL @STM-HAL-ARCH.
-
+#figure(
+  caption: [STM32CubeMX HAL architektura @HAL-DIAGRAM],
+    image("pic/hal-architecture.png"),
+) <stm32cubemx-arch>
 Součástí HALu je tzv. CMSIS,
 což je sada standardizovanách rozhraní, které umožňují konfiguraci periferií,
 správu jádra, obsluhu přerušení a další @ARM-CMSIS.
@@ -213,15 +217,11 @@ periferiím procesoru, obsahuje definice registrů, přístup k NVIC apod.
 je ten, že CMSIS je poskytnuto přímo ARM a slouží pouze na ovládání Cortex M
 procesorů zatímco část od STMicroelectronics poskytuje abstrakci periferií.
 
-#figure(
-  caption: [STM32CubeMX HAL architektura @HAL-DIAGRAM],
-    image("pic/hal-architecture.png"),
-) <stm32cubemx-arch>
 
 === MCU Raspberry Pi Pico
 Pro omezenou verzi sondy byl zvolen mikrokontroler Raspberry Pi Pico. Toto je velice populární mikrokontroler, kterým disponují i školy, které nejsou zaměřeny na elektroniku a logické obvody. Studenti těchto škol tak dostanou možnost diagnostikovat své obvody bez nutnosti pořizování speciálních nástrojů. Jediné, co student potřebuje k diagnostice je o jeden Raspberry Pi Pico KIT navíc.
 
-Tento mikrokontroler obsahuje RP2040 s externí flash pamětí o velikosti 2 MiB, s celkem 40 piny @rpi_datashet. RP2040 čip je navržen nadací Raspberry Pi Foundation a je postaven na Dual-core ARM cortex M0+, které dosahují frekvencí až 133 MHz, kterou je možné, stejně jako u STM32G031, měnit pomocí PLL @NI_2024 @rpi_datashet. Tento mikrokontroler je poměrně populární mezi skupinou lidí, která tvoří projekty volnočasově zejména díky ceně, jednoduchého nahrávání programů do mikrokontroleru a komunitní podpoře.
+Tento mikrokontroler obsahuje RP2040 s externí flash pamětí o velikosti 2 MiB, s celkem 40 piny @rpi_datashet. RP2040 čip je navržen nadací Raspberry Pi Foundation a je postaven na Dual-core ARM cortex M0+, které dosahují frekvencí až 133 MHz, kterou je možné, stejně jako u STM32G031, měnit pomocí PLL @NI_2024 @rpi_datashet. Tento mikrokontroler je poměrně populární mezi skupinou lidí, která tvoří projekty volnočasově zejména díky ceně, jednoduchému nahrávání programů do mikrokontroleru a komunitní podpoře.
 
 Mikrokontrolér disponuje 26 GPIO piny, které podporují funkce jako pull-up/pull-down rezistory, hardwarová přerušení, PWM či komunikaci přes UART, SPI nebo I2C. Vestavěný 12-bitový ADC umožňuje měření napětí na třech analogových pinech s volitelnou referencí (interní 3,3 V nebo externí). Raspberry Pi Pico je navržené tak, aby bylo možné jej napájet z USB nebo i z externích zdrojů jako baterie.
 
@@ -236,9 +236,9 @@ Programmable Input/Output blok je unikátní funkcí MCU RP2040, která poskytuj
 == Měření veličin testovaného obvodu <kap-mereni>
 === Měření napětí a logických úrovní
 Pro měření napětí, jak již zmiňuje #ref(<adc>, supplement: [kapitola]), je využíván AD převodník. Při měření napětí může docházet k šumu na vstupu kanálu a naměřená hodnota nemusí odpovídat realitě. Pro snížení vlivu šumu je použito tzn. sliding window. Do okna se uloží 32 vzorků měření do dvou bloků tj. 64 vzorků celkem. Každých 320 ms se provede průběžné měření 32 vzorků (vzorkovací frekvence $100$ Hz). Nejstarší blok 32 vzorků je odstraněn a nahrazen novými daty.
-#v(10pt)
+#v(5pt)
 $ V = (sum_(i=0)^(2^5)(V_"staré i") + sum_(i=0)^(2^5)(V_"nové j")) / 2^6 $
-#v(10pt)
+#v(5pt)
 
 Tento přístup kombinuje stabilitu dlouhodobého průměru s reakcí na aktuální změny.
 Po aktualizaci okna, které probíhá každých 320 ms, se vypočítá aritmetický průměr z celého okna (64 vzorků), který reprezentuje výsledné napětí#footnote[Jedná se o klouzavý průměr.]. Počet vzorků byl zvolen v mocninách dvojky z důvodu, že dělení může probíhat jako bitový posun, jelikož dělení na MCU je pomalé a paměťově náročné. Měření napětí se vzorkovací frekvencí 100 Hz zajistí, že dojde k potlačení 50 Hz, které se může na vstupu vyskytnout. @fr50 ukazuje, že při 50 Hz rušení odebírá převodník vzorky každých 10 ms (2× za periodu rušivého signálu). Díky odebrání dvou vzorků v protifázích (s odstupem půl periody) a následné integraci sinusového průběhu rušení se jeho vliv v průměru vynuluje, což umožní přesné změření skutečného napětí.
@@ -247,7 +247,6 @@ Po aktualizaci okna, které probíhá každých 320 ms, se vypočítá aritmetic
     image("pic/fr50.png")
 )<fr50>
 
-#v(10pt)
 #figure(
     caption: [Diagram způsobu sbírání vzorků z ADC],
     placement: none,
@@ -264,11 +263,9 @@ Po aktualizaci okna, které probíhá každých 320 ms, se vypočítá aritmetic
         edge((0,0), "d,rr,u", "<|--"),
     )
 )
-#v(10pt)
 
-Pro zjistění stavu logické úrovně, je nutné vědět nejvyšší možné napětí nízké logické úrovně a nejnižší možné napětí vysoké logické úrovně. Pro CMOS logiku, @cmosil popisuje definici nejvyššího napětí nízké logické úrovně a @cmosih definuje nejnižší napětí logické vysoké úrovně @CMOS. Po změření napětí na kanále pomocí sliding window bude zkontrolováno zda napětí odpovídá logické úrovni nebo je napětí v nedefinované oblasti neboli v oblasti: $V_"ILmax" < V < V_"IHmin"$. Napětí v této oblasti v realném obvodu může vést k nepredikovatelnému chování, proto logická sonda toto napětí detekuje.
+Pro zjistění stavu logické úrovně, je nutné vědět nejvyšší možné napětí nízké logické úrovně a nejnižší možné napětí vysoké logické úrovně. Pro CMOS logiku, @cmosil popisuje definici nejvyššího napětí nízké logické úrovně a @cmosih definuje nejnižší napětí logické vysoké úrovně @CMOS. Po změření napětí na kanále pomocí sliding window bude zkontrolováno zda napětí odpovídá logické úrovni nebo je napětí v nedefinované oblasti neboli v oblasti: $V_"ILmax" < V < V_"IHmin"$#footnote[Pro celou práci je využíván symbol $V$ pro napětí místo evropského $U$. Pro referenční manuály MCU je typické používání této značky. Cílem je omezit zmatku ohledně značení]. Napětí v této oblasti v realném obvodu může vést k nepredikovatelnému chování, proto logická sonda toto napětí detekuje.
 
-#v(10pt)
 $ V_"ILmax" = 0.3 times V_"dd" $<cmosil>
 $ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
 
@@ -276,31 +273,26 @@ $ V_"IHmin" = 0.7 times V_"dd" $<cmosih>
 
 === Měření odporu
 Pro měření neznámého odporu $R_x$ je využit AD převodník (viz #ref(<adc>, supplement: [kapitola])) v kombinaci s napěťovým děličem, jehož schéma je znázorněno na obrázku @divider-img. Rezistory $R_norm$ (normálový rezistor) a $R_x$ (měřený odpor) jsou zapojeny v sérii, čímž tvoří uzavřenou smyčku. Podle Kirchhoffova napěťového zákona platí, že součet úbytků napětí na obou rezistorech je roven napájecímu napětí @DIVIDER_TEXT @Center_2017:
-#v(10pt)
 $ V_"dd" = V_R_norm + V_R_x $ <ubytek-napet>
-#v(10pt)
-Pomocí pravidla pro napěťový dělič lze vztah mezi napětími a odpory vyjádřit jako:
-#v(10pt)
-$ V_R_x = V_"dd" times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
-#v(10pt)
-Za předpokladu, že $R_norm$ a napájecí napětí $V_"dd"$ jsou známé, a hodnota $V_R_x$ je změřena ADC, lze neznámý odpor $R_x$ vypočítat z upravené #ref(<divider-1-rov>, supplement:[rovnice]) @DIVIDER_TEXT:
-#v(10pt)
-$ R_x = R_"norm" times (V_R_x)/(V_"dd" - V_R_x) $<divider-2-rov>
-#v(10pt)
-V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: Uživatel sestaví napěťový dělič skládající se z normálového rezistoru $R_norm$ (typicky 10 $k Omega$) a měřeného rezistoru $R_x$. Normálový rezistor je připojen mezi referenční napětí $V_"dd"$ a vstup ADC (kanál 1), zatímco $R_x$ je zapojen mezi tento vstup a zem (viz schéma @divider-img). Sonda následně změří napětí $V_"dd"$ na kanálu 1 ADC a pomocí #ref(<divider-2-rov>, supplement: [rovnice]), vypočítá hodnotu neznámého odporu @DIVIDER_TEXT.
 
+Pomocí pravidla pro napěťový dělič lze vztah mezi napětími a odpory vyjádřit jako:
+$ V_R_x = V_"dd" times (R_x)/(R_"norm" + R_x) $<divider-1-rov>
+Za předpokladu, že $R_norm$ a napájecí napětí $V_"dd"$ jsou známé, a hodnota $V_R_x$ je změřena ADC, lze neznámý odpor $R_x$ vypočítat z upravené #ref(<divider-1-rov>, supplement:[rovnice]) @DIVIDER_TEXT:
+$ R_x = R_"norm" times (V_R_x)/(V_"dd" - V_R_x) $<divider-2-rov>
+V praxi probíhá měření neznámého odporu $R_x$ následujícím způsobem: Uživatel sestaví napěťový dělič skládající se z normálového rezistoru $R_norm$ (typicky 10 $k Omega$) a měřeného rezistoru $R_x$. Normálový rezistor je připojen mezi referenční napětí $V_"dd"$ a vstup ADC (kanál 1), zatímco $R_x$ je zapojen mezi tento vstup a zem (viz schéma @divider-img). Sonda následně změří napětí $V_(R_x)$ na kanálu 1 ADC a pomocí #ref(<divider-2-rov>, supplement: [rovnice]), vypočítá hodnotu neznámého odporu @DIVIDER_TEXT.
 #figure(
-    placement: none,
     caption: [Schéma děliče napětí],
-    image("pic/divider.png", width: 30%)
+    placement: none,
+    image("pic/divider.png", width: 35%)
 )<divider-img>
+
 === Měření frekvence
 ==== Metoda hradlování
 Pro měření frekvencí v řádu kHz a MHz je využívána metoda hradlování. Tato metoda využívá čítač, který registruje počet náběžných nebo sestupných hran měřené frekvence $N$, za určitý čas~$T_"gate"$. Čas, po který jsou počítány hrany, se nazývá hradlovací čas (angl. gate time). Frekvence $f_"gate"$ touto metodou je vypočítán pomocí #ref(<gate-freq>, supplement: [rovnice]). Délka hradlovacího času může mít vliv na výsledek a proto není vhodné volit jeden čas pro všechny druhy frekvencí. Pokud bude zvolen čas příliš dlouhý, může to zpomalovat měření a také může nastat problém na straně omezenosti hardwaru, kdy při měření vysoké frekvence může dojít k přetečení čítače. V případě příliš krátkého času dojde k nepřesnosti měření a případě nízkých frekvencích nemusí dojít k zachycení správného počtu hran. Proto v případě sondy bude čas volitelný uživatelem.
 
 $ f_"gate" = N/T_"gate" $<gate-freq>
 
-Pro měření metodou hradlování je využit časovač v režimu čítání pulzů, a další časovač pro měření času hradlování, kde tyto dva časovače jsou mezi sebou synchronizovány aby nedocházelo k velké odchylce mezi časem zahájení resp. ukončení činosti čítače a časovače hradlovacího času, případě odchylky může dojít k počítání hran, které nejsou v okně hradlovacího času. Časovač pro měření hradlovacího času je závislý na oscilátoru MCU, kde odchylka frekvence oscilátoru periferie může ovlivnit realný čas měření a ve finále také výslednou frekvenci. Prakticky tato metoda neumožňuje změřit střídu PWM signálu, protože jsou počítány pouze pulzy. 
+Pro měření metodou hradlování je využit časovač v režimu čítání pulzů, a další časovač pro měření času hradlování, kde tyto dva časovače jsou mezi sebou synchronizovány aby nedocházelo k velké odchylce mezi časem zahájení resp. ukončení činnosti čítače a časovače hradlovacího času, případě odchylky může dojít k počítání hran, které nejsou v okně hradlovacího času. Časovač pro měření hradlovacího času je závislý na oscilátoru MCU, kde odchylka frekvence oscilátoru periferie může ovlivnit realný čas měření a ve finále také výslednou frekvenci. Prakticky tato metoda neumožňuje změřit střídu PWM signálu, protože jsou počítány pouze pulzy. 
 
 #figure(
     placement: none,
@@ -308,7 +300,7 @@ Pro měření metodou hradlování je využit časovač v režimu čítání pul
     image("pic/signal-freq-diag.png")
 )
 ==== Reciproční měření frekvence
-Reciproční měření frekvence vhodná pro měření nízkých frekvencí $f_"rec"$ (typicky $<$ $1$ KHz). Na rozdíl od hradlování nepočítá hrany za pevný čas, ale měří periodu signálu $T$, ze které frekvenci dopočítá #ref(<rec-freq>, supplement:[vztahem]). Perioda je detekována pomocí náběžné/sestupné hrany, kdy se zahájí měření a měření je ukončeno při další náběžné/sestupné hraně. Během této doby se počítají pulsy interního oscilátoru MCU. 
+Reciproční měření frekvence vhodná pro měření nízkých frekvencí $f_"rec"$ (typicky $<$ $1$ kHz). Na rozdíl od hradlování nepočítá hrany za pevný čas, ale měří periodu signálu $T$, ze které frekvenci dopočítá #ref(<rec-freq>, supplement:[vztahem]). Perioda je detekována pomocí náběžné/sestupné hrany, kdy se zahájí měření a měření je ukončeno při další náběžné/sestupné hraně. Během této doby se počítají pulsy interního oscilátoru MCU. 
 $ f_"rec" = 1/T $<rec-freq>
 
 Výhoda této metody je možnost výpočtu střídy PWM signálu. V případě, že místo měření celé periody, může být změřen čas od náběžné hrany k sestupné hraně a poté od sestupné k náběžné hraně. Tímto je možno získat šířku pulzu ve vysoké logické úrovni a šířku pulzu v nízké logické úrovni. Pomocí #ref(<strida-freq>, supplement:[rovnice]) je možné dopočítat střídu PWM.
@@ -353,7 +345,6 @@ V logické sondě je UART využíván, ke komunikaci s PC a také logická sonda
 *Inter-Integrated Circuit* je seriová komunikační sběrnice, který byl vytvořen Philips Semiconductor jako nízkorychlostní sběrnice pro propojení zařízení jako např. mikrokonkrolery a procesory se senzory, periferiemi apod. Od roku 2006 implementace protokolu nevyžaduje licenci a proto se začal široce používat např. v IOT. Výhoda sběrnice je, že pro komunikaci potřebuje pouze dva vodiče, na které je možné připojit až 128 zařízení najednou, jelikož využívá systém adres @I2C_TI.
 
 SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový vodič. Protokol rozlišuje zařízení typu master a slave. Master řídí hodinový signál a protože je I2C obousměrný half duplex protokol, tak master zahajuje a zastavuje komunikaci aby nedocházelo ke konfliktům. Oba vodiče mají otevřený kolektor, z důvodu, že je na lince připojeno více zařízení a vodiče jsou pull up rezistorem přivedeny na společný zdroj napětí, což znamená, v klidovém režimu, jsou na vodičích vysoké logické úrovně @I2C_TI.
-#v(10pt)
 #grid(
     columns: 2,
     gutter: 10pt,
@@ -366,9 +357,8 @@ SCL vodič, slouží jako hodinový signál a SDA vodič slouží jako datový v
         caption: [Logická jednička a logická nula v~I2C @I2C_TI],
     )<i2c-zeros-ones>]
 )
-#v(10pt)
 
-Pro zahájení komunikace, master is zarezervuje sběrnici posláním `I2C START`. Nejprve master přivede vodič SDA do nízké logické úrovně a následně tam přivede i SCL. Tato sekvence indikuje, že se master zahajuje vysílání a všechny zařízení poslouchají. Pro ukončení je nejprve uvolněn SCL a až poté SDA. Tím je signalizováno, že komunikace je ukončena a jiný master může komunikovat.
+Pro zahájení komunikace, master si zarezervuje sběrnici posláním `I2C START`. Nejprve master přivede vodič SDA do nízké logické úrovně a následně tam přivede i SCL. Tato sekvence indikuje, že se master zahajuje vysílání a všechny zařízení poslouchají. Pro ukončení je nejprve uvolněn SCL a až poté SDA. Tím je signalizováno, že komunikace je ukončena a jiný master může komunikovat.
 
 @i2c-zeros-ones ukazuje způsob odesílání jednotlivých bitů. Pro odeslání logické jedničky SDA uvolní vodič, aby byla přivedena přes pull up rezistor vysoká logická úroveň. Pro logickou nulu, vysíláč stáhne vodič do nízké úrovně. Přijimač zaznamená bit v momentě, kdy SCL zapulsuje.
 
@@ -381,12 +371,9 @@ Po identifikaci se zahájí odesílání datových rámců, které se skládají
 )
 
 === Rozhraní SPI
-*Serial peripherial interface* je jeden z nejvíce využívaných rozhraní používaný mezi mikrokontrolery a periferiemi jako např. AD převodníky, SRAM, EEPROM apod. Rozhraní nemá definované jaké napětí se používají a ani velikosti rámců. Typicky se používá 8 bitů. Oproti UART a I2C vyniká rychlostí komunikace, která je v řádu MHz.
+*Serial peripheral interface* je jeden z nejvíce využívaných rozhraní používaný mezi mikrokontrolery a periferiemi jako např. AD převodníky, SRAM, EEPROM apod. Rozhraní nemá definované jaké napětí se používají a ani velikosti rámců. Typicky se používá 8 bitů. Oproti UART a I2C vyniká rychlostí komunikace, která je v řádu MHz.
 
 SPI má vždy jedno master zařízení a i několik podřízených slave zařízení. SPI je synchronní full duplex rozhraní, které má celkem 4 vodiče#footnote[4 vodiče má v případě jednoho slave zařízení. S každým dalším slave zařízením musí být připojen další `SS`.]. `SCLK`, což je hodinový signál, který určuje synchronizaci dat, `MOSI`, neboli vodič, kde probíhá komunikace od masteru ke slave, `MISO`, kde probíhá komunikace od slave k masteru a poté `SS`#footnote[Někdy také `CS` jako chip select.], neboli slave select. Ten určuje, se kterým slave zařízením probíhá komunikace, každé zařízení má vlastní `SS` pin @ANALOG-SPI.
-@pic-spi-diagram-single ukazuje způsob zapojení vodičů v případě jednoho slave zařízení. Pro zahájení komunikace nastaví logicky nízkou úroveň na `SS`#footnote[Jelikož se spíná vodič do log. 1, tak má značka `SS` nad sebou negaci.]. Master zahájí generování hodinového signálu, podle kterého se synchronizuje komunikace. Jelikož je komunikace full duplex, komunikace začne probíhat mezi master a slave oběma směry tzn. na vodičích `MISO` a `MOSI`. Po dokončení komunikace master ukončí vysílání hodinového signálu a nastaví `SS` na vysokou logickou úroveň. @pic-spi-diagram-multi znázorňuje připojení více slave zařízení. V tomto případě master využívá více `SS` a podle přivedení nízké logické úrovně určuje směr komunikace @ANALOG-SPI.
-
-#v(10pt)
 #grid(
     columns: 2,
     [
@@ -401,7 +388,10 @@ SPI má vždy jedno master zařízení a i několik podřízených slave zaříz
         )<pic-spi-diagram-multi>
     ]
 )
-#v(10pt)
+#pagebreak(weak: true)
+@pic-spi-diagram-single ukazuje způsob zapojení vodičů v případě jednoho slave zařízení. Pro zahájení komunikace nastaví logicky nízkou úroveň na `SS`#footnote[Jelikož se spíná vodič do log. 1, tak má značka `SS` nad sebou negaci.]. Master zahájí generování hodinového signálu, podle kterého se synchronizuje komunikace. Jelikož je komunikace full duplex, komunikace začne probíhat mezi master a slave oběma směry tzn. na vodičích `MISO` a `MOSI`. Po dokončení komunikace master ukončí vysílání hodinového signálu a nastaví `SS` na vysokou logickou úroveň. @pic-spi-diagram-multi znázorňuje připojení více slave zařízení. V tomto případě master využívá více `SS` a podle přivedení nízké logické úrovně určuje směr komunikace @ANALOG-SPI.
+
+
 
 
 Zjištění logické 0 a 1 vychází z přečtení logické úrovně v momentě vzestupné nebo sestupné hraně hodinového signálu. Vztah mezi hodinovým signálem a daty tzn. `CPOL` bitem a `CPHA` bitem. `CPOL` bit určuje, jakou logickou úroveň má klidový stav hodinového signálu. Při log. 0 je klidová úroveň nízká a hodinový signál započne náběhovou hranou, při log. 1 naopak. `CPHA` určuje, jaká hrana má určovat logickou úroveń signálu, při log. 0 je čtena hodnota při první hraně signálu, při log. 1 je čtena hodnota při druhé hraně hodinového signálu#footnote[Pokud bude `CPOL` bit = 0 a `CPHA` = 0, tak signál bude čten při náběžné hraně, při `CPOL` = 0 a `CPHA` = 1 bude čtena při sestupné hraně.].
@@ -424,7 +414,6 @@ Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje
     #figure(
     caption: [Diagram posílání dat pro zapojené WS2812D v sérii @NEOPIXEL-REF],
     image("pic/neopixel_signal.png", width: 90%))
-#v(5pt)
 #figure(
   placement: none,
   caption: [Pořadí bitů pro nastavení barvy v WS2812 @NEOPIXEL-REF],
@@ -440,10 +429,8 @@ Data do LED se zasílají ve formě 24 bitů, kdy každých 8 bitů reprezentuje
     )
   ]
 )<neopixel-bits>
-#v(5pt)
 
 Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpoznávat logickou jedničku a nulu jiným způsobem. Na pin DIn je přivedena vysoká úroveň na~určitou dobu, poté je na určitou dobu přivedena nízká úroveň. Kombinace těchto časů dává řídícímu obvodu v LED možnost rozpoznat, jaký bit byl poslán diodě. Pro ovládání `n`~LED, na DIn první LED je zasláno $n × 24$ bitů. Dioda zpracuje prvních 24 bitů, a na Dout odešle $(n-1)×24$ bitů. Tento proces se opakuje pro každou LED v sérii a tím je dosaženo rozsvícení všech diod na požadovanou barvu. Aby řídící obvod rozpoznal, které data má poslat dále a která jsou už nová iterace barev pro LED, je nutné dodržet tzn.~RESET time, kdy po uplynutí tohoto času, řídící obvod, už neposílá data dále, ale zpracuje je @neopixel_bit_time ukazuje časování pro WS2812D. Po testování odesílání dat do RGB LED bylo zjištěno, pro LED jsou stěžejní časy vysokých úrovní, nicméně časy nízkých úrovní jsou více benevolentní a bylo například zjištěno, že nízká úroveň u log. 1 je možné zkrátit i na čas $330$ ns.
-#v(10pt)
 #figure(
     placement: none,
     caption: [Časování logických úrovní pro zaslání bitů WS2812D @NEOPIXEL-REF],
@@ -464,13 +451,11 @@ Neopixel nepracuje na sběrnici s časovým signálem, proto je nutné rozpozná
  Návrhy obsahují, co nejméně komponent, aby student byl schopný zařízení jednoduše sestavit. Tzn. například pull up nebo pull down rezistory jsou řešeny interně na pinu. Logická sonda musí být ideálně co nejvíce kompatibilní mezi oběma pouzdry, tak aby byla zaručena přenositelnost a pravidla pro sestavení byla co nejvíce podobná.
 == Sdílené vlastnosti mezi návrhy pouzder<komp>
 Sonda je napájena skrze UART/USB převodník. Jelikož USB pracuje s napětím $5$ V ale STM32G030 vyžaduje napájecí napětí  $1.7 ~ 3.6$~V @STM32G0-REF je nutné napětí snížit. Proto byl použit linearní stabilizátor *HT7533*, který stabilizuje napětí na $3.3$~$plus.minus$~$0.1$~V. Ke vstupu je připojen kondenzátor `C1` k potlačení šumu o velikosti $10$ $mu$F. K výstupu je připojen keramický kondenzátor#footnote[Keramický s důvodu, že LDO požadují nízké ESR] `C2` k zajištění stability výstupu o velikosti také $10$ $mu$F @HT7533.
-#v(10pt)
 #figure(
     placement: none,
     caption: [Zapojení regulátoru pro napájení STM32G030 @fischer-regulator],
     image("pic/regulator.png", width: 90%)
 )<hw-regulator>
-#v(10pt)
 
 Návrh zohledňuje implementaci lokálního režimu. Pro tuto implementaci je na pin `PA13` zapojeno tlačítko pro interakci s uživatelem vůči zemi s interním pull up rezistorem na pinu. Připojení vůči zemi minimalizuje riziko zkratu chybným zapojení uživatelem.
 
@@ -478,55 +463,93 @@ Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu př�
 
 Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního režimu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
 
+Firmware pro SOP8 a TSSOP20 musí udělat nějaké změny na základě pouzdra, jedná se třeba o to, že FW musí znepřístupnit pokročilé funkce. První možnost je udělat FW takový, že pomocí makra jsou vypnuty pokročilé funkce a pomocí příznaku při kompilaci se určí pro jaké pouzdro je FW určen. Nicméně nevýhoda je taková, že musí být dva různé binární soubory pro každé pouzdro. Další možnost je definovat pin, který pomocí logické úrovně určí o jaké pouzdro se jedná. Za tento pin byl zvolen `PA4`, který bude nastaven jako input s interním pull down rezistorem. Na pouzdře se tento pin nenachází, takže při načtení bude na vstupu nízká logická úroveň. Na pouzdře TSSOP20 se pin `PA4` nachází a po připojení na $V_"dd"$ bude na pinu vysok8 logická úroveň. Po detekci pinu je pull down rezistor odpojen, aby netekl malý proud z $V_"dd"$ na zem.
 == STM32G030 v pouzdře SOP8
 @sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v pouzdře SOP8. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim, které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu, na pouzdro SOP8, jsou implementován pouze lokální režim a základní funkce terminálového režimu, jako měření napětí, frekvence a vysílání pulzů.
-#v(10pt)
 #figure(
     placement: none,
     caption: [STM32G030Jx SO8N Pinout @STM32G030x6-tsop],
-    image("pic/sop8_pinout.png", width: 80%),
+    image("pic/sop8_pinout.png", width: 100%),
 )<sop8-pinout>
-#v(10pt)
 
-Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. `NRST` požaduje aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít `PA0`. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a `PA0` bylo použitelné. Pomocí nastavení bude zajištěno, že `NRST` bude ignorován po dobu běhu programu, nicméně při bootu je nežádoucí, aby byl přiveden na logicky nízkou úroveň, protože stále MCU v této fázi ignoruje nastavení optional bitu.
-#v(10pt)
+Jelikož je pouzdro malé, tak se na jednom fyzickém pinu nachází více periferií. @sop8-pinout ukazuje, že na pinu 4, kde se nachází `PA0`, má připojený i `NRST`. `NRST` požaduje, aby pin byl neustále ve vysoké logické úrovni, což pro potřebu logické sondy je nepraktické protože takto není možné využít `PA0`. Funkce nresetu lze vypnout skrze tzv. *optional bits*. Kde na pozici `NRST_MODE` je potřeba nastavit `2`, aby NRST byl ignorován a `PA0` bylo použitelné. Pomocí nastavení bude zajištěno, že `NRST` bude ignorován po dobu běhu programu, nicméně při bootu je nežádoucí, aby byl přiveden na logicky nízkou úroveň, protože stále MCU v této fázi ignoruje nastavení optional bitu.
 #figure(
     placement: none,
     caption: [Paměťový prostor Flash option bits @STM32G0-REF],
     image("pic/option_bits.png"),
 )<optional-bits>
-#v(10pt)
 
-Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná @STM32G0-REF. Standartně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
+Další problém představuje pin 8, který obsahuje `PA14-BOOT0`. Při startu MCU bootloader zkontroluje bit *FLASH_ACR*, který určuje jestli je FLASH paměť prázdná. Pokud ano, MCU zapne a začne poslouchat periferie kvůli případnému stáhnutí firmwaru do FLASH paměti. Pokud FLASH prázdná není, program uložený v paměti se spustí. Pokud je na `PA14-BOOT0` ve vysoké logické úrovni, MCU se chová stejně, jako by paměť byla prázdná @STM32G0-REF. Standardně se mikrokontroler nahrává a debuguje pomocí tzn. SWD#footnote[Serial Wire Debug slouží pro jednoduší vývoj na mikrokontrolerech, je možné číst FLASH, RAM, nahrávat program, nastavovat option bity apod.], nicméně při této konfiguraci je to nepraktické, protože, by to znamenalo připojit ST-LINK k mikrokontroleru, nahrát, odpojit a poté až udělat zapojení, které ilustruje @sop8-hw. Pro jednoduchost se firmware nahraje pomocí UART. V tomto případě je ale potřeba řídit, zda má být nahráván firmware nebo spuštěn program. Optional bit `nBOOT_SEL` určuje, zda má být toto řízeno pomocí bitů `nBOOT0` a `nBOOT1` nebo pomocí úrovně `PA14-BOOT0`. V případě sondy, je potřeba druhá možnost, takže je nutné nastavit bit `nBOOT_SEL` na `0`.
 #figure(
     placement: none,
     caption: [Schéma zapojení STM32G030 v pouzdře SOP8],
     image("pic/sop8_hw.png", width: 80%),
 )<sop8-hw>
+#figure(
+    placement: none,
+    caption: [Zapojení STM32G030 v pouzdře SOP8],
+    image("pic/sop8-real.jpg", width: 70%),
+)<sop8-real>
 První z pinů k užívání je pin `PB7`. Tento pin slouží jako kanál AD převodníku pro měření napětí a pro měření odporu, pin je také využit pro hodinový signál pro posuvný registr.
 Na pinu `PA0` se nachází AD převodníkový kanál. Pin také disponuje kanály TIM2 časovače. Pin je použit jako druhý kanál AD převodníku pro měření napětí, pro posuvný registr je pin využíván pro posouvání dat do posuvného registru, měření frekvence, odchytávání Neopixel dat, detekce pulsů a generování frekvence. Pin `PB6` je použit pro odesílání dat do testované RGB LED.
 == STM32G030 v pouzdře TSSOP20<tssop20>
 Pouzdro TSSOP20 nabízí oproti SOP8 výhodu většího počet pinů a tím pádem i jednodušší implementaci pokročilých funkcí. Pouzdro má celkem 20 pinů, což má za následek, že např. může být pin `NRST` (pin 6) oddělen od `PA0` a má tak vlastní pin. Z tohoto důvodu při flashování MCU není potřeba myslet na nastavení optional bits pro `NRST` a může zůstat v základním nastavení. Nicméně pin `PA14-BOOT0` musí být nastaven stejným způsobem jako u SOP8, tzn. optional bit `nBOOT_SEL` je nutné nastavit na `0` aby bylo možné při startu MCU určit, zda má být nabootován program ve FLASH paměti, nebo má poslouchat periferie pro nahrání programu. 
 
-Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný návrhu SOP8.  Piny `PA11` a `PA12` jsou přemapovány na `PA9` a `PA10`. Na pin `PA10` je připojen rezistor o velikosti 10 $K Omega$ vůči zemi pro detekci komunikace s PC. Ze stejného důvodu byl zachován pin `PB6` jako výstup pro WS2812D a `PA13` pro tlačítko pro lokální režim. @tssop20-hw ukazuje schéma zapojení s pouzdrem TSSOP20. Rozmístění pokročilých funkcí vychází z charakteristik jednotlivých pinů. Pin 1 (`PB7`) je využit stejně jako v pouzdře SOP8 jako první kanál ADC. Na pinu 1 (`PB8`) a 2 (`PB9`) se nachází I2C periferie a proto jsou využity pro sledování komunikace I2C sběrnice. Pin 7 (`PA0`) je k měření frekvence a napětí. Piny 9 (`PA2`) a 10 (`PA3`) mají USART periferii a proto jsou vhodní kandidáti na sledování UART komunikace. Piny 12 (`PA5`), 13 (`PA6`), 14 (`PA7`) a 15 (`PB0`) mají SPI rozhraní a proto jsou použity pro sledování SPI komunikace. $V_"dd"$ je připojeno na výstup linearního stabilizátoru z #ref(<hw-regulator>, supplement: [obrázku]), který má na výstopu $3.3$ $V$.
+Pro zjednodušení sestavení sondy, je HW TSSOP20 návrh co nejvíce podobný návrhu SOP8.  Piny `PA11` a `PA12` jsou přemapovány na `PA9` a `PA10`. Na pin `PA10` je připojen rezistor o velikosti 10 $K Omega$ vůči zemi pro detekci komunikace s PC. Ze stejného důvodu byl zachován pin `PB6` jako výstup pro WS2812D a `PA13` pro tlačítko pro lokální režim. @tssop20-hw ukazuje schéma zapojení s pouzdrem TSSOP20. Rozmístění pokročilých funkcí vychází z charakteristik jednotlivých pinů. Pin 1 (`PB7`) je využit stejně jako v pouzdře SOP8 jako první kanál ADC. Na pinu 1 (`PB8`) a 2 (`PB9`) se nachází I2C periferie a proto jsou využity pro sledování komunikace I2C sběrnice. Pin 7 (`PA0`) je k měření frekvence a napětí. Piny 9 (`PA2`) a 10 (`PA3`) mají USART periferii a proto jsou vhodní kandidáti na sledování UART komunikace. Piny 12 (`PA5`), 13 (`PA6`), 14 (`PA7`) a 15 (`PB0`) mají SPI rozhraní a proto jsou použity pro sledování SPI komunikace. $V_"dd"$ je připojeno na výstup linearního stabilizátoru z #ref(<hw-regulator>, supplement: [obrázku]), který má na výstopu $3.3$ $V$. Pro potřeby studenta je možné toto zapojení realizovat i na pouzdře LQFP32.
+
 
 #figure(
     caption: [STM32G030Jx TSSOP20 Pinout @STM32G030x6-tsop],
     image("pic/tssop20_pinout.png", width: 100%)
 )<tssop20-pinout>
-
 #figure(
     caption: [Schéma zapojení STM32G030 v pouzdře TSSOP20],
-    image("pic/tssop20_hw.png", width: 80%)
+    image("pic/tssop20_hw.png", width: 90%)
 )<tssop20-hw>
+#figure(
+    caption: [Zapojení STM32G030 v pouzdře TSSOP20],
+    image("pic/tssop20-real.jpg", width: 75%)
+)<tssop20-real>
 
-= #set text(size: 23pt); Návrh terminálového režimu STM32
+
+#text[
+#show heading.where(level: 1): it => {
+    pagebreak(weak: false)
+
+    show: block
+
+    let use-supplement = it.outlined and it.numbering != none
+    grid(
+    columns:2,
+    gutter: 5pt,
+    rect(height:55pt, width: 5pt, fill: blue),
+    [
+
+            #set par(justify: false, spacing: 1em, first-line-indent:0em)
+            #text(size: 13pt,)[
+                #it.supplement #counter(heading).display(it.numbering)
+              ]
+            #linebreak()
+            #v(-10pt)
+        
+                #text(size: 23pt, weight: "bold", fill: blue,)[
+          #it.body
+        ]
+
+        #if (use-supplement) {
+          v(22pt)
+        } else {
+          v(5.5pt)
+        }
+    ]
+    )
+  }
+= Návrh terminálového režimu STM32
+]
 == Princip oblužní smyčky
 Terminálový režim využívá rozhraní UART, pro sériovou komunikaci s PC. Způsob vstoupení do terminálového režimu rozebírá #ref(<kap-log-rezim>, supplement: [kapitola]). Základ terminálového režimu běží v nekonečné smyčce, která je na konci oddělena čekáním #footnote[Toto čekání se mění na základě zvolené funkce.]. Smyčka slouží jako obsluha akcí, které jsou vyvolány, jak uživatelem prostřednictví TUI, tak periferiemi, které momentálně běží. Obsluha při každé iteraci provede jednotlivé úkony, pokud příznaky v globální struktuře (@code-global_vars_t) jsou nastaveny. Příznaky jsou běžně nastavovány skrze přerušení, například vyvolané uživatelem skrze odeslání symbolu seriovou komunikací. Obsluha v každé iteraci zkontroluje, zda příznak `need_frontend_update` vyžaduje vykreslit grafiku TUI (@kap-tui), zda příznak `need_perif_update` vyžaduje změnit periferii (@kap-perif), poté vykreslí data, které periferie získala a nakonec čeká na další smyčku. Sonda vykresluje data na základě `device_state` promněné, která určuje, jakou funkci uživatel momentálně používá.
-#v(10pt)
 #figure(
 caption:[Diagram smyčky terminálového módu],
-    placement: none,
     diagram(
         cell-size: (8mm, 10mm),
 	    edge-stroke: 1pt,
@@ -593,14 +616,12 @@ table(
 )<ansi-text-codes>
 ==== Manipulace s kurzorem
 Sekvence také lze použít pro pohyb kurzoru, což je užitečné pro vizuál aplikace. Pro pohyb kurzoru na konkrétní pozici zajišťuje písmeno `H` a pro pohyb o relativní počet symbolů slouží písmena `A` jako nahoru, `B` jako dolu, `C` jako doprava a `D` jako doleva na pozici akce @GITHUB-ANSI.
-#v(5pt)
 ```bash
 \033[<row>;<col>H // Pohyb na konkrétní pozici
 \033[<posun><směr> // Posune kurzor o danou pozici
 \033[10;15H // Posune kurzor na pozici 10. řádku a 15 sloupce
 \033[10B // Posune kurzor o 10 řádků dolů
 ```
-#v(5pt)
 ==== Mazání obsahu
 ANSI escape kódy umožňují kromě formátování textu také dynamické mazání obsahu obrazovky nebo řádků, což je klíčové pro aktualizaci TUI. Tyto sekvence se využívají např. pro překreslování statických prvků nebo odstranění přebytečného textu @GITHUB-ANSI.
 .
@@ -718,7 +739,7 @@ Po připojení sondy je uživatel přivítán stránkou hlavního menu (#ref(<tu
 )]
 )
 == Princip nastavení periferií<kap-perif>
-Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. Další důvod je například využití časovače TIM2, který je jako jediný 32 bitový a je nutný k více funkcím. Jeden z příkladů je využití časovače TIM2 na `PA0` ke měření frekvence a zároveň využití TIM2 na generování pulzů. Další příklad je kolize periferie USART2 a kanálu `PB7`, kde je potřeba jiné nastavení pinů. Jeden z velkých problémů můžou činit DMA kanály, kterých je na STM32G030 pouze pět, což vyžaduje častou reinicializaci kvůli změně funkce @STM32G0-REF.
+Jelikož pouzdra SOP8 a TSSOP20 mají malý počet výstupů, není možné mít aktivované všechny periferie najednou. Další důvod je například využití časovače TIM2, který je jako jediný 32bitový a je nutný k více funkcím. Jeden z příkladů je využití časovače TIM2 na `PA0` ke měření frekvence a zároveň využití TIM2 na generování pulzů. Další příklad je kolize periferie USART2 a kanálu `PB7`, kde je potřeba jiné nastavení pinů. Jeden z velkých problémů můžou činit DMA kanály, kterých je na STM32G030 pouze pět, což vyžaduje častou reinicializaci kvůli změně funkce @STM32G0-REF.
 
 Sonda obsahuje velké množství nastavení periferií a je velice snadné ztratit přehled, která periferie je inicializovaná, a která není. Pro vyhnutí se tomuto problému během vývoje bylo zvoleno řešení, kdy při každém přepnutí funkce uživatelem jsou všechny periferie uvedeny do základního stavu a poté podle funkce zvolené uživatelem jsou nastaveny pouze konkrétní periferie nutné pro danou funkci. Tento způsob minimalizuje výskyt nedefinovaného chování, které během vývoje mohou nastat. Inicializace a deinicialiace periferií se řeší během obslužní smyčky, která při nastaveném příznaku `need_perif_update`, nastaví všechny periferie do původního stavu a následně dle zvolené funkce uživatelem je nastavena periferie. Nastavení příznaku je provedeno v případě, že sonda potřebuje po uběhnutém čase změnit nastavení, nebo pokud uživatel pomocí vstupu z UARTu vyvolá žádost o přepnutí funkce.
 
@@ -731,7 +752,6 @@ K časování měření je využito časovače TIM3, který po uplynutí času v
 Při přetečení časovače je vyvoláno přerušení, které zavolá callback z #ref(<code-adc-callback>, supplement: [ukázky kódu]). Funkce zastaví časovač, a sekvenčně začne měřit poměrnou hodnotu mezi napětím na kanálu a $V_"dd"$. Po dokončení konverze je tato hodnota uložena do dynamicky alokovaného pole `voltage_measures` o velikosti $64 times "počet aktivních kanálů"$ #footnote[ADC při nastavení více kanálu sekvenčně prochází všechny kanály dokola.]. Toto pole se chová cyklicky, tzn. při překročení počtu prvků se začne plnit od začátku. Po změření všech kanálů je resetován a nastartován časovač.
 
 
-#v(10pt)
 #figure(
     placement: none,
     caption:[Naměření vzorku z ADC (ukázka bez ošetření)],
@@ -756,7 +776,6 @@ void adc_measure_callback(adc_vars_t* adc_perif) {
 }
 ```
 )<code-adc-callback>
-#v(10pt)
 
 Každých $320$ ms obslužní smyčka vezme naměřené vzorky z `voltage_measures` a udělá aritmetický průměr každého kanálu. Po provedení průměru je z poměrné hodnoty vypočítáno referenční napětí a napětí každého kanálu. K výpočtům napětí je, na základě vztahů z #ref(<adc>, supplement: [kapitoly]), využito makro z HAL knihovny (@code-calc-voltage). Toto napětí je poté zobrazeno dynamicky na stránce. U každého kanálu je také vyhodnocené zda naměřená hodnota napětí odpovídá log. "1", log, "0" nebo se napětí nachází v nedefinované oblasti#footnote[Podrobnosti je možné najít v manuálu použití.].
 #figure(
@@ -788,7 +807,7 @@ Stránka měření frekvence (@tui-freq) zobrazuje `Frequency`, což je měřen�
 === Měření frekvence hradlováním
 Při měření frekvence metodou hradlováním, jsou využity dva čítače. První časovač, TIM3, je zvolen, pro měření času hradlování. Tento čítač je nastavený předděličkou na $1$ kHz (incrementace každou milisekundu) a poté podle nastavené periody bude nastaven hradlovací čas. Za hradlovací čas lze volit hodnoty 50, 100, 200, 500 a 1000 milisekund. Jelikož TIM3 má promněnlivou periodu, tak je nastaven příznak `AutoReloadPreload`, který při změně periody za běhu časovače, je perioda aplikována až po přetečení časovače. Pokud by časovač měl hodnotu např. 500, a perioda by byla nastavena na 200, časovač by nemohl přetéct a nastal by problém. TIM3 je také nastaven jako One Pulse, což znamená, že při přetečení bude vypnut. Nastavení periferie je ukázáno v #ref(<code-tim3>, supplement: [úryvku kódu]).
 
-Na počítání hran je využit 32 bitový TIM2, který z důvodu své velikosti může napočítat velké množství pulsů i s poměrně dlouhým hradlovacím časem. Aby TIM2 počítal hrany, lze nastavit pro časovač tzv. ETR, neboli externí trigger. Tento trigger inkrementuje časovač pokaždé, když na ETR pinu (`PA0`) bude hrana (v tomto nastavení náběžná). Časovač v podstatě ignoruje interní hodiny, které inkrementují každý cyklus časovač, ale řídí se podle externích hodin na pinu `PA0`, které jsou v případě sondy měřená frekvence @STM32G0-REF. @signal-freq-measure ukazuje způsob spolupráce TIM2 a TIM3.
+Na počítání hran je využit 32bitový TIM2, který z důvodu své velikosti může napočítat velké množství pulsů i s poměrně dlouhým hradlovacím časem. Aby TIM2 počítal hrany, lze nastavit pro časovač tzv. ETR, neboli externí trigger. Tento trigger inkrementuje časovač pokaždé, když na ETR pinu (`PA0`) bude hrana (v tomto nastavení náběžná). Časovač v podstatě ignoruje interní hodiny, které inkrementují každý cyklus časovač, ale řídí se podle externích hodin na pinu `PA0`, které jsou v případě sondy měřená frekvence @STM32G0-REF. @signal-freq-measure ukazuje způsob spolupráce TIM2 a TIM3.
 
 Při vysokých frekvencích může nastat problém, kdy bude záležet i na rozdílu mezi zapnutím TIM2 a TIM3. Tyto dva časovače za normálních okolností musí být zahájeny sekvenčně a to vede k tomu, že buď bude nepatrně delší hradlovací čas a bude napočítáno více pulsů než by mělo. Design časovačů nicméně poskytuje řešení, kdy časovač může vyvolávat triggery a jiný časovač může na tyto triggery reagovat. V případě sondy byl TIM3 nastaven jako master timer, který při spuštění vyvolá trigger. TIM3 byl nastaven jako slave timer. Slave timer čeká, až dostane trigger a v momentě, kdy trigger dostane, začne počítat. Toto nastavení je ukázáno v #ref(<code-tim3>, supplement: [úryvku kódu]) a #ref(<code-tim2-freq>, supplement:[]).
 #figure(
@@ -796,9 +815,7 @@ Při vysokých frekvencích může nastat problém, kdy bude záležet i na rozd
     image("pic/freq_etr.png")
 )<signal-freq-measure>
 Po změření pulsů se provede výpočet frekvence. Zde nastavá problém, protože získání frekvence je nutné dělit počet pulzů, hradlovým časem. Nicméně pro MCU je operace dělení poměrně náročná. Jelikož všechny hradlovací časy (kromě 1000 ms), jsou pod 1 sekundu, dojde k dělení desetiným číslem. Toto desetiné číslo je ale možné převést na zlomek a po úpravě vznikne vztah, ve kterém eliminujeme dělení. @n-t demostruje příklad na $500$ ms.
-#v(10pt)
 $ f_"gate" = N / T_"gate" = N / 0.5 = N / (1/2) = N / 1 times 2/1  = 2N $ <n-t>
-#v(10pt)
 
 
 Měření touto metodou bylo otestováno měření nižších desítek MHz a naměřená odchylka od původní hodnoty byla $~0.16$ $%$. Což pravděpodobně bude způsobeno tím, že sonda nevyužívá externího krystalu ale interního oscilačního obvodu @STM32G0-REF, tak může být lehká odchylka od reference. Při vyšších frekvencích zde můžou hrát roli i režie implementovaná pro časovače.
@@ -830,19 +847,16 @@ if (period > 0) {
 }
 ```
 )
-#v(10pt)
 
 
-=== Odchytávání pulzů
+=== Detekce pulzů
 
-#v(10pt)
 #figure(
     placement: none,
-    caption: [TUI odchytávání pulzů],
+    caption: [TUI detekce pulzů],
     image("pic/tui_pulse.png", width: 80%)
 )<tui-pulse>
-#v(10pt)
-Odchytávání pulzů je podfunkce na stránce měření frekvence. Při detekci náběžné nebo sestupné hrany (dle nastavení uživatele) je nastaven příznak, který je následně vykreslen na terminál. Uživatel tento příznak poté může smazat. K detekci pulzů je využito nastavení periferií jako při recipročním měření frekvence. Časovač, který je na vstupu nastaven jako input capture ukládá do registru hodnotu a je vyvoláno přerušení. Během přerušení je zavolána funkce, která zkontroluje, zda je to odpovídající hrana a pokud ano, je nastaven příznak. K odchytávání pulzů by mohlo být využito EXTI callbacku, nicméně to by znamenalo jiné nastavení periferií a zkomplikování sondy z hlediska vývoje.
+Detekce pulzů je podfunkce na stránce měření frekvence. Při detekci náběžné nebo sestupné hrany (dle nastavení uživatele) je nastaven příznak, který je následně vykreslen na terminál. Uživatel tento příznak poté může smazat. K detekci pulzů je využito nastavení periferií jako při recipročním měření frekvence. Časovač, který je na vstupu nastaven jako input capture ukládá do registru hodnotu a je vyvoláno přerušení. Během přerušení je zavolána funkce, která zkontroluje, zda je to odpovídající hrana a pokud ano, je nastaven příznak. K odchytávání pulzů by mohlo být využito EXTI callbacku, nicméně to by znamenalo jiné nastavení periferií a zkomplikování sondy z hlediska vývoje.
 
 == Implementace generování pulzů
 Generování pulzů je realizováno za pomocí časovače TIM2, který má kanál 1 nastaven na PWM o střídě $50$ %. Předdělička časovače je nastavena na $64-1$, což znamená, že časovač běží na frekvenci $1$ MHz (inkrementace každou $1$ $mu$s). Poté pomocí periody čítače na uživatelem nastavována šířka pulzu, kdy zvolená šírka je vynásobena dvěma, protože při nastavení tomto nastavení dojde k přerušení pulzu v polovině periody. Aby časovač vyslal pouze jeden pulz, tak je inicializován tzv. One pulse, což způsobí zastavení časovače po jednom přetečení. Využití One pulse a časovače pro generaci je zajištěna velice přesná šířka jednoho pulzu.
@@ -855,26 +869,22 @@ Funkce umí generovat jeden pulz, více pulzů a generovat neustále. Generace `
 )<gprah-pulse>
 
 == Implementace nastavování úrovní
-#v(10pt)
 #figure(
     placement: none,
     caption: [TUI nastavování úrovní],
     image("pic/tui_levels.png", width: 80%)
 )<tui-levels>
-#v(10pt)
 
 Nastavování logických úrovní funguje celkem na 4 kanálech, které je možné skrze uživatelské rozhraní vypnou nebo zapnout dle potřeby. Každý pin je inicializován skrze STM32 HAL strukturu `GPIO_InitTypeDef`, kde je nastaven `GPIO_MODE_OUTPUT_PP`. Tento mód nastaví push pull na pin a lze ho tak ovládat skrze stisk tlačítka. @tui-levels ukazuje vizualizaci stránky pro funkci nastavování úrovní.
 
 == Implementace diagnostiky posuvného registru
-#v(10pt)
 #figure(
     placement: none,
     caption: [Signály při měření frekvence hradlováním],
     image("pic/tui_register.png", width: 85%)
 )<tui-register>
-#v(10pt)
 
-Funkce diagnostiky posuvného registru nabízí možnost nastavení jednotlivých bitů a následné odesílání dat do 8 bitového posuvného registru. Pro naplnění dat do posuvného registru je `PA7` připojen na jako hodinový signál registru a `PA0` jako datový pin do posuvného registru. Sonda umí posílat všech 8 bitů najednou a nebo je možné posílat bity postupně manuálně. Doba odesílání jednoho bitu je 200 ms. Tento čas nabízí možnost vizuální kontroly diagnostikovaného obvodu během odesílání. @code-shift ukazuje způsob odeslání jednoho bitu do posuvného registru.
+Funkce diagnostiky posuvného registru nabízí možnost nastavení jednotlivých bitů a následné odesílání dat do 8bitového posuvného registru. Pro naplnění dat do posuvného registru je `PA7` připojen na jako hodinový signál registru a `PA0` jako datový pin do posuvného registru. Sonda umí posílat všech 8 bitů najednou a nebo je možné posílat bity postupně manuálně. Doba odesílání jednoho bitu je 200 ms. Tento čas nabízí možnost vizuální kontroly diagnostikovaného obvodu během odesílání. @code-shift ukazuje způsob odeslání jednoho bitu do posuvného registru.
 Funkce nabízí i kompatibilitu s posuvnými registry `SNx4HC595`, která na základě signálu `RCLK` převede data z registru na paralelní výstupy @snx4hc595.
 
 == Implementace diagnostiky Neopixel komunikace <kap-neopixel>
@@ -903,7 +913,6 @@ int8_t neopixel_find_start(neopixel_measure_t* data) {
             width = curr_rise_edge - prev_fall_edge;
         }
         if (width > NEOPIXEL_RESET) {
-            // nalezen start
             start_index = i;
             break;
         }
@@ -912,9 +921,7 @@ int8_t neopixel_find_start(neopixel_measure_t* data) {
 }
     ```
 )<code-neopixel-find>
-#v(10pt)
-Po nalezení začátku datové sekvence, je zkontrolováno následujících 24 pulzů zda jejich šířka odpovídá velikosti bitové jedničky nebo nuly. Pokud je nalezen pulz, který neodpovídá velikosti, jsou data zahozena a dále se nepokračuje. Nakonec jsou jednotlivé bity posunuty tak, aby odpovídali 8 bitovému číslu pro každou složku.
-#v(10pt)
+Po nalezení začátku datové sekvence, je zkontrolováno následujících 24 pulzů zda jejich šířka odpovídá velikosti bitové jedničky nebo nuly. Pokud je nalezen pulz, který neodpovídá velikosti, jsou data zahozena a dále se nepokračuje. Nakonec jsou jednotlivé bity posunuty tak, aby odpovídali 8bitovému číslu pro každou složku.
 #figure(
     supplement: [Úryvek kódu],
     caption: [Způsob definování hodnoty bitu z hran neopixel],
@@ -928,15 +935,12 @@ if (pulse_width >= NEOPIXEL_MIN_LOW &&
 } else if (pulse_width >= NEOPIXEL_MIN_HIGH &&
     pulse_width <= NEOPIXEL_MAX_HIGH) {
     bits_detected[i] = 1;
-} else {
-    return;
-}
+} 
 ```
 )
-#v(10pt)
 
 === Testovací signály pro komunikaci LED Neopixel
-Pro přenos testovacích dat do Neopixelů je využit časovač TIM1, konfigurovaný v režimu PWM. Časovač pracuje s předem připraveným polem hodnot (šířek pulzů), které jsou přes DMA načítány do časovače a převáděny na PWM signál s odpovídajícími střídami. Po zadání číselných hodnot pro červenou, zelenou a modrou jako 8 bitová čísla (0-255), jsou jednotlivá čísla složek rozděleno na bity (celkem 24 bitů). Každý bit je poté převeden na střídu PWM signálu. 
+Pro přenos testovacích dat do Neopixelů je využit časovač TIM1, konfigurovaný v režimu PWM. Časovač pracuje s předem připraveným polem hodnot (šířek pulzů), které jsou přes DMA načítány do časovače a převáděny na PWM signál s odpovídajícími střídami. Po zadání číselných hodnot pro červenou, zelenou a modrou jako 8bitová čísla (0-255), jsou jednotlivá čísla složek rozděleno na bity (celkem 24 bitů). Každý bit je poté převeden na střídu PWM signálu. 
 
 Pro správně široký pulz je potřeba nastavit periodu časovače a poté určit, jaká střída bude reprezentovat log. 1 a který log. 0. Po analýze byla zvolena perioda $80-1$ což při frekvenci časovače 64 MHz, odpovídá přetečení každých $1.25$ $mu$s. To odpovídá délce doby odeslání jednoho bitu @NEOPIXEL-REF. Při testování RGB LED odesílání bylo zjištěno, že odeslání log. 1 odpovídá $2/3$ periody a log. 0 odpovídá $1/3$ periody.
 
@@ -948,81 +952,55 @@ Po převedení čísla složky odpovídající střídy, jsou střídy přesunut
     image("pic/neopixel_signal1.png")
 )
 == Implementace diagnostiky UART komunikace
-Diagnostika UART je implementována za pomocí vestavěné periferie USART2 a je inicializována podobným způsobem jako USART1 pro komunikaci s PC. Rozdíl je ten, že pro tuto diagnostický nástroj je nutné nastavovat baudrate, délku slova, paritu a počet stop bitů flexibilně aby uživatel mohl přizpůsobit nastavení svým potřebám. Pro nastavování uživatel využívá klávesy a po každém nastavení je periferie znovu inicializována s novým nastavením. Periferie využívá piny `PA2` a `PA3`.
+Diagnostika komunikace UART je užitečným nástrojem pro studenty i běžné uživatele, kteří se potýkají s problémy v komunikaci mezi zařízeními. Umožňuje ověřit, zda potíže nejsou způsobeny chybně odesílanými symboly, nesprávným nastavením kanálu UART, nebo častou chybou prohození vodičů RX a TX. K tomuto problému dochází, když jsou přijímací (RX) nebo vysílací (TX) kanály dvou zařízení nesprávně propojeny mezi sebou.
 
-Pro nastavení periferie je nutné vstoupit do editačního módu, kdy je periferie zastavena. Uživatelovi vyskočí hláška "Cannot start until edit mode" (viz. @tui-uart-read) aby věděl, že se v tomto módu nachází. Na základě toho se změní i dolní lišta, na které se nachází nápověda ovládání. V tomto módu uživatel nastaví nastaví klávesama např. baudrate, kde stisknutím čísla je číslo přidáno na poslední pozici a stiskem `X` je poslední pozice smazána. Po opuštění tohoto módu je periferie nastavena a může být využita.
+Tato funkce je k dispozici na MCU v pouzdře TSSOP20. Diagnostika UART kanálu je implementována za pomocí vestavěné periferie USART2 a je inicializována podobným způsobem jako USART1 pro komunikaci s PC. Rozdíl je ten, že pro tuto diagnostický nástroj je nutné nastavovat baudrate, délku slova, paritu a počet stop bitů flexibilně aby uživatel mohl přizpůsobit nastavení svým potřebám. Pro nastavování uživatel využívá klávesy a po každém nastavení je periferie znovu inicializována s novým nastavením. Periferie využívá piny `PA2` a `PA3`.
+
+Pro nastavení periferie je nutné vstoupit do editačního módu, kdy je periferie zastavena. Uživateli vyskočí hláška "_Cannot start until edit mode_" (viz. @tui-uart-read), aby věděl, že se v tomto módu nachází. Na základě toho se změní i dolní lišta, na které se nachází nápověda ovládání. V tomto módu uživatel nastaví klávesami např. baudrate, kde stisknutím numerické klávesy je číslice přidána na poslední pozici, stiskem `X` je poslední pozice smazána. Po opuštění tohoto módu je periferie nastavena a může být využita.
 
 === Monitoring UART komunikace
-Monitorování UART je realizováno za pomocí DMA, kdy po obdržení slova (7, 8 nebo 9 bitového) toto slovo uloženo do pole. DMA je v tomto případě nastaveno jako cirkulární. Toto pole je poté periodicky zobrazováno na terminál. Na terminál je zobrazen jak symbol, tak jeho číselná reprezentace aby uživatel, i při symbolu jako mezera, mohl vidět zda byl daný symbol zachycen. @tui-uart-read ukazuje způsob vypisování symbolů. Uživatel může symboly vyčistit klávesou `G`.
+Monitorování UART je realizováno za pomocí DMA, kdy po obdržení slova (7, 8 nebo 9 bitového) toto slovo je uloženo do pole paměti. DMA je v tomto případě nastaveno jako cirkulární buffer. Získané symboly jsou poté periodicky zobrazovány na terminálovou applikaci. V terminálové aplikaci je zobrazen jak symbol, tak jeho hexadecimalní číselná reprezentace, aby uživatel i při symbolu jako mezera, mohl vidět že byl daný symbol zachycen. @tui-uart-read ukazuje způsob vypisování symbolů. Uživatel může pole detekovaných symbolů smazat klávesou `G`.
 
-Výpis funguje způsobem scrollování, tzn. pokud se zaplní stránka, tak nejstarší symbol je smazán, jsou na stránce posunuty a nový se vykreslí jako nejnovější. Tohoto bylo dosaženo tak, že při vykreslování se zjistí DMA counter, který určuje na jakou poslední pozici periferie zapsala data. Jelikož je pole cirkulární, tak je poté iterované celé pole do doby, než se vrátí pointer na začátek. @code-uart-scroll ukazuje implementaci této vlastnosti.
-#v(10pt)
+Výpis funguje způsobem scrollování, tzn. pokud se zaplní stránka, tak nejstarší symbol je smazán, všechny symboly jsou na stránce posunuty doleva a nový se vykreslí jako nejnovější nejvíce v pravo. Tohoto bylo dosaženo tak, že při vykreslování se zjistí hodnota DMA counteru, která určuje na jakou poslední pozici periferie zapsala data. Jelikož je buffer cirkulární, tak je poté iterované celé pole do doby, než se vrátí pointer na začátek. @code-uart-scroll ukazuje implementaci této vlastnosti.
 #figure(
     placement: none,
     caption: [TUI UART monitorování],
     image("pic/tui_uart_read.png", width: 80%)
 )<tui-uart-read>
-#v(10pt)
 === Posílání testovacích symbolů na UART kanál
-Diagnostika UARTu také odesílá testovací symboly, které si uživatel navolí. Celkově lze odeslat až 10 symbolů najednou. Tyto symboly jsou poté odeslány pomocí tlačítka `S` skze blokovací funkci `HAL_UART_Transmit`. Odesílaná data lze modifikovat v tzv. "Data edit mode", který dává možnost zapisovat konkrétní symboly klávesnicí jako data a poté přepnout kurzor na další. Takto je možné upravit všechny symboly sekvenčně. Kurzor je reprezentován jako text, který je podbarven zeleně. Uživatel si může zvolit, jaké množství symbolů chce celkově odeslat.
-#v(10pt)
+Diagnostika UARTu také odesílá testovací symboly, které si uživatel navolí. Celkově lze odeslat až 10 symbolů najednou. Tyto symboly jsou poté odeslány pomocí tlačítka `S` skze blokovací funkci `HAL_UART_Transmit`. Odesílaná data lze modifikovat v tzv. "Data edit mode", který dává možnost zapisovat konkrétní symboly klávesnicí jako data a poté přepnout kurzor na další. Takto je možné upravit všechny symboly sekvenčně. Kurzor je reprezentován jako text, který je podbarven zeleně. Uživatel si může zvolit, jaké množství symbolů chce celkově odeslat. @tui-uart-write ukazuje, odesílání sekvence tří bajtů (symboly `ssd`) s nastavením `8O1` s baudrate `115 200`.
 #figure(
     placement: none,
     caption: [TUI UART odesílání testovacích symbolů],
     image("pic/tui_uart_write.png", width: 80%)
 )<tui-uart-write>
-#v(10pt)
-
-== Implementace diagnostiky I2C
-Diagnostika I2C je funkce, která pomáhá k analýze komunikace mezi MCU a senzory. Funkce umí, detekovat slave zařízení na sběrnici, chovat se jako slave, chovat se jako master, umí bez zásahu monitorovat komunikaci mezi masterem a slavem a umí testování OLED displeje na bázi SSD1306. Tyto funkce ulehčují diagnostiku při práci se senzory a zkracují čas hledání problému, pokud například senzor posílá nekorektní data apod. Pro implementaci bylo využito zabudované I2C periferie, která je runtime přenastavována podle potřeby.
-#v(10pt)
-#figure(
-    supplement: [Úryvek kódu],
-    caption: [I2C inicializace periferie],
-    placement: none,
-```C
-void i2c_init_perif(i2c_perif_t* i2c_perif) {
-    i2c_perif->hi2c->Instance = I2C1;
-    i2c_perif->hi2c->Init.Timing = 0x10B17DB5; // normal mode
-    i2c_perif->hi2c->Init.OwnAddress1 = 
-        (global_var.device_state == DEV_STATE_ADV_I2C_SLAVE)
-            ? i2c_perif->slave_address << 1
-            : i2c_perif->slave_address;
-    i2c_perif->hi2c->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    i2c_perif->hi2c->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    i2c_perif->hi2c->Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-    if (HAL_I2C_Init(i2c_perif->hi2c) != HAL_OK) {
-        Error_Handler();
-    }
-}
-```
-)
-=== Skener adres
-#v(10pt)
+#pagebreak()
+== Implementace diagnostiky I2C komunikace
+Diagnostika I2C je funkce, která pomáhá k analýze komunikace mezi MCU a senzory. Funkce umí detekovat slave zařízení na sběrnici, chovat se jako slave, chovat se jako master, bez zásahu monitorovat komunikaci mezi masterem a slavem a testovat OLED displeje na bázi SSD1306. Tyto funkce výrazně ulehčují diagnostiku při práci se senzory a zkracují čas hledání problému; například pomáhají uživateli rychle odhalit, zda potíže pramení ze špatného zapojení senzoru, chybějících nebo nesprávně dimenzovaných pull-up rezistorů, či z chyb v obslužném kódu, jako je použití nesprávné I2C adresy zařízení. Pro implementaci bylo využito zabudované I2C periferie, která je runtime přenastavována podle potřeby.
+=== Skener adres na I2C Bus
 #figure(
     placement: none,
     caption: [TUI I2C skenování adres],
     image("pic/tui_i2c_scan.png", width: 80%)
 )<tui-i2c-scan>
-#v(10pt)
-Skenování adres zobrazuje všechny adresy zařízeních, které se na sběrnici nachází. Skenování probíhá tak, že je funkcí `HAL_I2C_IsDeviceReady` zkontrolováno sekvenčně všech 127 adres a adresy, ze kterých je odpověď `ACK` jsou poté vykresleny do terminálu.
-=== Master mód
-#v(10pt)
+Skenování adres I2C sběrnice představuje fundamentální diagnostický krok. Tato funkce umožňuje uživateli ověřit, zda připojená zařízení korektně komunikují a jsou na sběrnici detekovatelná. Častým problémem bývá nesprávné nastavení adresy zařízení v programu, kdy se uživatel domnívá, že adresa je jiná. Skenování odhalí skutečnou adresu slave zařízení, čímž napomáhá k nápravě této chyby. Kromě toho může tato analýza nepřímo indikovat i hardwarové problémy, jako je například absence nezbytných pull-up rezistorů na signálových vodičích `SCL` a `SDA`, které jsou pro správnou funkci I2C komunikace klíčové. Výsledkem skenování je seznam všech adres aktivních zařízení na sběrnici. Samotný proces spočívá v sekvenční kontrole všech 127 možných adres pomocí funkce `HAL_I2C_IsDeviceReady`. Adresy, které na oslovení odpoví potvrzením (ACK), jsou následně zobrazeny v terminálu.
+=== Master mód I2C komunikace
 #figure(
     placement: none,
-    caption: [TUI UART odesílání testovacích symbolů],
+    caption: [TUI I2C master mód],
     image("pic/tui_i2c_write_d.png", width: 80%)
 )<tui-i2c-master>
-#v(10pt)
 
-Master mód je vhodný pro odesílání testovacích sekvencí senzoru. Uživatel může nastavit adresu slave zařízení na které chce odeslat data a také může nastavit read/write bit. V případě write uživatel může poslat až 10 bajtů dat najednou. Periferie nejprve odešle první rámec, který obsahuje adresu a read/write bit na který zařízení odpoví `ACK`. Dále sonda začne odesílat data dokud všechny data úspěšně neodešle, nebo do momentu, kdy nastane error. Tento error může být například z důvodu, že zařízení neodpoví (`NACK`) nebo z jiných důvodů.
+Master mód je vhodný pro odesílání testovacích sekvencí senzoru. Tento mód má za cíl simulovat a nahradit uživatelský program, který komunikuje se slave zařízením. Uživatel může nastavit adresu slave zařízení, na které chce odeslat data a také může nastavit zda chce číst či zapisovat (nastavení read/write bitu). V případě write uživatel může poslat až 10 bajtů dat najednou. Periferie nejprve odešle první rámec, který obsahuje adresu a read/write bit na který zařízení odpoví `ACK`. Dále sonda začne odesílat data dokud všechny data úspěšně neodešle, nebo do momentu, kdy nastane error. Tento error může být například z důvodu, že zařízení neodpoví (`NACK`).
 
-Pokud uživatel nastaví read, může odeslat na slave zařízení 1 bajt (většinou adresu paměti, ze které chce master číst) a přijme data, která mu slave pošle. Tyto data jsou reprezentovány na displeji terminálu jako hexadecimalní hodnoty. @tui-i2c-master ukazuje stránku I2C diagnostiky s read master módem. Červený čtvereček ohraničuje bajt, který je poslán senzoru a zelený rámeček ohraničuje bajt, který byl přijat od slave zařízení. Pod hodnotami je zobrazené `I2C OK`, což značí, že komunikace proběhla v pořádku. Počet bajtů, které budou přečteny lze uživatelsky volit.
+Pokud uživatel nastaví read může odeslat na slave zařízení 1 bajt (většinou adresu paměti, ze které chce master číst) a přijme data, která mu slave pošle. Tyto data jsou reprezentovány na displeji terminálu jako hexadecimalní hodnoty. @tui-i2c-master ukazuje stránku I2C diagnostiky s read master módem. Červený čtvereček ohraničuje bajt, který je poslán senzoru a zelený rámeček ohraničuje bajt, který byl přijat od slave zařízení. Pod hodnotami je zobrazené `I2C OK`, což značí, že komunikace proběhla v pořádku. Počet bajtů, které budou přečteny lze uživatelsky volit.
 
-@code-i2c-master-read reprezentuje funkci, která se stará I2C komunikaci, při čtení. Nejprve je zavolána funkce `HAL_I2C_Master_Transmit`, která odešle data slave zařízení ve write módu. Zde je možné si povšimnout, že adresa musí být bitově posunuta. Důvod posunutí je přítomnost read/write bitu, které je na posledním místě bajtu. Pokud pokud dojde k problému během odesílání, odesílání ukončeno a je vypsána chyba na terminál. 
+@code-i2c-master-read reprezentuje funkci, která se stará o I2C komunikaci, při čtení. Nejprve je zavolána funkce `HAL_I2C_Master_Transmit`, která odešle data slave zařízení ve write módu. Zde je možné si povšimnout, že adresa musí být bitově posunuta. Důvod posunutí je přítomnost read/write bitu, které je na posledním místě bajtu. Pokud pokud dojde k problému během odesílání, odesílání ukončeno a je vypsána chyba na terminálovou aplikaci. 
 
-#v(10pt)
+Po úspěšném odeslání je opět odeslán rámec s adresou, ale tentokrát je nastaven bit jako read. Po odeslání rámce sonda čeká na odpověď o daném počtu bajtů, definovanou dobu (timeout). Odpověd slave zařízení je poté zobrazena na terminálové aplikaci. V případě chyby je chyba vyparsována a na terminál je vypsána pravděpodobná příčina. Pokud uživatel zvolí zapisování do slave zařízení, proces proběhne podobným způsobem, ale neproběhne čtení ze slave zařízení.
+
 #figure(
+    placement: none,
     supplement: [Úryvek kódu],
     caption: [I2C master read funkce],
 ```C
@@ -1051,36 +1029,36 @@ void i2c_read_data_master(i2c_perif_t* perif) {
 }
 ```
 )<code-i2c-master-read>
-
-Po úspěšném odeslání je opět odeslán rámec s adresou, ale tentokrát je nastaven bit jako read. Po odeslání rámce sonda čeká na odpověď o dané velikost bajtů, definovanou dobu. Tyto data jsou poté zobrazena na terminálu. V případě chyby je chyba vyparsována a na terminál je vypsána pravděpodobná příčina. Stejný princip odesílání dat je i v případě zapisování dat, ale pouze nedochází z vyžádání čtení.
 === Testování SSD1306
 #figure(
     placement: none,
     caption: [TUI I2C testování displeje SSD1306],
     image("pic/tui_i2c_ssd1306.png", width: 80%)
 )<tui-i2c-ssd1306>
+Při realizaci projektů, zejména studentských, jsou displeje častou komponentou. Pokud displej nevykazuje očekávanou funkci, student často řeší dilema, zda se jedná o softwarovou, či hardwarovou závadu. K diagnostice tohoto problému může přispět test specificky navržený pro populární OLED displeje typu SSD1306. Tato testovací funkce na uživatelem definovanou I2C adresu displeje odešle inicializační sekvenci, která nastaví potřebné parametry. Následně aktivuje všechny pixely, což uživateli umožní vizuálně ověřit, zda displej není fyzicky poškozený a je plně funkční, a tím pomůže izolovat zdroj případných problémů.
 
-Testování OLED displeje SSD1306 je funkce která, na nastavenou adresu uživatelem#footnote[Tato adresa je nastavena stejným způsobem, jako v Master a Slave módu], odešle sekvenci, která inicializuje potřebné parametry displeje a rozsvítí všechny pixely na displeji, aby uživatel mohl ověři, zda displej není poškozený. 
 
+=== Monitoring I2C komunikace
+Monitoring I2C je podstatná část, která umí číst pasivně (bez zásahu) jednoduché komunikace mezi master a slave zařízením. Tato funkce se hodí, pokud uživatel zjistí neočekávané chování senzoru a potřebuje ověřit, zda se odesílají správná data. Monitoring I2C komunikace není jednoduše realizovatelná na I2C periferii. Pokud periferie je nastavena jako slave zařízení, dojde sice ke čtení komunikace, ale také dojde k odpovídání, což je nežádaný efekt. I2C periferie STM32 nenabízí možnost monitorovat komunikaci. Aby byla komunikace I2C mohla být monitorována, bylo k tomu využito SPI rozhraní.
 
-=== Monitoring
-Monitoring I2C je podstatná část, která umí číst jednoduché komunikace mezi master a slave zařízením. Monitoring I2C komunikace není jednoduše realizovatelná na I2C periferii. Pokud periferie je nastavena jako slave zařízení, dojde sice ke čtení komunikace, ale také dojde k odpovídání, což je nežádaný efekt. I2C periferie STM32 nenabízí možnost monitorovat komunikaci. Aby byla komunikace I2C mohla být monitorována, bylo k tomu využito SPI rozhraní.
+Propojení I2C masteru s SPI slave zařízením prostřednictvím hodinového signálu vyžaduje specifické nastavení parametrů SPI, aby bylo možné sladit odlišné vlastnosti obou rozhraní. V I2C zůstává hodinový signál (SCL) v klidovém stavu na vysoké logické úrovni (HIGH), což vyžaduje nastavení polarity SPI hodinového signálu (CPOL) na hodnotu 1. Tím se zajistí, že SPI slave zařízení bude v nečinnosti očekávat vysokou úroveň hodinového signálu, což odpovídá výchozímu stavu I2C. Dále je nutné řešit počáteční fázi komunikace: I2C zahajuje přenos tzv. start podmínkou, kdy datová linka (SDA) poklesne před poklesem SCL. Tato první hrana SCL nesmí být SPI slave interpretována jako platný hodinový takt. K jejímu ignorování slouží nastavení fáze SPI hodin (CPHA) na hodnotu 1, která způsobí, že data jsou čtena až na druhé hraně hodinového signálu. Tato kombinace (CPOL=1 a CPHA=1) odpovídá SPI módu 3 a umožňuje SPI zařízení správně reagovat na hodinový signál generované I2C masterem. V praxi se tak SPI slave synchronizuje s I2C hodinami až po start podmínce, kdy začne zpracovávat data z následujících taktů, například při zápisu I2C adresy nebo přenosu dat.
 
-Propojení I2C masteru s SPI slave zařízením prostřednictvím hodinového signálu vyžaduje specifické nastavení parametrů SPI, aby bylo možné sladit odlišné vlastnosti obou rozhraní. V I2C zůstává hodinový signál (SCL) v klidovém stavu na vysoké logické úrovni (HIGH), což vyžaduje nastavení polarity SPI hodin (CPOL) na hodnotu 1. Tím se zajistí, že SPI slave zařízení bude v nečinnosti očekávat vysokou úroveň hodinového signálu, což odpovídá výchozímu stavu I2C. Dále je nutné řešit počáteční fázi komunikace: I2C zahajuje přenos tzv. start podmínkou, kdy datová linka (SDA) poklesne před poklesem SCL. Tato první hrana SCL nesmí být SPI slave interpretována jako platný hodinový takt. K jejímu ignorování slouží nastavení fáze SPI hodin (CPHA) na hodnotu 1, která způsobí, že data jsou čtena až na druhé hraně hodinového signálu. Tato kombinace (CPOL=1 a CPHA=1) odpovídá SPI módu 3 a umožňuje SPI zařízení správně reagovat na hodiny generované I2C masterem. V praxi se tak SPI slave synchronizuje s I2C hodinami až po start podmínce, kdy začne zpracovávat data z následujících taktů, například při zápisu I2C adresy nebo přenosu dat.
-
-Po propojení hodinových signálů je nastaveno SPI rozhraní na 9 bitovová slova. Je to z důvodu, že I2C má slova 8 bitová, ale poté je k tomu přidán `ACK`/`NACK` bit, což je devátý. Na základě této metody je možné monitorovat I2C sběrnici za pomocí SPI rozhraní. Data jsou ukládána do pole za pomocí metody DMA. Po získání dat z rozhraní jsou data parsována a zobrazována na terminál podle kontextu dat. Monitor rozpozná, jestli se jedná o zápis nebo nebo čtení dat a podle toho přizpůsobí výpis. @tui-i2c-monitor tuto skutečnost ukazuje na výpisu z terminálové aplikace. @code-i2c-monitor-init ukazuje způsob inicializace SPI rozhraní.
+Po propojení hodinových signálů je nastaveno SPI rozhraní na 9bitová slova. Je to z důvodu, že I2C má slova 8bitová, ale poté je k tomu přidán `ACK`/`NACK` bit, což je devátý bit. Na základě této metody je možné monitorovat I2C sběrnici za pomocí SPI rozhraní. Data jsou ukládána do pole za pomocí metody DMA. Po získání dat z rozhraní jsou data parsována a zobrazována na terminál podle kontextu dat. Monitor rozpozná, jestli se jedná o zápis nebo nebo čtení dat a podle toho přizpůsobí výpis. @tui-i2c-monitor tuto skutečnost ukazuje na výpisu z terminálové aplikace. @code-i2c-monitor-init ukazuje způsob inicializace SPI rozhraní.
 
 #figure(
     caption:[TUI I2C monitoring],
     image("pic/tui_i2c_monitor.png", width: 80%)
 )<tui-i2c-monitor>
-== Implementace diagnostiky SPI
-Diagnostika SPI je, podobně jako u I2C, velice podstatný nástroj pro debugování komunikace mezi komponenty a MCU jako například paměti, senzory atd. STM32 má integrovanou periferii pro komunikaci SPI. SPI diagnostika obsahuje funkce jako čtení komunikace, aktivní odesílání testovacích dat a testování SSD1306 displeje. Uživatelské ovládání je co nejvíce přiblíženo k ovládání I2C diagnostiky aby uživatel se jednodušše naučil používat sondu. Pro SPI je možné nastavit jakou fázi nebo jakou polaritu má `SCK` využívat při zpracování dat.
-=== Master mód
-SPI periferie je konfigurována jako master, což umožňuje uživateli plně řídit komunikaci se slave zařízením. V tomto režimu může uživatel jak zapisovat data do slave zařízení, tak z něj číst odpovědi. Při zápisu sonda podporuje odeslání až 10 bajtů dat zadaných uživatelem v hexadecimalním formátu. Data jsou poté odeslány pomocí blokovací funkce `HAL_SPI_Transmit`. Ta zajistí, že mikrokontrolér čeká na dokončení celého přenosu před dalším krokem. Pro čtení dat sonda nejprve odešle jeden bajt dat a následně pomocí blokovací funkce `HAL_SPI_Receive` zachytí odpověď slave zařízení. @code-spi-transmit ilustruje klíčové části této logiky a také způsob detekování chyb v průběhu odesílání. Blokovací funkce zjednodušují implementaci, ale vyžadují pečlivé časování, aby nedošlo k zablokování systému při delších operacích.
+#pagebreak()
+== Implementace diagnostiky SPI rozhraní
+Diagnostika SPI je, podobně jako u I2C, velice podstatný nástroj pro debugování komunikace mezi komponenty a MCU jako například paměti, senzory atd. STM32 má integrovanou periferii pro komunikaci SPI. SPI diagnostika obsahuje funkce jako čtení komunikace, aktivní odesílání testovacích dat a testování SSD1306 displeje. Uživatelské ovládání je co nejvíce přiblíženo k ovládání I2C diagnostiky aby uživatel se jednodušše naučil používat sondu. Pro SPI je možné nastavit jakou fázi nebo jakou polaritu má `SCK` využívat při zpracování dat, což je klíčové, jelikož různá SPI zařízení vyžadují specifické kombinace těchto parametrů pro správnou funkci.
+=== Master mód SPI rozhraní
+SPI periferie je konfigurována jako master, což umožňuje uživateli plně řídit komunikaci se slave zařízením. V tomto režimu může uživatel jak zapisovat data do slave zařízení, tak z něj číst odpovědi. Při zápisu sonda podporuje odeslání až 10 bajtů dat zadaných uživatelem v hexadecimalním formátu. Data jsou poté odeslány pomocí blokovací funkce `HAL_SPI_Transmit`. Ta zajistí, že mikrokontrolér čeká na dokončení celého přenosu před dalším krokem. Pro čtení dat sonda nejprve odešle jeden bajt dat a následně pomocí blokovací funkce `HAL_SPI_Receive` zachytí odpověď slave zařízení. @code-spi-transmit ilustruje klíčové části této logiky a také způsob detekování chyb v průběhu odesílání. lokovací funkce zjednodušují implementaci, ale vyžadují pečlivé nastavení těchto timeout hodnot, aby nedošlo k nežádoucímu zablokování systému při komunikaci s pomalým či neodpovídajícím slave zařízením, což by mohlo negativně ovlivnit například responzivitu celého diagnostického nástroje.
+#figure(
+    caption:[TUI SPI master mód],
+    image("pic/tui_spi_master.png", width: 90%)
+)<tui-spi-master>
 
-
-#v(10pt)
 #figure(
     supplement: [Úryvek kódu],
     caption: [SPI transmit funkce],
@@ -1124,18 +1102,11 @@ void spi_transmit(spi_perif_t* perif) {
 ```
 )<code-spi-transmit>
 
-#v(10pt)
-#figure(
-    placement: none,
-    caption:[TUI SPI master mód],
-    image("pic/tui_spi_master.png", width: 78%)
-)<tui-spi-master>
-#v(10pt)
 
-=== Monitoring
-Sonda využívá SPI periferii konfigurovanou v slave režimu pro pasivní zachytávání dat z externího master zařízení. Uživatel může (podobně jako v master módu) nastavovat parametry hodinového signálu SCK (polaritu a fázi), aby sladil časování s požadavky systému. Pro zachycení dat, i při vysokých hodinových frekvencích, je implementováno DMA, které průběžně ukládá přijaté bajty přímo do vyhrazeného bufferu v paměti, aniž by zatěžoval jádro procesoru. Obslužná smyčka následně v pravidelných intervalech načte tato data z bufferu, převede je do hexadecimálního formátu a zobrazí na terminálovou aplikaci.  Tento přístup minimalizuje riziko ztráty bajtů i při maximální rychlosti SPI komunikace a zároveň udržuje responzivitu uživatelského rozhraní.
+#pagebreak()
+=== Monitoring komunikace na SPI rozhraní
+Sonda využívá SPI periferii konfigurovanou v slave režimu pro pasivní (bez zásahu) zachytávání dat z externího master zařízení. Uživatel může (podobně jako v master módu) nastavovat parametry hodinového signálu SCK (polaritu a fázi), aby sladil časování s požadavky systému. Pro zachycení dat, i při vysokých hodinových frekvencích, je implementováno DMA, které průběžně ukládá přijaté bajty přímo do vyhrazeného bufferu v paměti, aniž by zatěžoval jádro procesoru. Velikost tohoto DMA bufferu je zvolena jako kompromis mezi kapacitou pro zachycení delších sekvencí a dostupnou RAM pamětí mikrokontroléru. Obslužná smyčka následně v pravidelných intervalech načte tato data z bufferu, převede je do hexadecimálního formátu a zobrazí na terminálovou aplikaci.  Tento přístup minimalizuje riziko ztráty bajtů i při maximální rychlosti SPI komunikace a zároveň udržuje responzivitu uživatelského rozhraní. @tui-spi-slave ukazuje způsob zachytávání bajtů. Při zachycení bajtu se jeho hexadecimalní hodnota vypíše na terminálovou aplikaci s oddělovacím znakem, aby bylo možné bajty rozlišit.
 
-#v(10pt)
 #figure(
     placement: none,
     caption:[TUI SPI monitor mód],
@@ -1147,10 +1118,9 @@ Sonda využívá SPI periferii konfigurovanou v slave režimu pro pasivní zachy
 == Logika nastavení režimů<kap-log-rezim>
 Po připojení napájení MCU provede kontrolu pinu `BOOT0`. Pokud je pin `BOOT0` v nízké logické úrovni, firmware se načte z flash paměti a okamžitě spustí. Při spuštění firmwaru sondy, proběhne inicializace globalních struktur, které jsou nezbytné pro chod celé sondy. Globální struktura poskytuje potřebná data různým periferiím, které například periferie využívají při přerušeních. Po inicializaci struktury, která je deklarována #ref(<code-global_vars_t>, supplement:[v úryvku kódu]), dojde k inicializaci všech potřebných periferií, které dále jsou rozebrány v #ref(<kap-perif>, supplement: [kapitole]).
 
-Po inicializaci periferií, sonda zkontroluje stav pinu `PA10` (remapovaném na `PA12`) na kterém se nachází `Rx` `USART1` periferie. Jak bylo zmíněno v #ref(<uart>, supplement:[kapitole]), pokud jsou dvě zařízení propojené a neprobíhá žádná komunikace, tak se na vodičích od `Tx` do `Rx` nachází logicky vysoká úroveň. Takto snda dokáže určit, zda je sonda připojena UART/USB převodníkem k PC, nebo je sonda pouze napájena např. skrze jiné MCU.
+Po inicializaci periferií, sonda zkontroluje stav pinu `PA10` (remapovaném na `PA12`) na kterém se nachází `Rx` `USART1` periferie. Jak bylo zmíněno v #ref(<uart>, supplement:[kapitole]), pokud jsou dvě zařízení propojena a neprobíhá žádná komunikace, tak se na vodičích od `Tx` do `Rx` nachází logicky vysoká úroveň. Takto snda dokáže určit, zda je sonda připojena UART/USB převodníkem k PC, nebo je sonda pouze napájena např. skrze jiné MCU.
 @sop8-hw a @tssop20-hw má v zapojení, na pinu `PA10`, rezistor o velikosti $10$ $K Omega$, který při nepřipojeném vodiči uzemní `Rx`. @dia-init prezentuje způsob inicializace. Po zvolení režimu, zařízení přejde do různého nastavení, které jsou nutné pro fungování režimu. Opětovné nastavení režimu opět dojde při dalším bootu sondy, protože jednotlivé režimy běží v nekonečném cyklu dokud je zařízení napájeno.
 
-#v(10pt)
 #figure(
     placement: none,
     caption: [Diagram nazpůsobu načítání režimů],
@@ -1174,12 +1144,10 @@ Po inicializaci periferií, sonda zkontroluje stav pinu `PA10` (remapovaném na 
         edge("l,u,r,d", "--|>"),
     )
 )<dia-init>
-#v(10pt)
 #pagebreak(weak:true)
 == Ovládání lokálního režimu
 Jak #ref(<cil>, supplement: [kapitola]) zmiňuje, lokální mód je provozní režim, v němž zařízení nekomunikuje s externím počítačem a veškerá interakce s uživatelem probíhá výhradně prostřednictvím tlačítka a RGB LED diody. Tento režim je vhodný pro prvotní rychlou diagnostiku logického obvodu. Režim se ovládá skrze tlačítko a informace jsou zobrazovány prostřednictvím RGB LED WS2812. Lokální režim běží ve smyčce, kdy se periodicky kontrolují změny a uživatelské vstupy. Způsob zobrazování barev na WS2812 je popsán v #ref(<kap-neopixel>, supplement: [kapitole]).
 
-#v(10pt)
 #figure(
     caption: [Diagram způsobu reakce na vstupy uživatele v lokálním módu],
     placement: none,
@@ -1207,9 +1175,8 @@ Jak #ref(<cil>, supplement: [kapitola]) zmiňuje, lokální mód je provozní re
         edge((1,3), (1.7,3), (1.7,2), (1.7, 1), "ll", "--|>"),
     )
 )
-#v(10pt)
 
-Při zmáčknutí tlačítka dojde k přerušení a je zavolána funkce z #ref(<code-exti>, supplement:[úryvku kódu]), kde je zaznamenán čas zmáčknutí. Po uvolnění tlačítka dojde k přerušení náběžné hrany, a je zavolána funkce z #ref(<code-exti>, supplement: [úryvku kódu]), kde je zaznamenán čas uvolnění a následně funkce `extern_button_check_press`, z #ref(<code-extern_button>, supplement:[úryvku kódu]), porovná časy s referencí a určí, o který stisk se jedná. Funkce nastaví příznak v globální struktuře a v hlavní smyčce se poté provede příslušná akce. Tato metoda dokáže eliminovat nechtěné kmity tlačítka při stisku a uvolnění, kdy MCU zaznamenává velký počet hran v krátký moment (bouncing tlačítka).
+Při zmáčknutí tlačítka dojde k přerušení a je zavolána funkce z #ref(<code-exti>, supplement:[úryvku kódu]), kde je zaznamenán čas zmáčknutí. Po uvolnění tlačítka dojde k přerušení náběžné hrany, a je zavolána funkce z #ref(<code-exti>, supplement: [úryvku kódu]), kde je zaznamenán čas uvolnění a následně funkce `extern_button_check_press`, z #ref(<code-extern_button>, supplement:[úryvku kódu]), porovná časy s referencí a určí, o který stisk se jedná. Funkce nastaví příznak v globální struktuře a v hlavní smyčce se poté provede příslušná akce. Tato metoda dokáže eliminovat nechtěné kmity tlačítka při stisku a uvolnění, kdy MCU zaznamenává velký počet hran v krátkém momentu (bouncing tlačítka).
 
 Zařízení skrze tlačítko rozpozná tři interakce: _krátký stisk_ slouží k přepínání logických úrovních na určitém kanálu, _dvojitý stisk_ umožňuje cyklické přepínání mezi měřícími kanály, zatímco _dlouhý stisk_ (nad 500 ms) zahájí změnu stavu. Při stisku tlačítka je signalizováno změnou barvy LED na 1 sekundu, kde barva určuje k jaké změně došlo. Tyto barvy jsou definovány v uživatelském manuálu přiložený k této práci. 
 
@@ -1251,7 +1218,7 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
 
 
 == Funkce lokálního režimu
-Lokální režim má celkově 4 různé stavy, pro rychlou diagnostiku logického obvodu. Tyto funkce vychází ze standartních schopností komerečních logických sond. Stavy jsou přepínány dlouhým stiskem. 
+Lokální režim má celkově 4 různé stavy, pro rychlou diagnostiku logického obvodu. Tyto funkce vychází ze standardních schopností komerečních logických sond. Stavy jsou přepínány dlouhým stiskem. 
 
 === Funkce logické sondy
 Při zapnutí zařízení se vždy nastaví stav *logické sondy*. Tento stav čte na příslušném kanálu periodicky, jaká logická úroveň je naměřena AD převodníkem. Jsou využity piny `PB7` a `PA0`. Logickou úroveň je možné číst také jako logickou úroveň na GPIO, nicméně to neumožňuje rozlišit stav, kdy logická úroveň je v neurčité oblasti. Pomocí měření napětí na pinu lze zjistit zda napětí odpovídá CMOS logice či nikoliv. Pokud na pinu se nachází vysoká úroveň, LED se rozsvítí zeleně, v případě nízké úrovně se rozsvítí červená a pokud je napětí v neurčité oblasti, LED nesvítí. Tlačítkem poté lze přepínat mezi jednotlivými kanály. Tento stav vychází z terminálové funkce pro měření napětí a následné zjistění logiky. Tento stav je vhodný pro rychlé zjistění úrovně na vodiči při diagnostice obvodu.
@@ -1297,15 +1264,141 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef* htim) {
 )
 
 = Návrh omezené verze na RPI Pico
-Návrh omezené verze na Rasberry Pi Pico #todo[dopsat]
+Návrh omezené verze na Raspberry Pi Pico je určen pro školy, které nejsou zaměřeny výhradně na elektroniku a logické obvody (Např. víceletá gymnázia) Jelikož Raspberry Pi Pico je populární MCU, je hodně využíván i na školách a proto není tato verze postavená na STM32, které nabízí lepší periferie. Pro implementaci omezené verze byl použito C/C++ SDK, které přímo vyvíjí pro Raspberry Pi Pico nadace Raspberry Pi Foundation. Toto SDK nabízí abstrakci hardwaru, která urychluje vývoj na MCU. Jelikož při vývoji verze pro STM32 byl brán zřetel na možnost částečné přenositel: nosti kódu, je možné části pro výpočet veličin a generaci grafického rozhraní přesunout na C/C++ SDK bez úprav. Bohužel Raspberry Pi Pico se liší schopnostmi periferií a kód implementovaný pro přístup k periferiím musí být vyvinut na míru Raspberry Pi Pico.
+#figure(
+    caption: [Raspberry Pi Pico na kontaktním nepájivém poli],
+    image("pic/rpi_real.jpg")
+)<rpi-real>
+
+Jelikož je návrh mířen na gymnázia, omezuje se hardwarový návrh pouze na MCU, které je vsazeno do nepájivého kontaktního pole svou pravou stranou (#ref(<rpi-real>, supplement: [obrázek])) jelikož se na této straně nachází piny podporující ADC. Tato omezená verze nabízí měření napětí, odporu, frekvence, detekci pulzů a generování pulzů.
 == Komunikace s PC
-== Měření napětí a logických úrovní
+Raspberry Pi Pico napájí pomocí micro USB konektoru, který se nachází na desce. Tento konektor však slouží nejen k napájení, ale Raspberry Pi Pico podporuje také komunikaci přes USB rozhraní. To umožňuje například odesílat textové uživatelské rozhraní (TUI) vygenerované přímo na mikrokontroleru na připojený počítač. Aby byla tato funkcionalita správně inicializována a projekt zkompilován s podporou USB komunikace, je nezbytné provést odpovídající nastavení v konfiguračních souborech CMake. Typicky se jedná o povolení standardního I/O přes USB (@code-cmake) a případné přilinkování potřebných knihoven z Pico SDK, jako je tinyusb.
+#figure(
+    caption: [Nastavení CMake pro komunikaci s RPI Pico],
+    placement: none,
+    supplement: [Úryvek kódu],
+    ```Cmake
+    pico_enable_stdio_usb(logic_probe 1)
+    pico_enable_stdio_uart(logic_probe 1)
+    ```
+)<code-cmake>
+
+Nicméně USB rozhraní neumí být obslouženo pomocí přerušení a musí být periodicky spravováno. Jelikož MCU je dvou jádrové, je druhé jádro využité pro tuto správu rozhraní. Jádro periodicky volá funkci `tud_task`, která slouží ke správě USB rozhraní. Tato funkce zajišťuje, aby byly zpracované USB události z hostitelského zařízení. Funkce se také stará o udržení spojení s hostitelským zařízením. @code-usb-service ukazuje smyčku jádra, které spravuje USB. Každý cyklus provede `tud_task` je zavolána funkce `tud_cdc_available`, která vrací počet bajtů, které byly přijaty od hostitelského zařízení a jsou připraveny ke čtení. Pokud nějaké existují, jsou přečteny a přidány do fronty. Během přístupu je uzamknut spin lock, protože hlavní obslužní smyčka (stejná jako v případě STM32) symboly z fronty odebírá a na základě získaných symbolů provádí akce. Spin lock tedy zabraňuje race condition. Zpracování dále pracuje na stejném principu jako u MCU STM32 (viz. @kap-tui).
+
+
+#figure(
+    caption: [Správa USB],
+    placement: none,
+    supplement: [Úryvek kódu],
+    ```C
+void usb_service(void) {
+    usb_perif_t* perif = &global_var.usb_perif;
+    while (true) {
+        tud_task();
+        if (tud_cdc_available()) {
+            char input_c;
+            tud_cdc_read(&input_c, 1);
+            uint32_t save = spin_lock_blocking(perif->usb_lock);
+            queue_try_add(&perif->received_chars, &input_c);
+            spin_unlock(perif->usb_lock, save);
+        }
+        sleep_ms(1);
+    }
+}
+    ```
+)<code-usb-service>
+
+== Měření napětí a logických úrovní 
+Měření napětí probíhá na všech třech GPIO pinech, které mají AD převodník. AD převodník je více omezený a nenabízí takové kvality jako STM32. Vzorky jsou odebírány frekvencí 100 Hz aby bylo zamezeno 50 Hz rušení. Pro měření napětí je vždy vyvoláno přerušení, které zavolá funkci `adc_measure_callback`. Tato funkce vždy přepne na příslušný pin, přečte hodnotu, kterou uloží do pole paměti. Při generování TUI se poté vypočítají průměrné hodnoty z 64 vzorků. Hodnota je stejně jako u STM32 pouze poměrová hodnota mezi napětím na pinu a referenčním napětí. Logické úrovně jsou měřeny na základě získaného napětí podle CMOS logiky zmíněné v #ref(<kap-mereni>, supplement: [kapitole]).
+
+#figure(
+    caption: [Callback pro měření napětí],
+    placement: none,
+    supplement: [Úryvek kódu],
+    ```C
+bool adc_measure_callback(repeating_timer_t* rt) {
+    adc_vars_t* perif = &global_var.adc_perif;
+    for (uint8_t channel = 0; channel < ADC_NUM_CHANNELS; ++channel) {
+        adc_select_input(channel);
+        perif->voltage_measures[channel][perif->measures_index] = adc_read();
+    }
+    perif->measures_index = (perif->measures_index + 1) % ADC_CHANNEL_SAMPLES;
+    return true;
+}
+```
+)<code-adc>
+
+Na základě získaného napětí na prvním kanále AD převodníku je také možné vypočítat odpor za pomocí děliče napětí. Výpočet probíhá stejným způsobem jako ve verzi STM32. Z naměřených vzorků a převedení poměrové hodnoty na napětí je vypočítán odpor rezistoru či soustavy rezistorů.
+
+
 == Měření frekvence a detekce pulzů
+Frekvence je měřena pomocí dvou metod. První metoda je metoda hradlování a druhá je metoda recipročního měření frekvence. Sonda nejprve změří napětí pomocí jedné metody a po dokončení měření přepne na druhou metodu. Tento způsob zajistí měření vyšších frekvencí, ale také měření střídy případného PWM signálu.
+#figure(
+    caption: [Způsob střídání recipročního měření a měření hradlováním],
+    supplement: [Úryvek kódu],
+```C
+if (!is_rec) {
+    sig_det_counters_start(&gate_perif);
+    while (sig_det_check_ready_gate(&gate_perif));
+    sig_det_get_freq_value(sig_det_perif);
+    sig_det_perif->is_rec = true;
+} else {
+    if (global_var.sig_det_perif.is_rec_finished) {
+        sig_det_perif->is_rec_finished = 0;
+        gpio_set_irq_enabled_with_callback(
+            FREQUECY_PIN, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
+            true, &sig_det_recproc_pulse_callback);
+    }
+```
+)
+=== Měření frekvence pomocí metody hradlování
+K měření frekveknce pomocí metody hradlování je využit časovač, který počítá pulzy za hradlovací čas. Pin, který čte je přepnut do PWM funkce a následně se časovač ikrementuje s každou náběžnou hranou. Druhý časovač je nastaven jako hradlovací a počítá čas měření. Aby nedocházelo k prodlevě mezi zastavením prvního a druhého časovače a bylo měření, co nejvíce přesné, je využito DMA. DMA v tomto případě funguje jako trigger od hradlovacího časovače. V momentě, kdy časovač přeteče, je spuštěn DMA přenos, který aktualizuje řídící registr a zastaví časovač, který počítá hrany @rpi_freq. 
+
+Raspberry Pi Pico nenabízí 32bitový časovač jako STM32G030, ale má pouze 16bitové časovače, což znamená, že při větších frekvencích tento časovač může přetéct a přestane měřit relevatní frekvenci. Další problém s 16bitovým časovačem je při měření hradlového času. MCU má frekvenci $125$ MHz. 16bitový časovač má maximální periodu $65$ $536$ a předdělička hodinového signálu ke snížení frekvence časovače je maximálně $256$. Z #ref(<freq-vypocet>, supplement: [výpočtu]) je možné vidět, že maximální hradlovací čas, by mohl být pouze 134 ms @rpi_freq.
+#v(5pt)
+$ (65535 times 256) / (125 times 10^6) = 134 times 10^(-3) $<freq-vypocet>
+#v(5pt)
+
+Časovače ale podporují tzv. "Phase correct", který způsobí to, že časovač při dosažení maximální hodnoty začne počítat dolů do nuly. Tímto způsobem je možné získat 17 bit časovač, který už poskytuje maximální hradlovací čas $268$ ms (pro použití sondy $250$ ms).
+#v(5pt)
+$ (2 times 65535 times 256) / (125 times 10^6) = 268 times 10^(-3) $
+#v(5pt)
+
+=== Reciproční měření frekvence a detekce pulzů
+Pro měření časových charakteristik signálu, jako je perioda a střída, se využívá metoda založená na detekci hran pomocí přerušení. Přerušení je vyvoláno při každé náběžné nebo sestupné hraně na sledovaném vstupním pinu. V obslužné rutině přerušení je zaznamenána aktuální hodnota hardwarového čítače a typ detekované hrany. Pro určení parametrů signálu je implementován jednoduchý stavový automat, který sleduje sekvenci tří po sobě jdoucích hran: první náběžné, následné sestupné a druhé náběžné. Rozdíl časových značek mezi první a druhou náběžnou hranou určuje šířku periody, zatímco rozdíl mezi první náběžnou a sestupnou hranou definuje šířku pulzu ve vysoké logické úrovni. Z těchto přímo změřených časových intervalů lze následně vypočítat frekvenci signálu recipročním způsobem $f = 1/T_"perioda"$ a střídu jako podíl šířky pulzu a periody. Přesnost této metody může být ovlivněna latencí obsluhy přerušení, což je relevantní zejména u signálů s vyšší frekvencí. Výhodou je však přímé získání časových parametrů signálu, což je vhodné pro analýzu nízkofrekvenčních signálů nebo PWM signálů s proměnnou střídou.
+
+Detekce pulzů je také založena na detekci hran pomocí přerušení, nicméně při vyvolaném přerušení nastaven příznak, který se uživateli ukáže na terminálové aplikaci.
 == Generování pulzů
+Jak již bylo zmíněno v představení Raspberry Pi Pico, mikrokontroler disponuje tzv. Programmable Input/Output bloky, které mohou být naprogramovány pro obsluhu GPIO bez zátěže CPU. @code-asm ukazuje způsob vysílání pulzu o velikosti zadané uživatelem. Nejprve je načtena data z TX FIFO fronty, kterou plní CPU, do Output shift registeru. Následně do registru `x` je přesunuta 32bitová hodnota, která určuje šířku pulzu. Tato hodnota určuje délku trvání, po kterou bude výstupní pin v logické úrovni HIGH, vyjádřenou v počtu taktů PIO instrukcí. Je důležité poznamenat, že pokud je tato hodnota 0, výsledkem nebude puls nulové délky, ale naopak velmi dlouhý puls. Následně je pin nastaven do vysoké logické úrovně a smyčkou je odečítána hodnota z registru `x`, dokud nebude nula. Jelikož PIO bloky pracují ve smyčce, je vytvořen loop, ve kterém automat setrvá než je znovu vyslán další pulz. Aby automat mohl pokračovat, musí dojít k restartování automatu. Pro pulz nízké logické úrovně je postup stejný. Pouze místo nastavení pinu do vysoké logické úrovně je pin nastaven do nízké logické úrovně.
+
+#figure(
+    supplement: [Úryvek kódu],
+    caption: [Instrukce PIO bloku pro generování pulzu], 
+```ASM
+    pull
+    out x, 32
+    set pins, 1
+delay:
+    jmp x--, delay
+    set pins, 0
+loop:
+    jmp loop
+```
+)<code-asm>
+
 
 
 
 = Závěr a zhodnocení
+Tato bakalářská práce se věnovala návrhu a realizaci multifunkční diagnostické logické sondy, jejímž cílem bylo zjednodušit studentům proces osvojování principů práce s~logickými obvody a vestavnými systémy. Hlavním cílem bylo vytvořit cenově dostupné a~snadno použitelné zařízení, které by nahradilo komplexní a finančně náročné komerční laboratorní přístroje, a zároveň nabídlo funkce přizpůsobené výukovým potřebám.
+
+V rámci práce byla úspěšně navržena a implementována diagnostický nástroj, který integruje základní funkce logického analyzátoru, generátoru signálu a testeru komunikačních rozhraní běžně využívaných ve výuce jako jsou UART, I2C a SPI. Klíčovým přínosem je realizace sondy ve dvou variantách: verze založená na MCU STM32 a omezená verze pro Raspberry Pi Pico, což umožňuje její využití i na středních školách bez specializace na elektroniku a logické obvody. Obě verze byly navrženy s důrazem na minimalizaci externích komponent, což studentům umožňuje snadné sestavení sondy na nepájivém kontaktním poli.
+
+Sonda nabízí dva režimy ovládání, které uživatel může využívat během diagnostiky. Lokální režim, ovládaný tlačítkem s indikací pomocí RGB LED, je ideální pro rychlou základní diagnostiku bez nutnosti použití PC. Umožňuje například okamžitě ověřit logické úrovně na pinech, detekovat přítomnost pulsů (například zda senzor vysílá signál nebo časovač generuje pulsy pro 7-segmentový displej), či generovat jednoduché hodinové signály pro testování čítačů nebo posuvných registrů. Naopak terminálový režim, s textovým uživatelským rozhraním (TUI) založeným na ANSI sekvencích, poskytuje pokročilé funkce pro hlubší analýzu. Zde se sonda hodí například pro měření napětí, odporu a~frekvence, generovat pulzy, ale především pro diagnostiku komunikačních periferií: u~UART lze snadno odhalit přehozené Tx/Rx vodiče nebo chyby v přenášených datech, u~I2C je možné skenovat adresy připojených zařízení, monitorovat komunikaci se senzory či identifikovat chybějící pull-up rezistory a u SPI lze efektivně ladit komunikaci s paměťmi nebo jinými periferiemi. To vše bez nutnosti instalace speciálních ovladačů, pouze s~využitím standardní terminálové aplikace na jakémkoliv operačním systému.
+
+Při realizaci byly naplněny klíčové požadavky stanovené v úvodu práce. Důraz byl kladen na jednoduchost ovládání i pro uživatele bez předchozích zkušeností s diagnostickými nástroji, což zajišťuje přehledné TUI v terminálovém režimu. Požadavek na rychlou realizovatelnost na nepájivém kontaktním poli byl splněn minimalizací externích součástek, což zároveň snižuje potenciální body selhání. Praktičnost ve výuce je podpořena sadou funkcí pokrývajících běžné problémy, se kterými se studenti setkávají, od základního měření až po analýzu sběrnic.
+
+Lze tedy konstatovat, že cíle bakalářské práce byly úspěšně splněny. Vytvořená multifunkční diagnostická logická sonda představuje flexibilní, cenově dostupný a praktický nástroj, který má potenciál významně přispět ke zkvalitnění a zefektivnění výuky elektroniky a vestavných systémů, a usnadnit studentům první kroky v diagnostice digitálních obvodů.
 
 #start-appendix(lang: "cs")[
 = Citace
