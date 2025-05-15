@@ -58,9 +58,10 @@ void dev_mode_run_with_uart(void) {
         case DEV_STATE_VOLTMETER:
             adc_get_avg_voltages(global_var.adc_vars);
             ansi_render_voltage_measures(global_var.adc_vars);
-            delay = 250;
+            delay = 320;
             break;
         case DEV_STATE_OHMMETER:
+            adc_get_avg_voltages(global_var.adc_vars);
             ansi_render_resistance_measure(global_var.adc_vars);
             break;
         case DEV_STATE_FREQUENCY_READ:
