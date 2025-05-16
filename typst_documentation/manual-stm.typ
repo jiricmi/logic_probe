@@ -268,14 +268,14 @@ This mode produces periodic pulses with button-controlled activation. Output sta
     - _TSSOP20_ package: Pin 7
 
 == Rise edge detection
-This mode detects raising edge on input pin. Time-limited visual confirmation provided upon detection.
+This mode detects rising edge on input pin. Time-limited visual confirmation provided upon detection.
 
 ===== LED Behavior:
 - Mode indicator: #highlight(fill: blue)[BLUE]
 - Detection confirmation: #highlight(fill: green)[GREEN] (1 second)
 
 ===== Operation:
-- Continuous monitoring of PA0 pin for raise edge
+- Continuous monitoring of PA0 pin for rising edge
 - When pulse detected, #highlight(fill: green)[GREEN] LED color is on for 1 second
 
 ===== PIN Assignment:
@@ -291,7 +291,7 @@ This mode detects falling edge on input pin. Time-limited visual confirmation pr
 - Detection confirmation: #highlight(fill: green)[GREEN] (1 second)
 
 ===== Operation:
-- Continuous monitoring of PA0 pin for raise edge
+- Continuous monitoring of PA0 pin for rising edge
 - When pulse detected, #highlight(fill: green)[GREEN] LED color is on for 1 second
 
 ===== PIN Assignment:
@@ -515,7 +515,7 @@ After pressing *[D]* key, signal is generated permanetly with frequency showed o
 #v(10pt)
 #figure(
   placement:none,
-  caption: [Generate signal page],
+  caption: [GPIO SET Levels page],
   image("pic/tui_gen.png", width: 80%)
 )
 #v(10pt)
@@ -571,7 +571,7 @@ When *[D]* is pressed, bit selected by green color is send to the register.  *[F
 #v(10pt)
 #figure(
   placement:none,
-  caption: [Neopixel page],
+  caption: [Shift register page],
   image("pic/tui_register.png", width: 80%)
 )
 #v(10pt)
@@ -624,111 +624,313 @@ Once the color data for the Neopixel(s) is configured as desired, pressing the *
   image("pic/tui_neopixel.png", width: 80%)
 )
 #v(10pt)
-=== UART
-UART peripheral, can be read and write.
-Modes can be changed by pressing *M*.
-MCU #highlight(fill:green)[TX] and MCU #highlight(fill: gray)[RX] is connected to PA2 and PA3. Read mode shows letters which are accepted. Write mode has 10 bytes and parameter `SEND BYTES` set how many bytes are sent. In settings mode, user can change word length, parity, number of stopbits and baudrate. In value mode and settings mode can be edit by numkeys and letter `X`.
-By pressing *S* selected signal will be sent.
-- *[0-9]* - Change value
-- *[X]* - Delete value
-- *[M]* - Change mode
-- *[K]* - Edit values
-- *[L]* - Move cursor
-- *[S]* - Send data
-- *[T]* - Edit settings
-- *[O]* - Count bytes to send
-- *[Y]* - Word length
-- *[U]* - Switch between parity
-- *[I]* - Number of stopbit
+=== Page UART
+
+==== Send testing data 
+
+===== Pinout
+- #highlight(fill:green)[PA2/9 (MCU TX)]: UART Transmit pin.
+
+===== Control
+- Settings mode
+    - *[T]* - Enter or exit the UART Settings mode.
+    - *[0-9]* - Edit baudrate (add digit to the end).
+    - *[X]* - Delete the last entered digit of baudrate.
+    - *[O]* - Edit the 'SEND BYTES' parameter (number of bytes to send in Write mode).
+    - *[U]* - Select Parity.
+    - *[Y]* - Select Word Length.
+    - *[I]* - Select/edit Number of Stop Bits (in Settings mode).
+- Edit send value
+    - *[,]* - Enter/exit edit values mode.
+    - *[.]* - Move cursor to next byte
+    - *[Any]* - set letter to selected byte
+- *[M]* - Cycle between Read and Write.
+- *[S]* - Send the configured data bytes (in Write mode).
+- *[G]* - Reset function (incase of freeze)
+
+===== Description
+This feature provides a Universal Asynchronous Receiver/Transmitter (UART) interface for serial communication, allowing the device to send data. It also includes a mode for configuring the UART parameters. 
+
+This mode allows the user to compose and transmit a data message.
+- A buffer of up to 10 bytes is available for composing the message.
+- Use *[T]* to entry Settings mode, where user can set baudrate, number of sent bytes, wordlen, parity etc.
+- Use *[,]* to enter edit value mode and by pressing any letter will be written to the byte. Use *[.]* to move to the next byte (GREEN TEXT is cursor)
+- Pressing *[S]* sends the specified number of data bytes via the `PA2 (MCU TX)` pin.
+
+*Settings Mode:*
+Accessed by pressing the *[T]* key, this mode allows configuration of the UART communication parameters to match the connected device:
+- *Baud Rate*: Can be entered by *[0-9]* and deleted by *[X]*.
+- *Word Length*: Configured using the *[Y]* key to cycle through options (e.g., 7, 8, or 9 bits).
+- *Parity*: Configured using the *[U]* key to select the parity type (e.g., None, Even, Odd).
+- *Number of Stop Bits*: Configured using the *[I]* key to select the number of stop bits (e.g., 1 or 2).
+
 #v(10pt)
 #figure(
-    placement:none,
-    caption: [UART page],
-  image("pic/tui_uart.png", width: 80%)
+  placement:none,
+  caption: [UART write page],
+  image("pic/tui_uart_write.png", width: 80%)
 )
 #v(10pt)
 
+==== Monitor UART
+
+===== Pinout
+- #highlight(fill:gray)[PA3/10 (MCU RX)]: UART Receive pin.
+
+===== Control
+- Settings mode
+    - *[T]* - Enter or exit the UART Settings mode.
+    - *[0-9]* - Edit baudrate (add digit to the end).
+    - *[X]* - Delete the last entered digit of baudrate.
+    - *[O]* - Edit the 'SEND BYTES' parameter (number of bytes to send in Write mode).
+    - *[U]* - Select Parity.
+    - *[Y]* - Select Word Length.
+    - *[I]* - Select/edit Number of Stop Bits (in Settings mode).
+- *[M]* - Cycle between Read and Write.
+- *[G]* - Reset function (incase of freeze)
+
+===== Description
+This feature provides a Universal Asynchronous Receiver/Transmitter (UART) interface for serial communication, allowing the device to monitor actual comunication. It also includes a mode for configuring the UART parameters. 
+
+In this mode, the device listens for and displays incoming characters or data bytes received on the `PA3 (MCU RX)` pin.
+
+*Settings Mode:*
+Accessed by pressing the *[T]* key, this mode allows configuration of the UART communication parameters to match the connected device:
+- *Baud Rate*: Can be entered by *[0-9]* and deleted by *[X]*.
+- *Word Length*: Configured using the *[Y]* key to cycle through options (e.g., 7, 8, or 9 bits).
+- *Parity*: Configured using the *[U]* key to select the parity type (e.g., None, Even, Odd).
+- *Number of Stop Bits*: Configured using the *[I]* key to select the number of stop bits (e.g., 1 or 2).
+
+#v(10pt)
+#figure(
+  placement:none,
+  caption: [UART send page],
+  image("pic/tui_uart_read.png", width: 80%)
+)
+#v(10pt)
+#pagebreak()
 === I2C
-I2C peripheral can be read and write.
-Modes can be changed by pressing *M*.
-#highlight(fill: blue)[SCL] use PB8 and #highlight(fill: black)[#text(fill:white)[SDA]] use PB9.
+==== Address scanner
+===== Pinout
+- #highlight(fill: blue)[PB8/1 (SCL)]: I2C Clock line (SCL).
+- #highlight(fill: black)[#text(fill:white)[PB9/2 (SDA)]]: I2C Data line (SDA).
 
-First mode is address scan, where probe shows, which adress on I2C is active. Second mode is slave mode, where probe is behaving as slave. User can set I2C address of the slave. Third mode is master mode, where probe is behaving as master. To selected adress, probe send entered data by user. Fourth mode is testing *SSD1306* display, where after pressing *S*, display set all pixels active.
-- *[0-F]* - Change hex value
-- *[X]* - Delete value
-- *[M]* - Change mode
-- *[K]* - Edit values
-- *[L]* - Move cursor
-- *[S]* - Send data
-- *[T]* - Edit settings
-- *[Y]* - Change bytes to send
-- *[U]* - Switch read write
+===== Control
+- *[M]* - Changes the I2C operating mode (to select address scanning mode).
+
+===== Description
+This function is used to detect active devices connected to the I2C bus. After selecting the address scanning mode (using the *[M]* key until the corresponding screen is displayed). 
+
+Scanning I2C bus addresses is a fundamental diagnostic step. This function allows the user to verify whether connected devices are communicating correctly and are detectable on the bus. 
 #v(10pt)
-#grid(
-    columns: 2,
-    figure(
-        placement:none,
-        caption: [I2C Scan address page],
-        image("pic/sop8_i2c_scan.png")
-    ),
-    figure(
-        placement:none,
-        caption: [I2C Slave page],
-        image("pic/sop8_i2c_slave.png")
-    )
-)
-#grid(
-    columns: 2,
-    figure(
-        placement:none,
-        caption: [I2C Master page],
-        image("pic/sop8_i2c_master.png")
-    ),
-    figure(
-        placement:none,
-        caption: [I2C display testing page],
-        image("pic/sop8_i2c_display.png")
-    )
-)
-#v(10pt)
-
-=== SPI
-SPI peripheral can be read and write.
-Modes can be changed by pressing *M*.
-#highlight(fill: orange)[SCK] use PA5, #highlight(fill: rgb("#ba0000"))[#text(fill: white)[MISO]] use PA6, #highlight(fill: aqua)[MOSI] use PA7 a #highlight(fill: purple)[NSS] use PB0.
-
-First mode is slave mode, where probe is behaving as slave. second mode is master mode, where probe is behaving as master. Fourth mode is testing *SSD1306* display, where after pressing *S*, display set all pixels active.
-- *[0-F]* - Change hex value
-- *[X]* - Delete value
-- *[M]* - Change mode
-- *[K]* - Edit values
-- *[L]* - Move cursor
-- *[S]* - Send data
-- *[T]* - Edit settings
-- *[Y]* - Switch Phase
-- *[U]* - switch Polarity
-- *[P]* - read/write
-- *[I]* - Change bytes to send
-
-#v(10pt)
-#grid(
-    columns: 2,
-    figure(
-        placement:none,
-        caption: [SPI Slave page],
-        image("pic/sop8_spi_slave.png")
-    ),
-    figure(
-        placement:none,
-        caption: [SPI Display test page],
-        image("pic/sop8_spi_display.png")
-    )
-)
 #figure(
-        placement:none,
-        caption: [SPI Master page],
-        image("pic/sop8_spi_master.png")
-    )
+  placement:none,
+  supplement:[],
+
+  caption: [Example: Found address `0X3C`],
+  image("pic/tui_i2c_scan.png")
+)
+#v(10pt)
+
+==== I2C Master
+
+===== Pinout
+- #highlight(fill: blue)[PB8/1 (SCL)]: I2C Clock line (SCL).
+- #highlight(fill: black)[#text(fill:white)[PB9/2 (SDA)]]: I2C Data line (SDA)..
+
+===== Control
+- Settings mode
+    - *[T]* - Enter/exit settings mode  
+    - *[0-F]* - Enter hexadecimal digits (0-9, A-F) for I2C address.
+    - *[X]* - Delete the last entered hexadecimal digit of I2C address.
+    - *[Y]* - change the number of data bytes to be sent or received.
+    - *[U]* - Switch between Read and Write operations.
+- Edit send value
+    - *[0-F]* - Enter hexadecimal digits (0-9, A-F) for selected byte.
+    - *[X]* - Delete the last entered hexadecimal digit of selected byte.
+    - *[K]* - Enter/exit edit mode for values of data bytes.
+    - *[L]* - Move cursor to navigate between bytes positions.
+- *[M]* - Cycle through the different I2C operating modes.
+- *[S]* - send/receive data (Master mode)
+- *[G]* - Reset function (incase of freeze)
+
+
+
+
+===== Description
+This feature provides an Inter-Integrated Circuit (I2C) interface, allowing the device to communicate with other I2C devices. User can change settings like address, and read write mode
+
+The device acts as an I2C master, initiating communication with slave devices on the bus.
+- The user must specify the target slave address to communicate with (edited in Settings mode *[0-F]*, *[X]*).
+- The *[U]* key is used to toggle between Read (master receives data from slave) and Write (master sends data to slave) operations in Settings mode.
+- The *[Y]* key allows setting the number of data bytes to be transmitted or received in Settings mode.
+- For write operations, data bytes are entered using *[K]*, *[L]*, *[0-F]*, *[X]*.
+- Pressing *[S]* initiates the configured data transfer (read or write) with the specified slave device.
+#v(10pt)
+#figure(
+  placement:none,
+  supplement:[],
+  caption: [Example: Master send `0x30` with read bit, got replied `0X43` from slave],
+  image("pic/tui_i2c_write.png")
+)
+#v(10pt)
+==== I2C Monitor
+
+===== Pinout
+- #highlight(fill: aqua)[PA7/14]: SDA.
+- #highlight(fill: black)[#text(fill:orange)[PA5/12]]: SCL
+
+===== Control
+- *[M]* - Cycle through the different I2C operating modes.
+- *[G]* - Reset function (incase of freeze)
+
+===== Description
+This feature provides an Inter-Integrated Circuit (I2C) interface, allowing the device to monitor communication between devices on the bus. To reset comunication press *[G]*.
+
+#v(10pt)
+#figure(
+  placement:none,
+  supplement:[],
+  caption: [Example: Master send `0x30` with read bit, got replied `0X43` from slave],
+  image("pic/tui_i2c_monitor.png")
+)
+#v(10pt)
+
+==== I2C SSD1306 display test
+
+===== Pinout
+- #highlight(fill: blue)[PB8/1 (SCL)]: I2C Clock line (SCL).
+- #highlight(fill: black)[#text(fill:white)[PB9/2 (SDA)]]: I2C Data line (SDA)
+
+===== Control
+- Settings mode
+    - *[T]* - Enter/exit settings mode  
+    - *[0-F]* - Enter hexadecimal digits (0-9, A-F) for I2C address.
+    - *[X]* - Delete the last entered hexadecimal digit of I2C address.
+- *[M]* - Cycle through the different I2C operating modes.
+- *[S]* - start test
+- *[G]* - Reset function (incase of freeze)
+
+===== Description
+This is a specialized mode for testing SSD1306 OLED displays.
+    - Upon entering this mode and pressing the *[S]* key, the device sends pre-defined commands to an SSD1306 display (which is expected to be at a known I2C address or found via scan) to activate all pixels. This provides a quick visual confirmation of the display's operation. The device acts as an I2C master, initiating communication with slave devices on the bus.
+- The user must specify the target slave address to communicate with (edited in Settings mode *[0-F]*, *[X]*).
+- Pressing *[S]* initiates the configured data transfer (read or write) with the specified slave device.
+#v(10pt)
+#figure(
+  placement:none,
+  supplement:[],
+  caption: [Example: display i2c test page],
+  image("pic/tui_i2c_ssd1306.png")
+)
+#v(10pt)
+
+#pagebreak()
+
+=== Page SPI
+==== Master mode
+
+===== Pinout
+- #highlight(fill: orange)[PA5 (SCK)]: SPI Clock line.
+- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6 (MISO)]]: SPI Master In, Slave Out line.
+- #highlight(fill: aqua)[PA7 (MOSI)]: SPI Master Out, Slave In line.
+- #highlight(fill: purple)[PB0 (NSS)]: SPI Chip Select / Slave Select line.
+
+===== Control
+- Settings mode
+    - *[T]* - Enter/exit settings mode for additional SPI parameters.
+    - *[Y]* - Toggle SPI Clock Phase (CPHA).
+    - *[U]* - Toggle SPI Clock Polarity (CPOL).
+    - *[P]* - Toggle Read/Write operation.
+    - *[I]* - Edit the number of data bytes to send or receive.
+- Edit values mode
+    - *[0-F]* - Enter hexadecimal digits (0-9, A-F) for data bytes.
+    - *[X]* - Delete the last entered hexadecimal digit or clear the current value.
+    - *[L]* - Move cursor to navigate between editable fields (e.g., data bytes).
+    - *[K]* - Enter/exit edit mode for data bytes or other parameters.
+- *[M]* - Cycle through SPI operating modes (e.g., Slave, Master, SSD1306 Test).
+- *[S]* - Initiate data transfer.
+- *[G]* - Reset function (incase of freeze)
+
+
+===== Description
+This feature provides a Serial Peripheral Interface (SPI) for communication, enabling the device to act as an SPI master. Data is typically entered in hexadecimal format using keys *[0-F]* and *[X]*. The *[K]* and *[L]* keys facilitate editing and navigation. Key SPI communication parameters such as Clock Polarity (CPOL) and Clock Phase (CPHA) can be directly adjusted using the *[U]* and *[Y]* keys, respectively In Settings mode.
+
+The device acts as an SPI master, initiating and controlling communication with SPI slave devices.
+- The user can configure data to be written to the slave or specify data to be read.
+- The *[P]* key toggles between Read and Write operations in Settings mode.
+- The number of bytes for the transfer can be set using the *[I]* key in settings mode.
+- SPI Clock Polarity (CPOL) and Clock Phase (CPHA) can be configured using the *[U]* and *[Y]* keys to ensure compatibility with the slave device's requirements in settings mode.
+- Data bytes for writing are typically entered using *[K]* to select/edit, *[L]* to navigate (if multiple bytes), and *[0-F]* *[X]* for value input.
+- Pressing *[S]* initiates the data transfer with the connected SPI slave device.
+#v(10pt)
+#figure(
+  placement:none,
+  supplement:[],
+  caption: [Example: Master send `0x25 0x02 0xFF 0x08` to slave device],
+  image("pic/tui_spi_master.png")
+)
+#v(10pt)
+
+
+==== Monitor
+
+===== Pinout
+- #highlight(fill: orange)[PA5 (SCK)]: SPI Clock line.
+- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6 (MISO)]]: SPI Master In, Slave Out line.
+- #highlight(fill: aqua)[PA7 (MOSI)]: SPI Master Out, Slave In line.
+
+===== Control
+- Settings mode
+    - *[T]* - Enter/exit settings mode for additional SPI parameters.
+    - *[Y]* - Toggle SPI Clock Phase (CPHA).
+    - *[U]* - Toggle SPI Clock Polarity (CPOL).
+    - *[I]* - Edit the number of data bytes to send or receive.
+- *[M]* - Cycle through SPI operating modes (e.g., Slave, Master, SSD1306 Test).
+- *[G]* - Empty buffer
+
+===== Description
+This feature provides a Serial Peripheral Interface (SPI) for communication, enabling the device to act as an SPI slave (monitoring device). Data is typically showe as hexadecimal format Key SPI communication parameters such as Clock Polarity (CPOL) and Clock Phase (CPHA) can be directly adjusted using the *[U]* and *[Y]* keys, respectively In Settings mode.
+
+In this mode, the device emulates an SPI slave. It will listen to an external SPI master and respond accordingly. Data received from the master can be viewed, and data to be sent to the master (when the master initiates a read) can often be pre-loaded or configured.
+- SPI Clock Polarity (CPOL) and Clock Phase (CPHA) can be configured using the *[U]* and *[Y]* keys to ensure compatibility with the slave device's requirements in settings mode.
+
+#v(10pt)
+#figure(
+  placement:none,
+  supplement:[],
+  caption: [Example: Monitor detected `0x25 0x02 0xFF 0x08` communication],
+  image("pic/tui_spi_monitor.png")
+)
+#v(10pt)
+
+==== SPI SSD1306 display test
+
+===== Pinout
+- #highlight(fill: orange)[PA5 (SCK)]: SPI Clock line.
+- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6 (MISO)]]: SPI Master In, Slave Out line.
+- #highlight(fill: aqua)[PA7 (MOSI)]: SPI Master Out, Slave In line.
+- #highlight(fill: purple)[PB0 (NSS)]: SPI Chip Select / Slave Select line.
+
+===== Control
+- Settings mode
+    - *[T]* - Enter/exit settings mode  
+    - *[Y]* - Toggle SPI Clock Phase (CPHA).
+    - *[U]* - Toggle SPI Clock Polarity (CPOL).
+- *[S]* - start test
+- *[G]* - Reset function (incase of freeze)
+
+===== Description
+This is a specialized mode for testing SSD1306 OLED displays.
+    - Upon entering this mode and pressing the *[S]* key, the device sends pre-defined commands to an SSD1306 display via SPI to activate all pixels. This provides a quick visual confirmation of the display's operation. The device acts as an SPI master, initiating communication with slave device.
+- Pressing *[S]* initiates the configured data transfer (read or write) with the specified slave device.
+#v(10pt)
+#figure(
+  placement:none,
+  supplement:[],
+  caption: [Example: display i2c test page],
+  image("pic/tui_spi_ssd1306.png")
+)
 #v(10pt)
 
 
