@@ -32,7 +32,7 @@
 - *1x* WS2812D RGB Neopixel LED
 - *1x* Button
 - *2x* Resistor $480$ $Omega$
-- *1x* Resistor $10+$ K$Omega$
+- *1x* Resistor $+10$ K$Omega$
 - *1x* Breadboard
 
 === Assembly
@@ -67,15 +67,15 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
     numbering: none,
     outlined: false,
     placement: none,
-    image("pic/b_sop8_4.png", width: 70%)
+    image("pic/b_sop8_4.png", width: 65%)
 )
 #figure(
-    caption:text(size: 15pt)[5. Connect LED between purple line and ground\ Connect Pin 2 with LDO 3V3 Output (green lines)\ Connect Pin 3 to ground (blue lines)],
+    caption:text(size: 15pt)[5. Connect LED between purple line and ground\ Connect Pin 2 with LDO 3V3 Output (green lines)\ Connect Pin 3 to ground (blue lines) \ Connect Capacitor $47$ $mu$F between pin 2 and ground],
     supplement: [],
     numbering: none,
     outlined: false,
     placement: none,
-    image("pic/b_sop8_5.png", width: 75%)
+    image("pic/b_sop8_5.png", width: 70%)
 )
 #figure(
     caption:text(size: 15pt)[6. Connect pin 5 to purple line and pin 6 to aqua line (UART USB Converter)],
@@ -102,7 +102,7 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
     image("pic/b_sop8_8.jpg", width: 60%)
 )
 #figure(
-    caption:text(size: 15pt)[9. Connect RGB LED pin 2 to 3V3 (green) \ Coonect Capaciton $100$ nF between ground and RGB LED pin 2\ Connect RGB LED pin 4 to MCU pin 8 (purple) \ Connect $10$ k$Omega$ between MCU pin 6 and ground],
+    caption:text(size: 15pt)[9. Connect RGB LED pin 2 to 3V3 (green) \ Connect Capacitor $100$ nF between ground and RGB LED pin 2\ Connect RGB LED pin 4 to MCU pin 8 (purple) \ Connect $10$ k$Omega$ between MCU pin 6 and ground],
     supplement: [],
     numbering: none,
     outlined: false,
@@ -138,24 +138,83 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
 - *1x* WS2812D RGB Neopixel LED
 - *1x* Button
 - *2x* Resistor $480$ $Omega$
-- *1x* Resistor $10+$ K$Omega$
+- *1x* Resistor $+10$ K$Omega$
 - *1x* Breadboard
 
-#v(10pt)
-#grid(
-    columns: 2,
-    figure(
-        placement:none,
-        caption:[Diagram TSSOP20 ve Fritzingu],
-        image("pic/tssop20_hw_diagram.jpg")
-    ),
-    figure(
+=== Assembly
+Follow the circuit assembly instructions. Visually inspect all connections before applying power. Incorrect procedure risks damaging the MCU. 
+#figure(
+    caption:text(size: 15pt)[1. Connect STM32G30 to the breadboard],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_1.jpg") 
+)
+#figure(
+    caption:text(size: 12pt)[2. Connect LDO to breadboard with 3V3 pin closer to MCU \  Connect LDO Ground pin to upper side of the breadboard (blue line).\ Connect 3V3 LDO output to down side of the breadboard. \  Connect LDO 5V input to red line pinout (white wire). \  Connect LDO ground to blue stripe (green wire).\ Connect $47$ $mu$F capacitor between ground and LDO 5V input],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_2.png", width: 75%) 
+)
+#figure(
+    caption:text(size: 15pt)[3. Connect $480$ $Omega$ between LDO 3V3 output and purple line \ Connect LED between purple line and ground],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_3.png", width: 70%)
+)
+#figure(
+    caption:text(size: 15pt)[4. Connect Pin 4 with LDO 3V3 Output (green lines)\ Connect Pin 5 to ground (blue lines) \ Between Pin 4 and ground add $47$ $mu$F capacitor],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_4.png", width: 70%)
+)
+#figure(
+    caption:text(size: 15pt)[5. Connect pin 16 to purple line and pin 17 to aqua line (UART USB Converter)\ Add button and Neopixel RGB LED \ Pin 2 of LED is longest one \ Connect RGB pin 3 to ground \ Connect Button to ground],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_5.png", width: 75%)
+)
+#figure(
+    caption:text(size: 15pt)[6. Connect RGB LED pin 2 to 3V3 (green) \ Connect Capacitor $100$ nF between ground and RGB LED pin 2\ Connect RGB LED pin 4 to MCU pin 20 (purple) \ Connect button to MCU pin 18],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_6.png", width: 75%)
+)
+#figure(
+    caption:text(size: 15pt)[7. Connect MCU pin 11 to 3V3. \ Connect MCU pin 17 to ground],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_7.png", width: 75%)
+)
+#figure(
+    caption:text(size: 15pt)[8. Connect UART USB Converter according to Pinout],
+    supplement: [],
+    numbering: none,
+    outlined: false,
+    placement: none,
+    image("pic/b_sop20_8.png", width: 65%)
+)
+#figure(
         placement:none,
         caption:[Diagram TSSOP20],
-        image("pic/tssop20_hw.png")
+        image("pic/tssop20_hw.png", width: 65%)
     )
-)
-#v(10pt)
+
+
+
 = Firmware setup
 ==== Before start
 1. *Download and Install STM32CubeProgrammer*
@@ -709,7 +768,7 @@ Accessed by pressing the *[T]* key, this mode allows configuration of the UART c
 )
 #v(10pt)
 #pagebreak()
-=== I2C
+=== Page I2C
 ==== Address scanner
 ===== Pinout
 - #highlight(fill: blue)[PB8/1 (SCL)]: I2C Clock line (SCL).

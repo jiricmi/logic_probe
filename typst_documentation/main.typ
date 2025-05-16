@@ -1386,9 +1386,9 @@ loop:
 
 
 = Závěr a zhodnocení
-Tato bakalářská práce se věnovala návrhu a realizaci multifunkční diagnostické logické sondy, jejímž cílem bylo zjednodušit studentům proces osvojování principů práce s~logickými obvody a vestavnými systémy. Hlavním cílem bylo vytvořit cenově dostupné a~snadno použitelné zařízení, které by nahradilo komplexní a finančně náročné komerční laboratorní přístroje, a zároveň nabídlo funkce přizpůsobené výukovým potřebám.
+Tato bakalářská práce se věnovala návrhu a realizaci multifunkční diagnostické logické sondy, jejímž cílem bylo zjednodušit studentům proces osvojování principů práce s~logickými obvody a vestavnými systémy. Hlavním zaměřem bylo vytvořit cenově dostupné a~snadno použitelné zařízení, které by nahradilo komplexní a finančně náročné komerční laboratorní přístroje, a zároveň nabídlo funkce přizpůsobené výukovým potřebám.
 
-V rámci práce byla úspěšně navržena a implementována diagnostický nástroj, který integruje základní funkce logického analyzátoru, generátoru signálu a testeru komunikačních rozhraní běžně využívaných ve výuce jako jsou UART, I2C a SPI. Klíčovým přínosem je realizace sondy ve dvou variantách: verze založená na MCU STM32 a omezená verze pro Raspberry Pi Pico, což umožňuje její využití i na středních školách bez specializace na elektroniku a logické obvody. Obě verze byly navrženy s důrazem na minimalizaci externích komponent, což studentům umožňuje snadné sestavení sondy na nepájivém kontaktním poli.
+V rámci práce byla úspěšně navržen a implementován diagnostický nástroj, který integruje základní funkce logického analyzátoru, generátoru signálu a testeru komunikačních rozhraní běžně využívaných ve výuce jako jsou UART, I2C a SPI. Klíčovým přínosem je realizace sondy ve dvou variantách: verze založená na MCU STM32 a omezená verze pro Raspberry Pi Pico, což umožňuje její využití i na středních školách bez specializace na elektroniku a logické obvody. Obě verze byly navrženy s důrazem na minimalizaci externích komponent, což studentům umožňuje snadné sestavení sondy na nepájivém kontaktním poli.
 
 Sonda nabízí dva režimy ovládání, které uživatel může využívat během diagnostiky. Lokální režim, ovládaný tlačítkem s indikací pomocí RGB LED, je ideální pro rychlou základní diagnostiku bez nutnosti použití PC. Umožňuje například okamžitě ověřit logické úrovně na pinech, detekovat přítomnost pulsů (například zda senzor vysílá signál nebo časovač generuje pulsy pro 7-segmentový displej), či generovat jednoduché hodinové signály pro testování čítačů nebo posuvných registrů. Naopak terminálový režim, s textovým uživatelským rozhraním (TUI) založeným na ANSI sekvencích, poskytuje pokročilé funkce pro hlubší analýzu. Zde se sonda hodí například pro měření napětí, odporu a~frekvence, generovat pulzy, ale především pro diagnostiku komunikačních periferií: u~UART lze snadno odhalit přehozené Tx/Rx vodiče nebo chyby v přenášených datech, u~I2C je možné skenovat adresy připojených zařízení, monitorovat komunikaci se senzory či identifikovat chybějící pull-up rezistory a u SPI lze efektivně ladit komunikaci s paměťmi nebo jinými periferiemi. To vše bez nutnosti instalace speciálních ovladačů, pouze s~využitím standardní terminálové aplikace na jakémkoliv operačním systému.
 
@@ -1861,5 +1861,5 @@ void gpio_init_push_pull(void) {
 }
 ```
 )<code-local-levels>
-= Uživatelská příručka
+= Uživatelské příručky
 ]
