@@ -36,10 +36,12 @@
 
 
 == Firmware setup
-1. Connect RPI Pico to the the PC via USB
-2. Check if new external storage was added 
-3. Move firmware file (logic_probe_rpi.u2f) to external storage
-4. Reconnect device
+1. Hold `BOOTSEL` button
+2. Connect RPI Pico to the the PC via USB
+3. Release `BOOTSEL` button
+4. Check if new external storage was added 
+5. Move firmware file (logic_probe_rpi.u2f) to external storage
+6. Reconnect device
 
 = Terminal mode
 This mode enables deeper circuit diagnostic with PC control. It offers the following features:

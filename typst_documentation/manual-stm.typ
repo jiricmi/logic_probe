@@ -228,6 +228,7 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
 3. *Connect device via UART USB Converter to PC*
 
 *NOTE*: Do not forget to remove resistor after firmware setup. If you do not make changes according to manual, it will be necessary to use SWD to fix it.
+
 ==== STMCubeProgrammer
 #figure(
     caption:text(size: 15pt)[1. Select UART for connection],
@@ -282,6 +283,7 @@ This mode enables quick circuit diagnostics without requiring a computer connect
 - *Manual Logic Level Control*: Set fixed HIGH/LOW levels on selected channels.
 To switch between modes, hold the button for approximately 500 ms. The RGB LEDs indicate the active mode by displaying its assigned color when the button is released.
 === Activation
+*SOP8 Package, DO NOT CONNECT ANYTHING TO PA0. IT WILL PUT DEVICE TO RESET!*\
 Local mode is enabled when the device is powered without UART computer connection. To activate it:
 1. Connect only the power supply to the assembled circuit (no data/USB connection).
 2. Upon startup, the device detects a logic LOW (0) on the receive (RX) pin, which is reserved for computer communication.
@@ -391,6 +393,7 @@ This mode enables deeper circuit diagnostic with PC control. It offers the follo
         - Simulating master
         - SSD1306 communication tester
 === Activation
+*SOP8 Package, DO NOT CONNECT ANYTHING TO PA0. IT WILL PUT DEVICE TO RESET!*\
 Terminal mode is enabled when the device is powered with UART computer connection. To activate it:
 1. Connect the power supply and RX/TX of UART channel to PC.
 2. RGB LED will be red.
