@@ -73,11 +73,11 @@ void ansi_render_read_vals(uart_perif_t* uart) {
         }
 
         ++col;
-        snprintf(buff, 11, " %c(%3d)", uart->received_char[curr_buff_index],
+        snprintf(buff, 11, " %c(0x%2X)", uart->received_char[curr_buff_index],
                  uart->received_char[curr_buff_index]);
         ansi_send_text(buff, &ansi_default_conf);
 
-        if (col >= 10) {
+        if (col >= 9) {
             col = 0;
             ++row;
             ansi_set_cursor(row, 5);

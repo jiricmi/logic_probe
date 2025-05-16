@@ -29,8 +29,8 @@
 #define PIN_REAL {0, 1, 4}
 
 #else
-
-#define ADC_NUM_CHANNELS 4
+#define ADC_NUM_CHANNELS_8 3
+#define ADC_NUM_CHANNELS_20 4
 #define RANK_MAP                                                 \
     {ADC_REGULAR_RANK_1, ADC_REGULAR_RANK_2, ADC_REGULAR_RANK_3, \
      ADC_REGULAR_RANK_4}
@@ -39,6 +39,7 @@
 #define PIN_VALS {0, 7, 0, 1};
 #define PIN_GPIO {'A', 'B', 'A', 'A'}
 #define PIN_REAL {0, 1, 7, 8}
+#define PIN_REAL_8 {0, 1, 4, 0}
 
 #endif
 
@@ -50,14 +51,15 @@ typedef enum {
 
 typedef struct {
     TIM_HandleTypeDef* timer;
-    _Bool channel_state[ADC_NUM_CHANNELS];
-    _Bool channel_state_unapplied[ADC_NUM_CHANNELS];
+    uint8_t adc_num_channels;
+    _Bool channel_state[ADC_NUM_CHANNELS_20];
+    _Bool channel_state_unapplied[ADC_NUM_CHANNELS_20];
     _Bool applied;
     uint32_t base_resistor;
-    uint32_t avg_voltage[ADC_NUM_CHANNELS];
-    uint8_t pin[ADC_NUM_CHANNELS];
-    char gpio_pin[ADC_NUM_CHANNELS];
-    uint8_t pin_real[ADC_NUM_CHANNELS];
+    uint32_t avg_voltage[ADC_NUM_CHANNELS_20];
+    uint8_t pin[ADC_NUM_CHANNELS_20];
+    char gpio_pin[ADC_NUM_CHANNELS_20];
+    uint8_t pin_real[ADC_NUM_CHANNELS_20];
     uint8_t n_active_channels;
     ADC_HandleTypeDef* hadc;
     uint32_t* voltage_measures;

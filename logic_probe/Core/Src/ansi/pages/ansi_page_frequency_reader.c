@@ -21,14 +21,16 @@ void ansi_render_frequency_reader_page(void) {
 
 void ansi_generate_frequency_reader(sig_detector_t* detector) {
     uint8_t row = FREQ_READER_ROW_TEXT;
+    uint8_t frequency_pin =
+        (global_var.can_advanced) ? FREQUENCY_PIN_20 : FREQUENCY_PIN_8;
     ansi_get_detector_mode(detector->mode);
     char buff[BASE_TEXT_BUFF_LEN];
     if (detector->mode == DETECTOR_MODE_FREQUENCY) {
         char number_buff[NUM_BUFF_LEN];
         format_number_with_spaces(detector->frequency, number_buff);
         ansi_set_cursor(row++, FREQ_READER_COL_TEXT);
-        snprintf(buff, BASE_TEXT_BUFF_LEN,
-                 "Frequency (PA0/" FREQUENCY_PIN "): %12.12s Hz ", number_buff);
+        snprintf(buff, BASE_TEXT_BUFF_LEN, "Frequency (PA0/%d): %12.12s Hz ",
+                 frequency_pin, number_buff);
         ansi_send_text(buff, &ansi_default_conf);
 
         format_number_with_spaces(detector->rec_frequency, number_buff);
@@ -61,7 +63,7 @@ void ansi_generate_frequency_reader(sig_detector_t* detector) {
         ansi_send_text(buff, &ansi_default_conf);
 
     } else if (detector->mode != DETECTOR_MODE_FREQUENCY) {
-        char pulse_text[] = "Pulse found: ";
+        char pulse_text[] = "Pulse found (PA0): ";
         ansi_set_cursor(FREQ_READER_ROW_TEXT,
                         TERMINAL_CENTER - strlen(pulse_text) / 2);
         ansi_send_text(pulse_text, &ansi_default_conf);

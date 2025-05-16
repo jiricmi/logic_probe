@@ -3,12 +3,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "global_vars.h"
 #include "my_error_handle.h"
+
+extern global_vars_t global_var;
 
 adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
                                       TIM_HandleTypeDef* timer) {
     adc_vars_t* adc_ch = (adc_vars_t*)malloc(sizeof(adc_vars_t));
     adc_ch->timer = timer;
+    adc_ch->adc_num_channels =
+        (global_var.can_advanced) ? ADC_NUM_CHANNELS_20 : ADC_NUM_CHANNELS_8;
 
     if (adc_ch == NULL) {
         exception("Failed to allocate adc_vars_t struct");
@@ -16,7 +21,7 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
 
     adc_ch->channel_state[ADC_REF_INDEX - 1] = true;
     adc_ch->channel_state[ADC_CH_PERMANENT_INDEX - 1] = true;
-    for (size_t i = ADC_CH_PERMANENT_INDEX; i < ADC_NUM_CHANNELS; ++i) {
+    for (size_t i = ADC_CH_PERMANENT_INDEX; i < adc_ch->adc_num_channels; ++i) {
         adc_ch->channel_state[i] = false;
     }
 
@@ -32,8 +37,14 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
     memcpy(adc_ch->pin, pin_values, sizeof(pin_values));
     char gpio_pins[] = PIN_GPIO;
     memcpy(adc_ch->gpio_pin, gpio_pins, sizeof(gpio_pins));
-    uint8_t pin_real[] = PIN_REAL;
-    memcpy(adc_ch->pin_real, pin_real, sizeof(pin_real));
+
+    if (global_var.can_advanced) {
+        uint8_t pin_real[] = PIN_REAL;
+        memcpy(adc_ch->pin_real, pin_real, sizeof(pin_real));
+    } else {
+        uint8_t pin_real[] = PIN_REAL_8;
+        memcpy(adc_ch->pin_real, pin_real, sizeof(pin_real));
+    }
 
     adc_ch->n_active_channels = adc_count_active_channels(adc_ch);
 
@@ -65,13 +76,17 @@ void adc_flip_unapplied_channel(adc_vars_t* adc_ch, size_t channel) {
         return;
     }
 
+    if (channel >= adc_ch->adc_num_channels) {
+        return;
+    }
+
     adc_ch->channel_state_unapplied[channel] =
         !adc_ch->channel_state_unapplied[channel];
     adc_ch->applied = false;
 }
 
 void adc_remove_unapplied_channels(adc_vars_t* adc_ch) {
-    for (size_t i = ADC_REF_INDEX; i < ADC_NUM_CHANNELS; ++i) {
+    for (size_t i = ADC_REF_INDEX; i < adc_ch->adc_num_channels; ++i) {
         adc_ch->channel_state_unapplied[i] = adc_ch->channel_state[i];
     }
     adc_ch->applied = true;
@@ -79,7 +94,7 @@ void adc_remove_unapplied_channels(adc_vars_t* adc_ch) {
 
 uint8_t adc_count_active_channels(adc_vars_t* adc_ch) {
     size_t count = 0;
-    for (size_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
+    for (size_t i = 0; i < adc_ch->adc_num_channels; ++i) {
         if (adc_ch->channel_state[i]) {
             ++count;
         }
@@ -89,7 +104,7 @@ uint8_t adc_count_active_channels(adc_vars_t* adc_ch) {
 
 void adc_apply_channels(adc_vars_t* adc_ch) {
     adc_stop_measure(adc_ch);
-    for (size_t i = ADC_REF_INDEX; i < ADC_NUM_CHANNELS; ++i) {
+    for (size_t i = ADC_REF_INDEX; i < adc_ch->adc_num_channels; ++i) {
         adc_ch->channel_state[i] = adc_ch->channel_state_unapplied[i];
     }
     adc_ch->n_active_channels = adc_count_active_channels(adc_ch);
@@ -101,21 +116,22 @@ void adc_apply_channels(adc_vars_t* adc_ch) {
 void adc_set_rank(ADC_ChannelConfTypeDef* sConfig, uint8_t rank) {
     static const uint32_t rank_map[] = RANK_MAP;
 
-    if (rank <= ADC_NUM_CHANNELS) {
+    if (rank <= global_var.adc_vars->adc_num_channels) {
         sConfig->Rank = rank_map[rank];
     }
 }
 
 void adc_set_channel(ADC_ChannelConfTypeDef* sConfig, uint8_t channel) {
     static const uint32_t channel_map[] = CHANNEL_MAP;
-    if (channel <= ADC_NUM_CHANNELS) {
+    if (channel <= global_var.adc_vars->adc_num_channels) {
         sConfig->Channel = channel_map[channel];
     }
 }
 
 void adc_init_hal_conversion(ADC_HandleTypeDef* hadc,
                              const uint32_t n_conversion) {
-    if (n_conversion >= ADC_REF_INDEX && n_conversion <= ADC_NUM_CHANNELS) {
+    if (n_conversion >= ADC_REF_INDEX &&
+        n_conversion <= global_var.adc_vars->adc_num_channels) {
         hadc->Init.NbrOfConversion = n_conversion;
 
         if (HAL_ADC_Init(hadc) != HAL_OK) {
@@ -152,7 +168,7 @@ void adc_setup_channel_struct(adc_vars_t* adc_ch) {
 
     adc_init_hal_conversion(adc_ch->hadc, adc_ch->n_active_channels);
 
-    for (size_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
+    for (size_t i = 0; i < adc_ch->adc_num_channels; ++i) {
         if (active_channel == adc_ch->n_active_channels) {
             break;
         }
@@ -169,7 +185,7 @@ void adc_setup_channel_struct(adc_vars_t* adc_ch) {
 
 // todo: udelat pri mereni
 void adc_get_avg_voltages(adc_vars_t* adc_ch) {
-    uint64_t avgs[ADC_NUM_CHANNELS];
+    uint64_t avgs[ADC_NUM_CHANNELS_20];
     memset(avgs, 0, sizeof(avgs));
 
     for (size_t i = 0; i < adc_ch->n_active_channels * CHANNEL_NUM_SAMPLES;
@@ -181,10 +197,10 @@ void adc_get_avg_voltages(adc_vars_t* adc_ch) {
         avgs[i] /= CHANNEL_NUM_SAMPLES;
     }
 
-    uint32_t ordered_buff[ADC_NUM_CHANNELS];
+    uint32_t ordered_buff[ADC_NUM_CHANNELS_20];
 
     size_t index = 0;
-    for (size_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
+    for (size_t i = 0; i < ADC_NUM_CHANNELS_20; ++i) {
         if (adc_ch->channel_state[i]) {
             ordered_buff[i] = (uint32_t)avgs[index++];
         } else {

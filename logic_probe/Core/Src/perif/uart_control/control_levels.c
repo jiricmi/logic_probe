@@ -20,8 +20,5 @@ void control_levels_page(char received_char) {
         case '3':
             HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3);
             break;
-        case '4':
-            HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
-            break;
     }
 }

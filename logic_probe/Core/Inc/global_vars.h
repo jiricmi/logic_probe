@@ -20,6 +20,7 @@
 
 typedef struct {
     _Bool booted;
+    _Bool can_advanced;
     dev_state_t device_state;
     local_state_t local_state;
     local_substate_t local_substate;

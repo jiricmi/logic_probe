@@ -20,6 +20,8 @@ void ansi_render_impulse_generator_page(void) {
 void ansi_render_impulse_generator(const sig_generator_t* generator) {
     char buff[50];
     char number_buff[15];
+    uint8_t output_pin =
+        (global_var.can_advanced) ? FREQUENCY_PIN_20 : FREQUENCY_PIN_8;
     ansi_set_cursor(9, 10);
     if (generator->mode == SIG_GEN_MODE_PULSE_UP) {
         ansi_send_text("UP  ", &ansi_default_conf);
@@ -28,7 +30,7 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
     }
     ansi_set_cursor(10, 10);
     format_number_with_spaces(generator->period_us_temp, number_buff);
-    snprintf(buff, 50, "Pulse width (PA0/" FREQUENCY_PIN "): %9.9s us",
+    snprintf(buff, 50, "Pulse width (PA0/%d): %9.9s us", output_pin,
              number_buff);
     ansi_send_text(buff, &ansi_default_conf);
 
@@ -38,8 +40,7 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
 
     ansi_set_cursor(11, 10);
     format_number_with_spaces((uint32_t)freq, number_buff);
-    snprintf(buff, 50, "Frequency in permament sending: %7.7s Hz",
-             number_buff);
+    snprintf(buff, 50, "Frequency in permament sending: %7.7s Hz", number_buff);
     ansi_send_text(buff, &ansi_default_conf);
 
     GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);

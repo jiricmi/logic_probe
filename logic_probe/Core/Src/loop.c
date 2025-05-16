@@ -48,6 +48,20 @@ void dev_mode_check_update(void) {
     }
 }
 
+void dev_mode_package_version(void) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4) == GPIO_PIN_SET) {
+        global_var.can_advanced = true;
+    }
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
+}
+
 void dev_mode_run_with_uart(void) {
     dev_mode_check_update();
 
@@ -248,7 +262,7 @@ void local_mode_update_perif(void) {
     switch (global_var.local_state) {
         case LOCAL_STATE_LOGIC_PROBE:
             global_var.device_state = DEV_STATE_VOLTMETER;
-            for (uint8_t i = 1; i < ADC_NUM_CHANNELS; ++i) {
+            for (uint8_t i = 1; i < adc_vars->adc_num_channels; ++i) {
                 adc_vars->channel_state_unapplied[i] = true;
             }
             adc_apply_channels(global_var.adc_vars);

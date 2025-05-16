@@ -105,7 +105,7 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
     uint8_t row = ADC_MEASURE_ROW;
     uint32_t ref_voltage = adc_get_v_ref(adc_ch->avg_voltage[0]);
 
-    for (uint8_t channel = 1; channel < ADC_NUM_CHANNELS; ++channel) {
+    for (uint8_t channel = 1; channel < adc_ch->adc_num_channels; ++channel) {
         uint32_t channel_voltage =
             adc_get_voltage(ref_voltage, adc_ch->avg_voltage[channel]);
 
@@ -226,7 +226,7 @@ void ansi_render_logic_probe_ch(uint32_t voltage, _Bool channel) {
 }
 
 void help_voltage(void) {
-    char msg[] = "1-4: On/Off channel | S: Save | M: resistance mode";
+    char msg[] = "[nums]: On/Off channel | S: Save | M: resistance mode";
     ansi_print_help_msg(msg, 0);
 }
 

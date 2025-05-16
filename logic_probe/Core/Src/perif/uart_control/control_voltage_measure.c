@@ -42,8 +42,7 @@ void control_voltage_measures(const unsigned char received_char) {
     switch (received_char) {
         case '1':
         case '2':
-        case '3':
-        case '4': {
+        case '3': {
             int num = cdtoi(global_var.received_char);
             adc_flip_unapplied_channel(global_var.adc_vars, (size_t)num);
             break;

@@ -82,6 +82,7 @@ i2c_perif_t i2c_perif;
 spi_perif_t spi_perif;
 
 global_vars_t global_var = {false,
+                            false,
                             DEV_STATE_NONE,
                             LOCAL_STATE_LOGIC_PROBE,
                             LOCAL_SUBSTATE_CHANNEL_1,
@@ -689,6 +690,7 @@ static void MX_GPIO_Init(void) {
     HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
     /* USER CODE BEGIN MX_GPIO_Init_2 */
+    dev_mode_package_version();
     /* USER CODE END MX_GPIO_Init_2 */
 }
 
