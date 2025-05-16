@@ -1,6 +1,8 @@
 #ifndef GLOBAL_STRUCTS_H
 #define GLOBAL_STRUCTS_H
 
+#define PICO_DEFAULT_LED_PIN 25
+
 typedef enum {
     DEV_STATE_NONE,
     DEV_STATE_VOLTMETER,

@@ -11,6 +11,7 @@
 #include "pages/ansi_page_voltage_measure.h"
 #include "signal_detection.h"
 
+extern bool led_state;
 extern global_vars_t global_var;
 
 void dev_mode_check_update(void) {
@@ -59,7 +60,6 @@ void dev_mode_request_update(void) {
 }
 
 void dev_mode_update_perif(void) {
-    //   sig_detector_t* sig_det = global_var.signal_detector;
     adc_vars_t* adc_perif = &global_var.adc_perif;
     sig_det_t* sig_det_perif = &global_var.sig_det_perif;
     sig_gen_t* sig_gen_perif = &global_var.sig_gen_perif;
@@ -102,6 +102,7 @@ void dev_mode_update_perif(void) {
 }
 
 void dev_mode_run(void) {
+    gpio_put(PICO_DEFAULT_LED_PIN, led_state = !led_state);
     dev_mode_check_update();
     adc_vars_t* adc_perif = &global_var.adc_perif;
     sig_det_t* sig_det_perif = &global_var.sig_det_perif;
