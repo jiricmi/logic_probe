@@ -458,9 +458,9 @@ Návrh zohledňuje implementaci lokálního režimu. Pro tuto implementaci je na
 
 Dále je připojena WS2812 RGB LED na `PB6`. Tento pin byl zvolen z důvodu přítomnosti kanálu časovače, který je využit pro posílání dat skrze PWM do LED. WS2812 dle~datasheetu vyžaduje napětí $3.7 ~ 5.3$ V @NEOPIXEL-REF. Pokud by WS2812 byla napájena $5$ V z USB převodníku, došlo by k problému s CMOS logikou, kdy vstupní vysoká logická úroveň je definována jako $0.7 times V_"dd"$, což se rovná $3.5$ V a STM32 pin při vysoké úrovni má $V_"dd"$, což je $~3.3$ V @CMOS @STM32G0-REF. Z toho důvodu je navzdory datasheetu LED připojena na napětí $V_"dd"$ mikrokontroleru. Toto zapojení bylo otestováno a je plně funkční. Problém se kterým je možné se setkat je nesprávné svícení modré barvy z důvodu vysokého prahového napětí. Mezi katodu a anodu LED je umíštěn blokovací kondenzátor o velikost $100$ nF.
 
-Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního režimu je na Rx pin přiveden pull down rezistor o velikosti $10$ K$Omega$.
+Obě pouzdra využívají pro komunikaci s PC periferii USART1. STM32 poskytuje možnost remapování pinů. Pro zjednodušení zapojení jsou piny `PA12` a `PA11` přemapované na `PA10` a `PA9`. Tyto piny jsou použity jako Tx a Rx piny UART komunikace. Pro zajištění funkce lokálního režimu je na Rx pin nastaven interní pull down rezistor.
 
-Firmware pro SOP8 a TSSOP20 musí udělat nějaké změny na základě pouzdra, jedná se třeba o to, že FW musí znepřístupnit pokročilé funkce. První možnost je udělat FW takový, že pomocí makra jsou vypnuty pokročilé funkce a pomocí příznaku při kompilaci se určí pro jaké pouzdro je FW určen. Nicméně nevýhoda je taková, že musí být dva různé binární soubory pro každé pouzdro. Další možnost je definovat pin, který pomocí logické úrovně určí o jaké pouzdro se jedná. Za tento pin byl zvolen `PA4`, který bude nastaven jako input s interním pull down rezistorem. Na pouzdře se tento pin nenachází, takže při načtení bude na vstupu nízká logická úroveň. Na pouzdře TSSOP20 se pin `PA4` nachází a po připojení na $V_"dd"$ bude na pinu vysok8 logická úroveň. Po detekci pinu je pull down rezistor odpojen, aby netekl malý proud z $V_"dd"$ na zem.
+Firmware pro SOP8 a TSSOP20 musí udělat nějaké změny na základě pouzdra, jedná se třeba o to, že FW musí znepřístupnit pokročilé funkce. První možnost je udělat FW takový, že pomocí makra jsou vypnuty pokročilé funkce a pomocí příznaku při kompilaci se určí pro jaké pouzdro je FW určen. Nicméně nevýhoda je taková, že musí být dva různé binární soubory pro každé pouzdro. Další možnost je definovat pin, který pomocí logické úrovně určí o jaké pouzdro se jedná. Za tento pin byl zvolen `PA4`, který bude nastaven jako input s interním pull down rezistorem. Na pouzdře se tento pin nenachází, takže při načtení bude na vstupu nízká logická úroveň. Na pouzdře TSSOP20 se pin `PA4` nachází a po připojení na $V_"dd"$ bude na pinu vysoká logická úroveň. Po detekci pinu je pull down rezistor odpojen, aby netekl malý proud z $V_"dd"$ na zem.
 == STM32G030 v pouzdře SOP8
 @sop8-hw#footnote[Schéma zapojení bylo zrealizováno pomocí nástroje _Autodesk Eagle_ @EAGLE_SW. Komponenta Neopixel RGB LED byla použita jako externí knihovna @NEOPIXEL-SCHEMA-LIB.] ukazuje zapojení STM32G030 v pouzdře SOP8. Toto pouzdro po zapojení napájení, rozhraní UART má k dispozici pouze 4 piny. Po zapojení potřebných komponent pro lokální režim, které zmiňuje @komp, zůstávají piny 2. Z tohoto důvodu, na~pouzdro SOP8, jsou implementován pouze lokální režim a základní funkce terminálového režimu, jako měření napětí, frekvence a vysílání pulzů.
 #figure(
@@ -1385,48 +1385,163 @@ loop:
 
 
 
-= Zhodnocení a Závěr
-== Zhodnocení
-=== Diagnostická logická sonda STM32
-Během práce byla vytvořena diagnostická logická sonda na základě MCU STM32G030, která je sestavitelná na nepájivém kontaktním poli. Tato verze nabízí lokální a terminálový režim, která má následující funkce:
+= Zhodnocení dosažených výsledků
+== Diagnostická multifunkční logická sonda STM32
+Během práce byla vytvořena diagnostická logická sonda na základě MCU STM32G030, která je sestavitelná na nepájivém kontaktním poli. Tato verze nabízí lokální a terminálový režim, které jsou popsány níže. Tato sonda je vytvořena primárně na základě potřeb výuky předmětů vestavných systémů na fakultě elektrotechnické ČVUT.
+=== Realizace
+
+#figure(
+    placement:none,
+    caption: [Realizace SOP8 STM32G030],
+    image("pic/sop8-real2.png", width: 70%)
+)
+#figure(
+    placement:none,
+    caption: [Realizace TSSOP20 STM32G030],
+    image("pic/tssop20-real2.png", width: 70%)
+)
+=== Funkce
 ==== Lokální režim
 #par(first-line-indent: 0pt)[
-Režim pro rychlou diagnostiku bez PC na pouzdrech SOP8 a TSSOP20.
+Režim pro rychlou diagnostiku bez připojení k PC. Režim je ovládán tlačítkem a vizualizace probíhá za pomocí RGB LED. Režim má následující funkce:
 ]
 - *Zjištění logické úrovně a signalizaci stavu pomocí RGB LED*
 - *Nastavení logických úrovní na kanálech*
-    - např. pro kontrolu chování obvodu s posuvným registrem
+    - Např. pro kontrolu chování obvodu s posuvným registrem
 - *Generování pulzů s frekvencí 1 Hz*
-    - např. pro kontrolu chování obvodu čítače
-- *Detekce krátkých pulzů na vodiči a signalizace pomocí RGB LED*
-    - např. pro ověření, zda periferie odesílá data
+    - Např. pro kontrolu chování obvodu čítače
+- *Detekce krátkých pulzů a signalizace pomocí RGB LED*
+    - Např. pro ověření, zda periferie odesílá data
 ==== Terminálový režim
 #par(first-line-indent: 0pt)[
-Režim pro hlubší diagnostiku s připojením PC a ovládání sondy pomocí terminálové aplikace.
+Režim pro hlubší diagnostiku s připojením PC a ovládání sondy pomocí terminálové aplikace. Následující funkce jsou k dispozici na pouzdra SOP8 a TSSOP20:
 ]
-- *Měření napětí*
+- *Měření napětí a logických úrovní*
+    - Měření probíhá se vzorkovací frekvencí 100 Hz s průměrováním
+    - Výpis logické úrovně na základě napětí na kanálu
+    - SOP8 pouzdro měří 2 kanály na pinech _PB7_ (pin 1) a _PA0_ (pin 4)
+    - TSSOP20 pouzdro měří 3 kanály na pinech _PB7_ (pin 1), _PA0_ (pin 7) a _PA1_ (pin 8)
 - *Měření odporu*
+    - Měření odporu rezistoru na základě poměrového napětí
+    - Možnost nastavit uživatelsky normálový rezistor
+    - Odpor je měřen na pinu _PB7_ (pin 1)
 - *Měření frekvence a střídy*
+    - Měření frekvence metodou hradlování s nastavitelným časem hradla
+    - Reciproční měření frekvence
+    - Měření periody a střídy
+    - Měřeno je na pinu _PA0_ (pin 7 na TSSOP20, pin 4 na SOP8)
 - *Detekce pulzů*
+    - Detekuje zda je na vodiči přítomna náběžná/sestupná hrana
+    - Uživateli se vypíše detekce do terminálové aplikace
+    - Uživatel může příznak detekce smazat až uzná za vhodné
+    - Detekováno na pinu _PA0_ (pin 7 na TSSOP20, pin 4 na SOP8)
+    - Vhodné pro detekci, zda probíhá na sběrnici nějaká komunikace
 - *Generace pulzů*
-- *Generování frekvence*
-Následující funkce jsou k dispozici na pouzdře TSSOP20
+    - Vysílání pulzů na základě uživatelsky definované šířky
+    - Uživatel může generovat frekvenci na základě uživatelsky definované šířky
+    - Generováno na pinu _PA0_ (pin 7 na TSSOP20, pin 4 na SOP8)
+    - Vhodné pro ověřování funkčnosti např. čítačů
+#pagebreak()
+===== Pokročilé funkce
+#par(first-line-indent: 0pt)[
+Následující funkce jsou k dispozici na pouzdře *TSSOP20*:
+]
 - *Nastavení logických úrovní na kanálech*
+    - Uživatel může ovládat logickou úroveň pinů pomocí numerických kláves
+    - K dispozici piny _PA1_ (pin 8), _PA2_ (pin 9) a _PA3_ (pin 10)
 - *Testovací sekvence pro 8bitové posuvné registry*
-- *Neopixel RGB LED komunikace*
-    - Monitorování komunikace mezi zařízením a RGB LED
-    - Zapisování testovacích bitů pro řetězec RGB LED
+    - Odesílání testovací sekvence nastavené uživatelem do posuvného registru
+    - Sonda řídí hodinový signál hodin
+    - Možné posílání po jednom bitu či celé sekvence najednou
+    - Podpora 74HC595
+    - Data pin _PA0_ (pin 7), clock pin _PB7_ (pin 1) a RCLK _PA1_ (pin 8)
+    - Vhodné pro testování napřiklad 7 segmentového disleje s posuvným registrem
+- *RGB LED Neopixel komunikace*
+    - *Monitorování komunikace mezi zařízením a RGB LED*
+        - Monitorování probíhá na _PA0_ (pin 7)
+    - *Zapisování testovacích bitů pro řetězec RGB LED*
+        - Možné nastavit barevné složky RGB LED uživatelsky
+        - Zapisovat lze na více RGB LED zapojené do serie
+        - Zapisování probíhá na _PA13_ (pin 18)
+    - Lze využít při ověření funkčnosti RGB LED nebo ověření, zda je odesílána správná sekvence programem
 - *UART periferie*
-    - Pasivní monitorování komunikace
-    - Aktivní vysílání testovacích sekvencí
+    - Uživatelský nastavitelný baudrate, word length, parita a počet stop bitů
+    - *Pasivní monitorování komunikace*
+        - Při monitorování je vypisován znak i hexadecimální hodnota
+        - Na pinu _PA2_ (pin 9)
+    - *Aktivní vysílání testovacích sekvencí*
+        - Odesílání až 10 bajtů o hodnotách nastavených uživatelem
+        - Na pinu _PA3_ (pin 10)
+    - Vhodné pro ověření zda nejsou např. prohozeny vodiče Rx/Tx
 - *I2C*
-    - Detekce adres slave zařízení na sběrnici
-    - Pasivní monitorování komunikace na sběrnici
-    - 
+    - SCL na _PB8_ (pin 1), SDA na _PB9_ (pin 2)
+    - *Detekce adres slave zařízení na sběrnici*
+        - Zobrazuje adresy slave zařízení na sběrnici
+        - Indikace zda I2C slave součástka je "živá"
+    - *Slave zařízení*
+        - Sonda se chová jako slave
+        - Vypisuje získané bajty od masteru
+        - Uživatelsky nastavitelná adresa
+    - *Master zařízení*
+        - Sonda se chová jako master
+        - Uživatelsky nastavitelná adresa slave zařízení
+        - Možnost zapisovat i číst slave zařízení
+        - Zápis až 10 bajtů najednou
+        - Vhodné pro přímé otestování senzoru
+    - *Pasivní monitorování*
+        - Pasivní monitorování realizováno pomocí SPI sběrnice
+        - Monitorování probíhá na pinech SCL _PA5_ (pin 12) a SDA _PA7_ (pin 14)
+        - Vhodné pro přímé zjištění dat posílaných mezi senzorem a MCU
+    - *Testování SSD1306 displeje*
+        - Posílá předdefinované sekvence na displej
+        - Uživatelsky nastavitelná adresa
+        - Po odeslání sekvence rozsvítí displej všechny pixely aby bylo možné ověřit funkčnost a nepřítomnost mrtvých pixelů
 - *SPI*
+    - SCK na _PA5_ (pin 12), MISO na _PA6_ (pin 13), MOSI na _PA7_ (pin 14) a NSS na _PB0_ (pin 15)
+    - Uživatelsky nastavitelná fáze a polarita hodinového signálu
+    - *Pasivní monitorování*
+        - Monitorována komunikace na MISO nebo na MOSI vodiči
+    - *Master zařízení*
+        - Sonda se chová jako master zařízení
+        - Odesílá uživatelsky nastavené sekvence na slave zařízení
+        - Možnost odeslání až 10 bajtů najednou
+        - Běží na frekvenci 100 KHz 
+    - *Testování SSD1306 displeje*
+        - Posílá předdefinované sekvence na displej
+        - Po odeslání sekvence rozsvítí displej všechny pixely aby bylo možné ověřit funkčnost a nepřítomnost mrtvých pixelů
+
+== Diagnostická multifunkční logická sonda Raspberry Pi Pico
+Během práce byla také vytvořena omezená verze diagnostické logické sondy na základě MCU Raspberry Pi Pico, která je sestavitelná na nepájivém kontaktním poli. Tato verze cílí na střední školy, které nejsou primárně vybaveny na výuku vestavných systému (např. gymnázia).
+- *Měření napětí a logických úrovní*
+    - Měření probíhá se vzorkovací frekvencí 100 Hz s průměrováním
+    - Výpis logické úrovně na základě napětí na kanálu
+    - Sonda měří 3 kanály na pinech GPIO 26, 27 a 28
+- *Měření odporu*
+    - Měření odporu rezistoru na základě poměrového napětí
+    - Možnost nastavit uživatelsky normálový rezistor
+    - Odpor je měřen na pinu GPIO 26
+- *Měření frekvence a střídy*
+    - Měření frekvence metodou hradlování s nastavitelným časem hradla
+    - Reciproční měření frekvence
+    - Měření periody a střídy
+    - Měřeno je na pinu GPIO 21
+- *Detekce pulzů*
+    - Detekuje zda je na vodiči přítomna náběžná/sestupná hrana
+    - Uživateli se vypíše detekce do terminálové aplikace
+    - Uživatel může příznak detekce smazat až uzná za vhodné
+    - Detekováno na pinu GPIO 21
+    - Vhodné pro detekci, zda probíhá na sběrnici nějaká komunikace
+- *Generace pulzů*
+    - Vysílání pulzů na základě uživatelsky definované šířky
+    - Uživatel může nastavit počet opakování pulzů do počtu 255
+    - Uživatel může generovat frekvenci na základě uživatelsky definované šířky
+    - Pulzy jsou generovány na pinu GPIO 17 
+    - Permanentní frekvence je generována na pinu GPIO 16
+    - Vhodné pro ověřování funkčnosti např. čítačů
 
 
-== Závěr
+
+= Závěr
 Tato bakalářská práce se věnovala návrhu a realizaci multifunkční diagnostické logické sondy, jejímž cílem bylo zjednodušit studentům proces osvojování principů práce s~logickými obvody a vestavnými systémy. Hlavním zaměřem bylo vytvořit cenově dostupné a~snadno použitelné zařízení, které by nahradilo komplexní a finančně náročné komerční laboratorní přístroje, a zároveň nabídlo funkce přizpůsobené výukovým potřebám.
 
 V rámci práce byla úspěšně navržen a implementován diagnostický nástroj, který integruje základní funkce logického analyzátoru, generátoru signálu a testeru komunikačních rozhraní běžně využívaných ve výuce jako jsou UART, I2C a SPI. Klíčovým přínosem je realizace sondy ve dvou variantách: verze založená na MCU STM32 a omezená verze pro Raspberry Pi Pico, což umožňuje její využití i na středních školách bez specializace na elektroniku a logické obvody. Obě verze byly navrženy s důrazem na minimalizaci externích komponent, což studentům umožňuje snadné sestavení sondy na nepájivém kontaktním poli.
@@ -1435,7 +1550,7 @@ Sonda nabízí dva režimy ovládání, které uživatel může využívat běhe
 
 Při realizaci byly naplněny klíčové požadavky stanovené v úvodu práce. Důraz byl kladen na jednoduchost ovládání i pro uživatele bez předchozích zkušeností s diagnostickými nástroji, což zajišťuje přehledné TUI v terminálovém režimu. Požadavek na rychlou realizovatelnost na nepájivém kontaktním poli byl splněn minimalizací externích součástek, což zároveň snižuje potenciální body selhání. Praktičnost ve výuce je podpořena sadou funkcí pokrývajících běžné problémy, se kterými se studenti setkávají, od základního měření až po analýzu sběrnic.
 
-Lze tedy konstatovat, že cíle bakalářské práce byly úspěšně splněny. Vytvořená multifunkční diagnostická logická sonda představuje flexibilní, cenově dostupný a praktický nástroj, který má potenciál významně přispět ke zkvalitnění a zefektivnění výuky elektroniky a vestavných systémů, a usnadnit studentům první kroky v diagnostice digitálních obvodů.
+Lze tedy konstatovat, že všechny cíle bakalářské práce byly úspěšně splněny. Vytvořená multifunkční diagnostická logická sonda představuje flexibilní, cenově dostupný a~praktický nástroj, který má potenciál významně přispět ke zkvalitnění a zefektivnění výuky elektroniky a vestavných systémů, a usnadnit studentům první kroky v diagnostice digitálních obvodů.
 
 #start-appendix(lang: "cs")[
 = Citace
@@ -1489,23 +1604,25 @@ void ansi_send_text(const char* str,
     size_t offset = 0;     
     // Při nastavení barvy přidej ansi sekvenci pro zbarvení
     if (strlen(text_conf->bg_color) != 0) {
-        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s",
-                           text_conf->bg_color);
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset,
+                           "%s", text_conf->bg_color);
     }
     
     // Při nastavení barvy přidej ansi sekvenci pro zbarvení
     if (strlen(text_conf->color) != 0) {
-        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s",
-                           text_conf->color);
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset,
+                           "%s", text_conf->color);
     }
 
     // Nastav text tučně
     if (text_conf->bold) {
         offset +=
-            snprintf(buffer + offset, sizeof(buffer) - offset, "%s", BOLD_TEXT);
+            snprintf(buffer + offset, sizeof(buffer) - offset, "%s",
+                     BOLD_TEXT);
     }
 
-    offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s", str);
+    offset += snprintf(buffer + offset, sizeof(buffer) - offset,
+                       "%s", str);
     
     // Kontrola velikosti bufferu
     if (offset >= sizeof(buffer)) {

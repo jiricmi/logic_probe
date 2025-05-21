@@ -32,7 +32,6 @@
 - *1x* WS2812D RGB Neopixel LED
 - *1x* Button
 - *2x* Resistor $480$ $Omega$
-- *1x* Resistor $+10$ K$Omega$
 - *1x* Breadboard
 
 === Assembly
@@ -102,7 +101,7 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
     image("pic/b_sop8_8.jpg", width: 60%)
 )
 #figure(
-    caption:text(size: 15pt)[9. Connect RGB LED pin 2 to 3V3 (green) \ Connect Capacitor $100$ nF between ground and RGB LED pin 2\ Connect RGB LED pin 4 to MCU pin 8 (purple) \ Connect $10$ k$Omega$ between MCU pin 6 and ground],
+    caption:text(size: 15pt)[9. Connect RGB LED pin 2 to 3V3 (green) \ Connect Capacitor $100$ nF between ground and RGB LED pin 2\ Connect RGB LED pin 4 to MCU pin 8 (purple)],
     supplement: [],
     numbering: none,
     outlined: false,
@@ -138,7 +137,6 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
 - *1x* WS2812D RGB Neopixel LED
 - *1x* Button
 - *2x* Resistor $480$ $Omega$
-- *1x* Resistor $+10$ K$Omega$
 - *1x* Breadboard
 
 === Assembly
@@ -192,7 +190,7 @@ Follow the circuit assembly instructions. Visually inspect all connections befor
     image("pic/b_sop20_6.png", width: 75%)
 )
 #figure(
-    caption:text(size: 15pt)[7. Connect MCU pin 11 to 3V3. \ Connect MCU pin 17 to ground],
+    caption:text(size: 15pt)[7. Connect MCU pin 11 to 3V3.],
     supplement: [],
     numbering: none,
     outlined: false,
@@ -312,7 +310,7 @@ This mode is designed for diagnosing logic circuits. It enables real-time monito
     - _TSSOP20_ package: Pin 7
 
 == Generating periodic pulses
-This mode produces periodic pulses with button-controlled activation. Output state visualized through persistent LED feedback.
+This mode produces periodic pulses (1 Hz) with button-controlled activation. Output state visualized through persistent LED feedback.
 
 ===== LED Behavior:
 - Mode indicator: #highlight(fill: white)[WHITE]
@@ -590,7 +588,7 @@ This mode is available only on STM32G030 with packaging TSSOP20.
 === Page Logic Level
 
 ===== Pinout
-- #highlight(fill: yellow)[|TSSOP20(PA1/8)]: Toggle output
+- #highlight(fill: yellow)[TSSOP20(PA1/8)]: Toggle output
 - #highlight(fill: green)[TSSOP20(PA2/9)]: Toggle output
 - #highlight(fill: gray)[TSSOP20(PA3/10)]: Toggle output
 
@@ -615,7 +613,7 @@ This page allows to toggle output pin.
 ===== Pinout
 - #highlight(fill: red)[PA0/7]: Data signal output for the shift register.
 - #highlight(fill: blue)[PB7/1]: Clock signal output for the shift register.
-- #highlight(fill: yellow)[PA1/9]: RCLK signal, typically for *74HC595* compatible shift registers.
+- #highlight(fill: yellow)[PA1/8]: RCLK signal, typically for *74HC595* compatible shift registers.
 
 ===== Control
 - *[1-8]* - Toggle the bit value (0 or 1) at the corresponding position in the 8-bit sequence.
@@ -641,7 +639,7 @@ When *[D]* is pressed, bit selected by green color is send to the register.  *[F
 ==== Read communication
 
 ===== Pinout
-- #highlight(fill: red)[PA0]: Neopixel data input (for Read mode).
+- #highlight(fill: red)[PA0/7]: Neopixel data input (for Read mode).
 
 ===== Control
 - *[M]* - Change operating mode (e.g., Read Neopixel / Write Neopixel).
@@ -660,7 +658,7 @@ In Read mode, the device attempts to read data from a Neopixel signal connected 
 #v(10pt)
 ==== Send testing communication
 ===== Pinout
-- #highlight(fill:fuchsia)[PA13]: Neopixel data output
+- #highlight(fill:fuchsia)[PA13/18]: Neopixel data output
 
 ===== Control
 - *[0-9]* - Enter numerical value (e.g., 0-255 for color components).
@@ -893,10 +891,10 @@ This is a specialized mode for testing SSD1306 OLED displays.
 ==== Master mode
 
 ===== Pinout
-- #highlight(fill: orange)[PA5 (SCK)]: SPI Clock line.
-- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6 (MISO)]]: SPI Master In, Slave Out line.
-- #highlight(fill: aqua)[PA7 (MOSI)]: SPI Master Out, Slave In line.
-- #highlight(fill: purple)[PB0 (NSS)]: SPI Chip Select / Slave Select line.
+- #highlight(fill: orange)[PA5/12 (SCK)]: SPI Clock line.
+- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6/13 (MISO)]]: SPI Master In, Slave Out line.
+- #highlight(fill: aqua)[PA7/14 (MOSI)]: SPI Master Out, Slave In line.
+- #highlight(fill: purple)[PB0/15 (NSS)]: SPI Chip Select / Slave Select line.
 
 ===== Control
 - Settings mode
@@ -938,9 +936,9 @@ The device acts as an SPI master, initiating and controlling communication with 
 ==== Monitor
 
 ===== Pinout
-- #highlight(fill: orange)[PA5 (SCK)]: SPI Clock line.
-- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6 (MISO)]]: SPI Master In, Slave Out line.
-- #highlight(fill: aqua)[PA7 (MOSI)]: SPI Master Out, Slave In line.
+- #highlight(fill: orange)[PA5/12 (SCK)]: SPI Clock line.
+- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6/13 (MISO)]]: SPI Master In, Slave Out line.
+- #highlight(fill: aqua)[PA7/14 (MOSI)]: SPI Master Out, Slave In line.
 
 ===== Control
 - Settings mode
@@ -969,10 +967,10 @@ In this mode, the device emulates an SPI slave. It will listen to an external SP
 ==== SPI SSD1306 display test
 
 ===== Pinout
-- #highlight(fill: orange)[PA5 (SCK)]: SPI Clock line.
-- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6 (MISO)]]: SPI Master In, Slave Out line.
-- #highlight(fill: aqua)[PA7 (MOSI)]: SPI Master Out, Slave In line.
-- #highlight(fill: purple)[PB0 (NSS)]: SPI Chip Select / Slave Select line.
+- #highlight(fill: orange)[PA5/12 (SCK)]: SPI Clock line.
+- #highlight(fill: rgb("#ba0000"))[#text(fill: white)[PA6/13 (MISO)]]: SPI Master In, Slave Out line.
+- #highlight(fill: aqua)[PA7/14 (MOSI)]: SPI Master Out, Slave In line.
+- #highlight(fill: purple)[PB0/15 (NSS)]: SPI Chip Select / Slave Select line.
 
 ===== Control
 - Settings mode
