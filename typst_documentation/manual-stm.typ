@@ -393,7 +393,7 @@ This mode enables deeper circuit diagnostic with PC control. It offers the follo
         - Simulating master
         - SSD1306 communication tester
 === Activation
-*SOP8 Package, DO NOT CONNECT ANYTHING TO PA0. IT WILL PUT DEVICE TO RESET!*\
+*SOP8 Package, DO NOT CONNECT ANYTHING TO PA0 BEFORE CONNECTING POWER SUPPLY. IT WILL PUT DEVICE TO RESET!*\
 Terminal mode is enabled when the device is powered with UART computer connection. To activate it:
 1. Connect the power supply and RX/TX of UART channel to PC.
 2. RGB LED will be red.

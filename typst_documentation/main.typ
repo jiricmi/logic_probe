@@ -1385,7 +1385,48 @@ loop:
 
 
 
-= Závěr a zhodnocení
+= Zhodnocení a Závěr
+== Zhodnocení
+=== Diagnostická logická sonda STM32
+Během práce byla vytvořena diagnostická logická sonda na základě MCU STM32G030, která je sestavitelná na nepájivém kontaktním poli. Tato verze nabízí lokální a terminálový režim, která má následující funkce:
+==== Lokální režim
+#par(first-line-indent: 0pt)[
+Režim pro rychlou diagnostiku bez PC na pouzdrech SOP8 a TSSOP20.
+]
+- *Zjištění logické úrovně a signalizaci stavu pomocí RGB LED*
+- *Nastavení logických úrovní na kanálech*
+    - např. pro kontrolu chování obvodu s posuvným registrem
+- *Generování pulzů s frekvencí 1 Hz*
+    - např. pro kontrolu chování obvodu čítače
+- *Detekce krátkých pulzů na vodiči a signalizace pomocí RGB LED*
+    - např. pro ověření, zda periferie odesílá data
+==== Terminálový režim
+#par(first-line-indent: 0pt)[
+Režim pro hlubší diagnostiku s připojením PC a ovládání sondy pomocí terminálové aplikace.
+]
+- *Měření napětí*
+- *Měření odporu*
+- *Měření frekvence a střídy*
+- *Detekce pulzů*
+- *Generace pulzů*
+- *Generování frekvence*
+Následující funkce jsou k dispozici na pouzdře TSSOP20
+- *Nastavení logických úrovní na kanálech*
+- *Testovací sekvence pro 8bitové posuvné registry*
+- *Neopixel RGB LED komunikace*
+    - Monitorování komunikace mezi zařízením a RGB LED
+    - Zapisování testovacích bitů pro řetězec RGB LED
+- *UART periferie*
+    - Pasivní monitorování komunikace
+    - Aktivní vysílání testovacích sekvencí
+- *I2C*
+    - Detekce adres slave zařízení na sběrnici
+    - Pasivní monitorování komunikace na sběrnici
+    - 
+- *SPI*
+
+
+== Závěr
 Tato bakalářská práce se věnovala návrhu a realizaci multifunkční diagnostické logické sondy, jejímž cílem bylo zjednodušit studentům proces osvojování principů práce s~logickými obvody a vestavnými systémy. Hlavním zaměřem bylo vytvořit cenově dostupné a~snadno použitelné zařízení, které by nahradilo komplexní a finančně náročné komerční laboratorní přístroje, a zároveň nabídlo funkce přizpůsobené výukovým potřebám.
 
 V rámci práce byla úspěšně navržen a implementován diagnostický nástroj, který integruje základní funkce logického analyzátoru, generátoru signálu a testeru komunikačních rozhraní běžně využívaných ve výuce jako jsou UART, I2C a SPI. Klíčovým přínosem je realizace sondy ve dvou variantách: verze založená na MCU STM32 a omezená verze pro Raspberry Pi Pico, což umožňuje její využití i na středních školách bez specializace na elektroniku a logické obvody. Obě verze byly navrženy s důrazem na minimalizaci externích komponent, což studentům umožňuje snadné sestavení sondy na nepájivém kontaktním poli.

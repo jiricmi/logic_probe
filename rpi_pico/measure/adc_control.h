@@ -3,7 +3,7 @@
 #include <pico/time.h>
 #include <stdint.h>
 
-#define ADC_CHANNEL_SAMPLES 50
+#define ADC_CHANNEL_SAMPLES 100
 #define ADC_NUM_CHANNELS 3
 #define ADC_BASE_RESISTOR 10000
 #define ADC_DELAY_MEASURE_MS 10

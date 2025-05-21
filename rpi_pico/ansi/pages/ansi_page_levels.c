@@ -25,5 +25,5 @@ void ansi_render_levels_page(void) {
             ansi_send_text(buff, &ansi_red_bold_conf);
         }
     }
-    ansi_print_help_msg("1-4: toggle output", 0);
+    ansi_print_help_msg("1-3: toggle output", 0);
 }
