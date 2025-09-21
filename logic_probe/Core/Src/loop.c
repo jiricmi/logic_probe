@@ -22,6 +22,10 @@
 
 #include <stdbool.h>
 
+#define PACKAGE_DATA_REGISTER (*((volatile uint32_t*)0x1FFF7500U))
+#define PACKAGE_TYPE_MASK 0x0000000FUL
+#define SOP8_CODE 0x1
+
 extern global_vars_t global_var;
 
 dev_setup_t dev_mode_get_dev_setup(void) {
@@ -49,17 +53,14 @@ void dev_mode_check_update(void) {
 }
 
 void dev_mode_package_version(void) {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    uint32_t package_data = PACKAGE_DATA_REGISTER;
+    uint32_t package_code = package_data & PACKAGE_TYPE_MASK;
 
-    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4) == GPIO_PIN_SET) {
+    if (package_code != SOP8_CODE) {
         global_var.can_advanced = true;
+    } else {
+        global_var.can_advanced = false;
     }
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
 }
 
 void dev_mode_run_with_uart(void) {
