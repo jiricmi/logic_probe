@@ -79,7 +79,7 @@ void control_main_page(void) {
             break;
         case 'l':
         case 'L':
-            if (NOT_SOP) {
+            if (global_var.can_advanced) {
                 ansi_set_current_page(ANSI_PAGE_LEVELS);
                 dev_mode_change_mode(DEV_STATE_LEVEL);
             }
