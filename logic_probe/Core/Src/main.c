@@ -174,7 +174,7 @@ int main(void) {
     init_shift_register(global_var.adv_shift_register);
     init_visual_output(global_var.visual_output, &htim1);
     init_button_data(global_var.button_data);
-    uart_init(global_var.uart_perif, &huart2);
+    uart_init(global_var.uart_perif, &huart1);
     i2c_init_struct(global_var.i2c_perif, &hi2c1);
     spi_init_struct(global_var.spi_perif, &hspi1);
     deinit_uart(global_var.uart_perif);
