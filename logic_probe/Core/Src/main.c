@@ -67,7 +67,7 @@ DMA_HandleTypeDef hdma_tim2_ch2;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
-DMA_HandleTypeDef hdma_usart2_rx;
+DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -183,7 +183,7 @@ int main(void) {
     if (global_var.device_setup == DEV_SETUP_LOCAL) {
         neopixel_startup_effect(global_var.visual_output);
     } else {
-        neopixel_send_color(global_var.visual_output, NEOPIXEL_RED);
+        // neopixel_send_color(global_var.visual_output, NEOPIXEL_RED);
     }
 
     while (!global_var.booted) {
@@ -199,11 +199,7 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
-        if (global_var.device_setup == DEV_SETUP_UART) {
-            dev_mode_run_with_uart();
-        } else {
-            dev_mode_run();
-        }
+        dev_mode_run_with_uart();
     }
     /* USER CODE END 3 */
 }
@@ -562,49 +558,6 @@ static void MX_TIM3_Init(void) {
 }
 
 /**
- * @brief USART1 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_USART1_UART_Init(void) {
-    /* USER CODE BEGIN USART1_Init 0 */
-
-    /* USER CODE END USART1_Init 0 */
-
-    /* USER CODE BEGIN USART1_Init 1 */
-
-    /* USER CODE END USART1_Init 1 */
-    huart1.Instance = USART1;
-    huart1.Init.BaudRate = 115200;
-    huart1.Init.WordLength = UART_WORDLENGTH_8B;
-    huart1.Init.StopBits = UART_STOPBITS_1;
-    huart1.Init.Parity = UART_PARITY_NONE;
-    huart1.Init.Mode = UART_MODE_TX_RX;
-    huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-    huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-    huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-    huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-    if (HAL_UART_Init(&huart1) != HAL_OK) {
-        Error_Handler();
-    }
-    if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) !=
-        HAL_OK) {
-        Error_Handler();
-    }
-    if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) !=
-        HAL_OK) {
-        Error_Handler();
-    }
-    if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK) {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN USART1_Init 2 */
-
-    /* USER CODE END USART1_Init 2 */
-}
-
-/**
  * @brief USART2 Initialization Function
  * @param None
  * @retval None
@@ -629,6 +582,49 @@ static void MX_USART2_UART_Init(void) {
     huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
     huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
     if (HAL_UART_Init(&huart2) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_UARTEx_SetTxFifoThreshold(&huart2, UART_TXFIFO_THRESHOLD_1_8) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_UARTEx_SetRxFifoThreshold(&huart2, UART_RXFIFO_THRESHOLD_1_8) !=
+        HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN USART1_Init 2 */
+
+    /* USER CODE END USART1_Init 2 */
+}
+
+/**
+ * @brief USART1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_USART1_UART_Init(void) {
+    /* USER CODE BEGIN USART2_Init 0 */
+
+    /* USER CODE END USART2_Init 0 */
+
+    /* USER CODE BEGIN USART2_Init 1 */
+
+    /* USER CODE END USART2_Init 1 */
+    huart1.Instance = USART1;
+    huart1.Init.BaudRate = 115200;
+    huart1.Init.WordLength = UART_WORDLENGTH_8B;
+    huart1.Init.StopBits = UART_STOPBITS_1;
+    huart1.Init.Parity = UART_PARITY_NONE;
+    huart1.Init.Mode = UART_MODE_TX_RX;
+    huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+    huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+    if (HAL_UART_Init(&huart1) != HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN USART2_Init 2 */
@@ -679,16 +675,6 @@ static void MX_GPIO_Init(void) {
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /*Configure GPIO pin : PA13 */
-    GPIO_InitStruct.Pin = GPIO_PIN_13;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    /* EXTI interrupt init*/
-    HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
-
     /* USER CODE BEGIN MX_GPIO_Init_2 */
     dev_mode_package_version();
     /* USER CODE END MX_GPIO_Init_2 */
@@ -710,8 +696,6 @@ void Error_Handler(void) {
     __disable_irq();
     HAL_DeInit();
     NVIC_SystemReset();
-    while (1) {
-    }
     /* USER CODE END Error_Handler_Debug */
 }
 
