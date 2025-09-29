@@ -35,7 +35,7 @@ void neopixel_set_color(visual_output_t* visual_output,
     memset(visual_output->neopixel_data + NEOPIXEL_DATA_SIZE - 3, 0, 3);
 
     HAL_TIM_PWM_Start_DMA(visual_output->neopixel_tim, TIM_CHANNEL_3,
-                          visual_output->neopixel_data, NEOPIXEL_DATA_SIZE);
+                          (uint32_t *)visual_output->neopixel_data, NEOPIXEL_DATA_SIZE);
 }
 
 void neopixel_get_color(neopixel_color_t* color,

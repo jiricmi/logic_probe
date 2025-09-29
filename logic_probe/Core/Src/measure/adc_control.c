@@ -46,6 +46,9 @@ adc_vars_t* adc_create_channel_struct(ADC_HandleTypeDef* hadc,
         memcpy(adc_ch->pin_real, pin_real, sizeof(pin_real));
     }
 
+    char gpio_nucleo[] = PIN_NUCLEO;
+    memcpy(adc_ch->gpio_nucleo, gpio_nucleo, sizeof(gpio_nucleo));
+
     adc_ch->n_active_channels = adc_count_active_channels(adc_ch);
 
     adc_ch->hadc = hadc;

@@ -29,15 +29,7 @@
 extern global_vars_t global_var;
 
 dev_setup_t dev_mode_get_dev_setup(void) {
-    for (uint8_t i = 0; i < SETUP_TRIES; ++i) {
-        if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_10)) {
-            HAL_Delay(SETUP_WAIT);
-            continue;
-        } else {
-            return DEV_SETUP_UART;
-        }
-    }
-    return DEV_SETUP_LOCAL;
+    return DEV_SETUP_UART;
 }
 
 void dev_mode_check_update(void) {
@@ -180,9 +172,9 @@ void dev_mode_perif_turn_off(sig_detector_t* sig_det, adc_vars_t* adc_vars) {
     deinit_level_gpio();
 
     // TODO: TOTO JE PRO TSOP20
-    deinit_uart(global_var.uart_perif);
-    i2c_deinit_perif(global_var.i2c_perif);
-    spi_deinit_perif(global_var.spi_perif);
+    // deinit_uart(global_var.uart_perif);
+    // i2c_deinit_perif(global_var.i2c_perif);
+    // spi_deinit_perif(global_var.spi_perif);
 
     __HAL_TIM_SET_COUNTER(sig_det->master_tim, 0);
     __HAL_TIM_SET_COUNTER(sig_det->slave_tim, 0);
@@ -195,7 +187,7 @@ void dev_mode_update_perif(void) {
     sig_generator_t* sig_gen = global_var.signal_generator;
     neopixel_measure_t* neopixel_measure = global_var.adv_neopixel_measure;
 
-    dev_mode_perif_turn_off(sig_det, adc_vars);
+    // dev_mode_perif_turn_off(sig_det, adc_vars);
 
     switch (global_var.device_state) {
         case DEV_STATE_NONE:

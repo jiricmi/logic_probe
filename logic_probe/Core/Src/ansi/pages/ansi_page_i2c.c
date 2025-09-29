@@ -25,8 +25,8 @@ void ansi_render_i2c_measure_page(void) {
     ansi_render_border('&', "&", "");
 
     const char* header = (global_var.device_state == DEV_STATE_ADV_I2C_MONITOR)
-                             ? "SCK - PA5/12 | Monitor - PA7/14"
-                             : "SCL - PB8/1 | SDA - PB9/2";
+                             ? "SCK - PA5/A3 | Monitor - PA7/A7"
+                             : "SCL - PB8/D8 | SDA - PB9/D10";
 
     ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
     ansi_send_text(header, &ansi_bold_conf);

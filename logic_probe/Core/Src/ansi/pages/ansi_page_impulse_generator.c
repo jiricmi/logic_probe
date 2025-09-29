@@ -30,8 +30,7 @@ void ansi_render_impulse_generator(const sig_generator_t* generator) {
     }
     ansi_set_cursor(10, 10);
     format_number_with_spaces(generator->period_us_temp, number_buff);
-    snprintf(buff, 50, "Pulse width (PA0/%d): %9.9s us", output_pin,
-             number_buff);
+    snprintf(buff, 50, "Pulse width (PA0/A0): %9.9s us", number_buff);
     ansi_send_text(buff, &ansi_default_conf);
 
     uint64_t freq = (generator->period_us_temp != 0)

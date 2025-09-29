@@ -38,7 +38,8 @@
     {ADC_CHANNEL_VREFINT, ADC_CHANNEL_11, ADC_CHANNEL_0, ADC_CHANNEL_1}
 #define PIN_VALS {0, 7, 0, 1};
 #define PIN_GPIO {'A', 'B', 'A', 'A'}
-#define PIN_REAL {0, 1, 7, 8}
+#define PIN_REAL {0, 0, 0, 1}
+#define PIN_NUCLEO {'A', 'D', 'A', 'A'}
 #define PIN_REAL_8 {0, 1, 4, 0}
 
 #endif
@@ -59,6 +60,7 @@ typedef struct {
     uint32_t avg_voltage[ADC_NUM_CHANNELS_20];
     uint8_t pin[ADC_NUM_CHANNELS_20];
     char gpio_pin[ADC_NUM_CHANNELS_20];
+    char gpio_nucleo[ADC_NUM_CHANNELS_20];
     uint8_t pin_real[ADC_NUM_CHANNELS_20];
     uint8_t n_active_channels;
     ADC_HandleTypeDef* hadc;

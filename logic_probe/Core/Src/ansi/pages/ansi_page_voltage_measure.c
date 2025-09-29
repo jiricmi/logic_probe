@@ -40,7 +40,7 @@ void ansi_render_resistance_measure(const adc_vars_t* adc_ch) {
     uint8_t row = 8;
 
     ansi_set_cursor(row - 3, ADC_MEASURE_CENTER + 3);
-    ansi_send_text("RESISTANCE (PB7)", &ansi_bold_conf);
+    ansi_send_text("RESISTANCE (PB7/D0)", &ansi_bold_conf);
 
     ansi_render_resistance_values(row, ADC_MEASURE_CENTER, ref_voltage,
                                   adc_ch->base_resistor, resistance);
@@ -123,9 +123,9 @@ void ansi_render_voltage_measures(const adc_vars_t* adc_ch) {
         } else {
             char text_buffer[ANSI_VOLTAGE_TEXT_BUFFER];
             snprintf(text_buffer, sizeof(text_buffer),
-                     "Channel %hu (P%c%d/%d): x", channel,
+                     "Channel %hu (P%c%d/%c%d): x", channel,
                      adc_ch->gpio_pin[channel], adc_ch->pin[channel],
-                     adc_ch->pin_real[channel]);
+                     adc_ch->gpio_nucleo[channel], adc_ch->pin_real[channel]);
             ansi_send_text(text_buffer, &ansi_bold_conf);
         }
     }
@@ -192,7 +192,8 @@ void ansi_render_channel_voltage(uint32_t voltage,
 
     uint_32_to_split_int(split_float_format, voltage, floating_point);
     snprintf(text_buffer, sizeof(text_buffer),
-             "Channel %hu (P%c%d/%1d): %lu.%0*lu V", channel, gpio, pin,
+             "Channel %hu (P%c%d/%c%1d): %lu.%0*lu V", channel, gpio, pin,
+             global_var.adc_vars->gpio_nucleo[channel],
              global_var.adc_vars->pin_real[channel], split_float_format[0],
              (int)floating_point, split_float_format[1]);
     ansi_send_text(text_buffer, &ansi_bold_conf);

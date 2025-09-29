@@ -21,8 +21,8 @@ void ansi_render_spi_measure_page(void) {
     ansi_render_border('%', "%", "");
     const char* header =
         (global_var.device_state != DEV_STATE_ADV_SPI_SLAVE)
-            ? "SCK-PA5/12 | MISO-PA6/13 | MOSI-PA7/14 | NSS-PB0/15"
-            : "SCK-PA5/12 | MONITOR-PA7/14";
+            ? "SCK-PA5/A3 | MISO-PA6/A6 | MOSI-PA7/A7 | NSS-PB0/D6"
+            : "SCK-PA5/A3 | MONITOR-PA7/A7";
 
     ansi_set_cursor(5, TERMINAL_CENTER - (strlen(header) / 2));
     ansi_send_text(header, &ansi_bold_conf);
