@@ -658,7 +658,7 @@ In Read mode, the device attempts to read data from a Neopixel signal connected 
 #v(10pt)
 ==== Send testing communication
 ===== Pinout
-- #highlight(fill:fuchsia)[PA13/18]: Neopixel data output
+- #highlight(fill:fuchsia)[PB6/20]: Neopixel data output
 
 ===== Control
 - *[0-9]* - Enter numerical value (e.g., 0-255 for color components).
@@ -675,7 +675,7 @@ In Write mode, the user can define the color for each RGB (Red, Green, Blue) com
 - Press *[K]* to enter edit mode for the color values or to select which specific Neopixel or color component (R, G, or B) is currently being edited.
 - Use *[L]* to move the cursor or navigate between different editable fields or Neopixels.
 - The numerical keys *[0-9]* are used to input the desired values (decimal 0-255) for the selected component, and *[X]* can be used to delete or correct the input.
-Once the color data for the Neopixel(s) is configured as desired, pressing the *[S]* key transmits this data to the connected Neopixel strip via the `PA13` pin.
+Once the color data for the Neopixel(s) is configured as desired, pressing the *[S]* key transmits this data to the connected Neopixel strip via the `PB6` pin.
 
 #v(10pt)
 #figure(
